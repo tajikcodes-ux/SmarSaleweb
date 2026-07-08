@@ -16,6 +16,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0",
+    "shaders": "^2.5.135",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {

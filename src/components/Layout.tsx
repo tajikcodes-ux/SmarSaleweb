@@ -81,87 +81,138 @@ export default function Layout({ children }: LayoutProps) {
     if (t.includes('заряд') || t.includes('геопозиция') || t.includes('предупреждение') || t.includes('ошибка')) return 'text-amber-700';
     return 'text-slate-700';
   };
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{"username":"Admin","role":"OWNER"}');
 
-  const menuItems = [
-    { path: '/', label: 'Дашборд', icon: LayoutDashboard },
-    { path: '/agents', label: 'Агенты', icon: Users },
-    { path: '/map', label: 'Карта и GPS', icon: MapPin },
-    { path: '/clients', label: 'Клиенты', icon: UserCheck },
-    { path: '/catalog', label: 'Товары и Склады', icon: Layers },
-    { path: '/warehouse', label: 'Сборка (Склад)', icon: CheckSquare },
-    { path: '/orders', label: 'Заказы', icon: ShoppingBag },
-    { path: '/returns', label: 'Возвраты', icon: RotateCcw },
-    { path: '/payments', label: 'Оплаты', icon: DollarSign },
-    { path: '/tasks', label: 'Задачи', icon: CheckSquare },
-    { path: '/salary', label: 'Зарплаты', icon: Coins },
-    { path: '/branches', label: 'Филиалы', icon: MapPin },
-    { path: '/promotions', label: 'Акции', icon: Gift },
-    { path: '/roles', label: 'Управление ролями', icon: Shield },
-    { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
-    { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
-    { path: '/ai-assistant', label: 'AI Ассистент', icon: Sparkles },
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('expanded_menu_groups');
+      return saved ? JSON.parse(saved) : { 'analytics': true, 'sales': true, 'warehouse': true, 'team': true, 'admin': true };
+    } catch {
+      return { 'analytics': true, 'sales': true, 'warehouse': true, 'team': true, 'admin': true };
+    }
+  });
+
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups(prev => {
+      const next = { ...prev, [groupKey]: !prev[groupKey] };
+      localStorage.setItem('expanded_menu_groups', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const menuStructure = [
+    {
+      key: 'analytics',
+      title: 'Аналитика',
+      items: [
+        { path: '/', label: 'Дашборд', icon: LayoutDashboard },
+        { path: '/ai-assistant', label: 'AI Ассистент', icon: Sparkles },
+      ]
+    },
+    {
+      key: 'sales',
+      title: 'Продажи',
+      items: [
+        { path: '/orders', label: 'Заказы', icon: ShoppingBag },
+        { path: '/returns', label: 'Возвраты', icon: RotateCcw },
+        { path: '/payments', label: 'Оплаты', icon: DollarSign },
+        { path: '/promotions', label: 'Акции', icon: Gift },
+      ]
+    },
+    {
+      key: 'warehouse',
+      title: 'Склад и Товары',
+      items: [
+        { path: '/catalog', label: 'Товары и Склады', icon: Layers },
+        { path: '/warehouse', label: 'Сборка (Склад)', icon: CheckSquare },
+      ]
+    },
+    {
+      key: 'team',
+      title: 'Команда',
+      items: [
+        { path: '/agents', label: 'Агенты', icon: Users },
+        { path: '/map', label: 'Карта и GPS', icon: MapPin },
+        { path: '/tasks', label: 'Задачи', icon: CheckSquare },
+        { path: '/salary', label: 'Зарплаты', icon: Coins },
+      ]
+    },
+    {
+      key: 'admin',
+      title: 'Управление',
+      items: [
+        { path: '/clients', label: 'Клиенты', icon: UserCheck },
+        { path: '/branches', label: 'Филиалы', icon: MapPin },
+        { path: '/roles', label: 'Управление ролями', icon: Shield },
+        { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
+        { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
+      ]
+    }
   ];
 
-  const getFilteredMenuItems = () => {
+  const getFilteredMenuStructure = () => {
     const role = user.role;
     const permissions = user.permissions || {};
 
-    return menuItems.filter(item => {
-      // OWNER and SUPER_ADMIN always see everything (mirrors backend bypass)
-      if (role === 'OWNER' || role === 'SUPER_ADMIN') return true;
+    return menuStructure.map(group => {
+      const filteredItems = group.items.filter(item => {
+        if (role === 'OWNER' || role === 'SUPER_ADMIN') return true;
 
-      // If permissions object exists and is populated, use dynamic permissions
-      if (permissions && Object.keys(permissions).length > 0) {
-        if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/feedbacks') return true;
+        if (permissions && Object.keys(permissions).length > 0) {
+          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/feedbacks') return true;
 
-        const resourceMap: Record<string, string> = {
-          '/agents': 'agents',
-          '/map': 'map',
-          '/clients': 'clients',
-          '/catalog': 'catalog',
-          '/warehouse': 'warehouse',
-          '/orders': 'orders',
-          '/returns': 'returns',
-          '/payments': 'payments',
-          '/tasks': 'tasks',
-          '/salary': 'salary',
-          '/branches': 'branches',
-          '/promotions': 'promotions',
-          '/roles': 'roles',
-          '/smm': 'smm',
-          '/feedbacks': 'feedbacks',
-        };
+          const resourceMap: Record<string, string> = {
+            '/agents': 'agents',
+            '/map': 'map',
+            '/clients': 'clients',
+            '/catalog': 'catalog',
+            '/warehouse': 'warehouse',
+            '/orders': 'orders',
+            '/returns': 'returns',
+            '/payments': 'payments',
+            '/tasks': 'tasks',
+            '/salary': 'salary',
+            '/branches': 'branches',
+            '/promotions': 'promotions',
+            '/roles': 'roles',
+            '/smm': 'smm',
+            '/feedbacks': 'feedbacks',
+          };
 
-        const resource = resourceMap[item.path];
-        if (!resource) return false;
+          const resource = resourceMap[item.path];
+          if (!resource) return false;
 
-        return permissions[resource]?.includes('read') || false;
-      }
+          return permissions[resource]?.includes('read') || false;
+        }
 
-      // Legacy fallback based on role name
-      if (role === 'SUPER_ADMIN' || role === 'OWNER' || role === 'SALES_MANAGER') {
-        return true;
-      }
-      if (role === 'SUPERVISOR') {
-        return ['/', '/agents', '/map', '/clients', '/orders', '/returns', '/payments', '/tasks', '/ai-assistant'].includes(item.path);
-      }
-      if (role === 'WAREHOUSE_MAN') {
-        return ['/catalog', '/warehouse', '/orders'].includes(item.path);
-      }
-      if (role === 'DELIVERY_MAN' || role === 'DELIVERY_DRIVER') {
-        return ['/warehouse', '/orders'].includes(item.path);
-      }
-      if (role === 'FINANCIER') {
-        return ['/orders', '/payments', '/salary'].includes(item.path);
-      }
-      if (role === 'DEVELOPER') {
-        return ['/', '/feedbacks'].includes(item.path);
-      }
-      return false;
-    });
+        if (role === 'SUPER_ADMIN' || role === 'OWNER' || role === 'SALES_MANAGER') {
+          return true;
+        }
+        if (role === 'SUPERVISOR') {
+          return ['/', '/agents', '/map', '/clients', '/orders', '/returns', '/payments', '/tasks', '/ai-assistant'].includes(item.path);
+        }
+        if (role === 'WAREHOUSE_MAN') {
+          return ['/catalog', '/warehouse', '/orders'].includes(item.path);
+        }
+        if (role === 'DELIVERY_MAN' || role === 'DELIVERY_DRIVER') {
+          return ['/warehouse', '/orders'].includes(item.path);
+        }
+        if (role === 'FINANCIER') {
+          return ['/orders', '/payments', '/salary'].includes(item.path);
+        }
+        if (role === 'DEVELOPER') {
+          return ['/', '/feedbacks'].includes(item.path);
+        }
+        return false;
+      });
+
+      return {
+        ...group,
+        items: filteredItems
+      };
+    }).filter(group => group.items.length > 0);
   };
 
   const handleLogout = () => {
@@ -188,7 +239,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="flex flex-col h-full overflow-hidden">
           {/* Logo & Close Button */}
-          <div className="flex items-center justify-between mb-5 px-2 py-4">
+          <div className="flex items-center justify-between mb-3 px-2 py-2">
             <div
               className="flex items-center gap-3 cursor-pointer select-none"
               onClick={() => navigate('/')}
@@ -219,27 +270,50 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1 overflow-y-auto flex-1 pr-1">
-            {getFilteredMenuItems().map((item) => {
-              const isActive = location.pathname === item.path;
+          <nav className="space-y-4 overflow-y-auto flex-1 pr-1 py-2">
+            {getFilteredMenuStructure().map((group) => {
+              const isExpanded = expandedGroups[group.key] !== false;
               return (
-                <button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  title={item.label}
-                  className={`w-full flex items-center gap-3 px-3 py-2 ${
-                    isCollapsed ? 'lg:justify-center lg:py-2.5 lg:px-0' : ''
-                  } rounded-xl font-medium text-[13px] transition-all duration-200 ${
-                    isActive
-                      ? 'bg-[#0b57d0] text-white shadow-sm shadow-[#0b57d0]/20 font-semibold'
-                      : 'text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#1d1d1f]'
-                  }`}
-                >
-                  <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#5f6368]'}`} />
+                <div key={group.key} className="space-y-1">
                   {(!isCollapsed || isMobileMenuOpen) && (
-                    <span className={`truncate ${isCollapsed ? 'lg:hidden block' : 'block'}`}>{item.label}</span>
+                    <button
+                      onClick={() => toggleGroup(group.key)}
+                      className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-[#86868b] uppercase tracking-wider hover:text-[#1d1d1f] transition-colors"
+                    >
+                      <span>{group.title}</span>
+                      <span className="text-[9px]">{isExpanded ? '▼' : '▶'}</span>
+                    </button>
                   )}
-                </button>
+                  {isCollapsed && !isMobileMenuOpen && (
+                    <div className="h-px bg-slate-100 my-2" />
+                  )}
+                  {(isExpanded || (isCollapsed && !isMobileMenuOpen)) && (
+                    <div className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => navigate(item.path)}
+                            title={item.label}
+                            className={`w-full flex items-center gap-3 px-3 py-2 ${
+                              isCollapsed ? 'lg:justify-center lg:py-2.5 lg:px-0' : ''
+                            } rounded-xl font-medium text-[13px] transition-all duration-200 ${
+                              isActive
+                                ? 'bg-[#0b57d0] text-white shadow-sm shadow-[#0b57d0]/20 font-semibold'
+                                : 'text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#1d1d1f]'
+                            }`}
+                          >
+                            <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#5f6368]'}`} />
+                            {(!isCollapsed || isMobileMenuOpen) && (
+                              <span className={`truncate ${isCollapsed ? 'lg:hidden block' : 'block'}`}>{item.label}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
@@ -300,7 +374,7 @@ export default function Layout({ children }: LayoutProps) {
               <Menu className="w-4 h-4" />
             </button>
             <h2 className="text-sm font-bold text-[#1d1d1f] tracking-tight">
-              {menuItems.find((item) => item.path === location.pathname)?.label || 'Управление'}
+              {menuStructure.flatMap(g => g.items).find((item) => item.path === location.pathname)?.label || 'Управление'}
             </h2>
             
             {/* Search Box */}

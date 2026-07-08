@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [salesSparkline, setSalesSparkline] = useState<number[]>([]);
   const [ordersSparkline, setOrdersSparkline] = useState<number[]>([]);
+  const [weather, setWeather] = useState({ temp: '28°C', desc: 'Солнечно' });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -131,12 +132,30 @@ export default function Dashboard() {
         if (gpsRes.data.length > 0) {
           setAgents(gpsRes.data);
         } else {
-          setAgents([
-            { userId: '1', firstName: 'Фирдавс', lastName: 'Алиев', role: 'SALES_REP', latitude: 40.2825, longitude: 69.6210, speed: 0, batteryLevel: 85, recordedAt: new Date().toISOString() },
-            { userId: '2', firstName: 'Саид', lastName: 'Каримов', role: 'SALES_REP', latitude: 40.2910, longitude: 69.6130, speed: 41, batteryLevel: 82, recordedAt: new Date().toISOString() },
-            { userId: '3', firstName: 'Джамшед', lastName: 'Умаров', role: 'SALES_REP', latitude: 40.2750, longitude: 69.6320, speed: 0, batteryLevel: 67, recordedAt: new Date().toISOString() },
-          ]);
+          setAgents([]);
         }
+
+        // Fetch real weather for Khujand region (40.28, 69.62) from free Open-Meteo API
+        try {
+          const wRes = await fetch('https://api.open-meteo.com/v1/forecast?latitude=40.28&longitude=69.62&current_weather=true');
+          const wData = await wRes.json();
+          if (wData && wData.current_weather) {
+            const temp = Math.round(wData.current_weather.temperature);
+            const code = wData.current_weather.weathercode;
+            // Map weathercode to Russian description
+            const weatherDescriptions: Record<number, string> = {
+              0: 'Ясно', 1: 'Преимущественно ясно', 2: 'Переменная облачность', 3: 'Пасмурно',
+              45: 'Туман', 48: 'Иней с туманом', 51: 'Морось', 53: 'Умеренная морось',
+              61: 'Слабый дождь', 63: 'Дождь', 65: 'Сильный дождь', 80: 'Ливень',
+              95: 'Гроза'
+            };
+            const desc = weatherDescriptions[code] || 'Солнечно';
+            setWeather({ temp: `${temp}°C`, desc });
+          }
+        } catch (wErr) {
+          console.error('Failed to fetch weather', wErr);
+        }
+
       } catch (err) {
         console.error('Error fetching dashboard stats', err);
       } finally {
@@ -333,19 +352,8 @@ export default function Dashboard() {
               <Sun className="w-4 h-4" />
             </span>
             <div className="text-left">
-              <div className="text-xs font-bold text-[#1d1d1f]">28°C</div>
-              <div className="text-[10px] text-[#86868b]">Солнечно</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <div className="text-left">
-              <div className="text-xs font-bold text-[#1d1d1f]">Все системы</div>
-              <div className="text-[10px] text-[#86868b]">работают в штатном режиме</div>
+              <div className="text-xs font-bold text-[#1d1d1f]">{weather.temp}</div>
+              <div className="text-[10px] text-[#86868b]">{weather.desc}</div>
             </div>
           </div>
 
