@@ -205,8 +205,7 @@ h1, h2, h3, h4, h5, h6 {
 .dark h4,
 .dark h5,
 .dark h6,
-.dark p,
-.dark span:not(.text-white):not(.text-emerald-700):not(.text-amber-700) {
+.dark p {
   color: var(--text-main) !important;
 }
 
