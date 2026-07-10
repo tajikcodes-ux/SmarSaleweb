@@ -318,6 +318,11 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
+.dark .bg-slate-50\/40 {
+  background-color: rgba(26, 26, 26, 0.4) !important;
+  border-color: var(--border-color) !important;
+}
+
 .dark input.bg-transparent {
   background-color: transparent !important;
 }
