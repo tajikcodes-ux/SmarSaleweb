@@ -156,8 +156,8 @@ h1, h2, h3, h4, h5, h6 {
   --border-color: #1a1a1a;
   --text-main: #ffffff;
   --text-muted: #a1a1aa;
-  --active-bg: #ffffff;
-  --active-text: #000000;
+  --active-bg: rgba(11, 87, 208, 0.25);
+  --active-text: #3b82f6;
 }
 
 /* Global Elements Overrides in Dark Mode */
