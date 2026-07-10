@@ -472,5 +472,27 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--active-text) !important;
 }
 
+/* AI Assistant Recommendation Badges Overrides */
+.dark .bg-\[\#e8f5e9\] {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  border-color: rgba(16, 185, 129, 0.25) !important;
+}
+.dark .text-\[\#2e7d32\] {
+  color: #6ee7b7 !important;
+}
+
+.dark .bg-\[\#ffebee\] {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+  border-color: rgba(244, 63, 94, 0.25) !important;
+}
+.dark .text-\[\#c62828\] {
+  color: #fda4af !important;
+}
+
+.dark .border-\[\#c8e6c9\],
+.dark .border-\[\#ffcdd2\] {
+  border-color: var(--border-color) !important;
+}
+
 
 
