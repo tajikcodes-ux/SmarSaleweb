@@ -313,6 +313,15 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
+.dark .bg-slate-50\/50 {
+  background-color: #0c0c0c !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark input.bg-transparent {
+  background-color: transparent !important;
+}
+
 /* Hover Overrides */
 .dark .hover\:bg-slate-50:hover,
 .dark .hover\:bg-slate-50\/50:hover,
