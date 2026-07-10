@@ -88,13 +88,13 @@ export default function FeedbackPanel() {
       {/* Stats cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Всего обращений', value: feedbacks.length, color: '#0071e3', bg: '#eff6ff' },
-          { label: 'Новые',           value: totalNew,          color: '#3b82f6', bg: '#dbeafe' },
-          { label: 'На рассмотрении', value: totalUnderReview,  color: '#f59e0b', bg: '#fef3c7' },
+          { label: 'Всего обращений', value: feedbacks.length, colorClass: 'text-[#0071e3]', bgClass: 'bg-[#eff6ff]' },
+          { label: 'Новые',           value: totalNew,          colorClass: 'text-[#3b82f6]', bgClass: 'bg-[#dbeafe]' },
+          { label: 'На рассмотрении', value: totalUnderReview,  colorClass: 'text-[#f59e0b]', bgClass: 'bg-[#fef3c7]' },
         ].map((stat) => (
-          <div key={stat.label} className="rounded-2xl p-4 border border-[#e9e9e7]" style={{ background: stat.bg }}>
+          <div key={stat.label} className={`rounded-2xl p-4 border border-[#e9e9e7] ${stat.bgClass}`}>
             <p className="text-xs text-[#86868b] font-medium mb-1">{stat.label}</p>
-            <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+            <p className={`text-2xl font-bold ${stat.colorClass}`}>{stat.value}</p>
           </div>
         ))}
       </div>

@@ -369,3 +369,39 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #2a2a2a !important;
 }
 
+/* Feedback Panel Stats Cards Overrides */
+.dark .bg-\[\#eff6ff\] {
+  background-color: #050505 !important;
+  border-color: var(--border-color) !important;
+}
+.dark .bg-\[\#dbeafe\] {
+  background-color: #050505 !important;
+  border-color: var(--border-color) !important;
+}
+.dark .bg-\[\#fef3c7\] {
+  background-color: #050505 !important;
+  border-color: var(--border-color) !important;
+}
+.dark .text-\[\#0071e3\] {
+  color: #60a5fa !important;
+}
+.dark .text-\[\#3b82f6\] {
+  color: #60a5fa !important;
+}
+.dark .text-\[\#f59e0b\] {
+  color: #fbbf24 !important;
+}
+
+/* Roles specific overrides */
+.dark .text-blue-700 {
+  color: var(--active-text) !important;
+}
+.dark .text-blue-800 {
+  color: var(--text-main) !important;
+}
+.dark .border-blue-100,
+.dark .border-blue-200 {
+  border-color: var(--border-color) !important;
+}
+
+
