@@ -136,3 +136,134 @@ h1, h2, h3, h4, h5, h6 {
 .animate-shake {
   animation: shake 0.5s ease-in-out;
 }
+
+/* ── Dark Mode Tokens & Overrides (Bozicha B2B Palette) ── */
+:root {
+  --bg-main: #f4f6fa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --border-color: #e5e7eb;
+  --text-main: #1d1d1f;
+  --text-muted: #86868b;
+  --active-bg: #e8f0fe;
+  --active-text: #0b57d0;
+}
+
+.dark {
+  --bg-main: #000000;
+  --bg-card: #0a0a0a;
+  --bg-sidebar: #000000;
+  --border-color: #1a1a1a;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --active-bg: #ffffff;
+  --active-text: #000000;
+}
+
+/* Global Elements Overrides in Dark Mode */
+.dark body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+.dark .bg-white {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .bg-\[\#f4f6fa\] {
+  background-color: var(--bg-main) !important;
+}
+
+/* Sidebar & Header Overrides */
+.dark aside,
+.dark .bg-white.border-r {
+  background-color: var(--bg-sidebar) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark header,
+.dark .bg-white\/80 {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Text Overrides */
+.dark .text-\[\#1d1d1f\] {
+  color: var(--text-main) !important;
+}
+
+.dark .text-\[\#5f6368\],
+.dark .text-\[\#86868b\],
+.dark .text-gray-500,
+.dark .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark p,
+.dark span:not(.text-white):not(.text-emerald-700):not(.text-amber-700) {
+  color: var(--text-main) !important;
+}
+
+/* Border Overrides */
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-\[\#e3e3e8\],
+.dark .border-\[\#e2e8f0\] {
+  border-color: var(--border-color) !important;
+}
+
+/* Input Fields Overrides */
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0d0d0d !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.dark input::placeholder {
+  color: #555555 !important;
+}
+
+/* Sidebar Active Item */
+.dark .bg-blue-50,
+.dark .bg-blue-50\/50,
+.dark .bg-\[\#e8f0fe\] {
+  background-color: var(--active-bg) !important;
+  color: var(--active-text) !important;
+}
+
+.dark .text-blue-600,
+.dark .text-\[\#0b57d0\] {
+  color: var(--active-text) !important;
+}
+
+/* Card Overrides */
+.dark .bg-white.rounded-xl,
+.dark .bg-white.rounded-2xl,
+.dark .bg-white.rounded-3xl {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Leaflet Map elements override for Dark Mode */
+.dark .leaflet-container {
+  background: #0d0d0d !important;
+}
+.dark .leaflet-tile {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+.dark .leaflet-bar a {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #2a2a2a !important;
+}
+

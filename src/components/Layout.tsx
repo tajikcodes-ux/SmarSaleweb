@@ -24,6 +24,8 @@ import {
   Shield,
   Share2,
   MessageSquare,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -37,6 +39,20 @@ export default function Layout({ children }: LayoutProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
@@ -398,6 +414,15 @@ export default function Layout({ children }: LayoutProps) {
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
               <span>AI Анализ</span>
+            </button>
+
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className="p-1.5 bg-white border border-[#e3e3e8] rounded-xl hover:bg-[#f8f9fa] text-[#5f6368] transition-colors shadow-sm"
+              title="Переключить тему"
+              id="theme-toggle-btn"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
             </button>
 
             <div className="relative">
