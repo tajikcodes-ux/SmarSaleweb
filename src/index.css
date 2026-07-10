@@ -265,9 +265,27 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
+.dark .bg-\[\#ffffff\] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark .bg-gray-50\/50,
+.dark .bg-gray-50\/30 {
+  background-color: #050505 !important;
+}
+
 .dark .bg-\[\#f5f5f7\] {
   background-color: #0d0d0d !important;
   border-color: var(--border-color) !important;
+}
+
+.dark .bg-\[\#f5f5f7\]\/50 {
+  background-color: #050505 !important;
+}
+
+.dark .bg-\[\#e3e3e8\] {
+  background-color: #1a1a1a !important;
 }
 
 .dark .bg-\[\#f1f1f0\],
@@ -286,13 +304,25 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
-.dark .bg-slate-200 {
+.dark .bg-slate-100 {
   background-color: #1a1a1a !important;
   border-color: var(--border-color) !important;
 }
 
+.dark .bg-slate-50 {
+  background-color: #050505 !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Hover Overrides */
 .dark .hover\:bg-slate-50:hover,
-.dark .hover\:bg-slate-50\/50:hover {
+.dark .hover\:bg-slate-50\/50:hover,
+.dark .hover\:bg-\[\#fbfbfa\]:hover,
+.dark .hover\:bg-\[\#fafaf9\]:hover,
+.dark .hover\:bg-\[\#f5f5f7\]:hover,
+.dark .hover\:bg-\[\#f5f5f7\]\/50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-200:hover {
   background-color: #0d0d0d !important;
 }
 
