@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
-import { Plus, Navigation, Wallet, Edit, Trash } from 'lucide-react';
+import { Plus, Navigation, Wallet, Edit, Trash, X } from 'lucide-react';
 import L from 'leaflet';
 
 // Fix for default Leaflet icon paths in React production bundles
@@ -307,114 +307,148 @@ export default function Clients() {
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleCreateOrUpdateClient} className="bg-white border border-[#e9e9e7] p-5 rounded-xl space-y-4 max-w-2xl shadow-sm">
-          <h4 className="font-bold text-[#1d1d1f] text-xs">
-            {editingClient ? 'Редактировать торговую точку' : 'Новая торговая точка'}
-          </h4>
-          {error && <div className="text-rose-600 text-xs bg-rose-50 border border-rose-100 p-3 rounded-lg">{error}</div>}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              type="text"
-              placeholder="Название магазина*"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] placeholder-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="Юридическое лицо"
-              value={legalName}
-              onChange={(e) => setLegalName(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] placeholder-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="ИНН / ТИН"
-              value={tin}
-              onChange={(e) => setTin(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] placeholder-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="Телефон*"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] placeholder-slate-400"
-            />
-            <input
-              type="text"
-              placeholder="Адрес*"
-              required
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] placeholder-slate-400 md:col-span-2"
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Широта (Latitude)*"
-              required
-              value={latitude}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value) || 0;
-                setLatitude(val);
-                updateMapMarker(val, longitude);
-              }}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Долгота (Longitude)*"
-              required
-              value={longitude}
-              onChange={(e) => {
-                const val = parseFloat(e.target.value) || 0;
-                setLongitude(val);
-                updateMapMarker(latitude, val);
-              }}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
-            />
-            <div className="md:col-span-2 space-y-1">
-              <label className="text-[10px] font-semibold text-slate-500 block">Укажите точку на карте или перетащите маркер:</label>
-              <div id="client-select-map" className="w-full h-48 rounded-lg border border-[#e9e9e7] dark:border-[#1a1a1a] z-0" />
-            </div>
-            <select
-              value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
-            >
-              <option value="cash">Наличный расчет</option>
-              <option value="bank_transfer">Безналичный расчет</option>
-              <option value="card">Карта</option>
-            </select>
-            <input
-              type="number"
-              placeholder="Кредитный лимит (TJS)"
-              value={creditLimit}
-              onChange={(e) => setCreditLimit(parseInt(e.target.value))}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
-            />
-            <select
-              value={priceCategoryId}
-              onChange={(e) => setPriceCategoryId(e.target.value)}
-              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] md:col-span-2"
-            >
-              <option value="">Ценовая категория: Базовая розница</option>
-              {priceCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white dark:bg-[#0a0a0a] border border-[#e9e9e7] dark:border-[#1a1a1a] p-5 rounded-xl shadow-sm relative">
           <button
-            type="submit"
-            className="px-4 py-2 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs shadow-sm"
+            type="button"
+            onClick={() => {
+              setShowAddForm(false);
+              setEditingClient(null);
+            }}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors z-10"
+            title="Закрыть форму"
           >
-            {editingClient ? 'Сохранить изменения' : 'Создать точку'}
+            <X className="w-4 h-4" />
           </button>
-        </form>
+
+          {/* Left Form Column */}
+          <form onSubmit={handleCreateOrUpdateClient} className="lg:col-span-7 space-y-4">
+            <h4 className="font-bold text-[#1d1d1f] dark:text-white text-xs">
+              {editingClient ? 'Редактировать торговую точку' : 'Новая торговая точка'}
+            </h4>
+            {error && <div className="text-rose-600 text-xs bg-rose-50 border border-rose-100 p-3 rounded-lg">{error}</div>}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Название магазина*"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Юридическое лицо"
+                value={legalName}
+                onChange={(e) => setLegalName(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="ИНН / ТИН"
+                value={tin}
+                onChange={(e) => setTin(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Телефон*"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Адрес*"
+                required
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400 md:col-span-2"
+              />
+              <input
+                type="number"
+                step="any"
+                placeholder="Широта (Latitude)*"
+                required
+                value={latitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setLatitude(val);
+                  updateMapMarker(val, longitude);
+                }}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              />
+              <input
+                type="number"
+                step="any"
+                placeholder="Долгота (Longitude)*"
+                required
+                value={longitude}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setLongitude(val);
+                  updateMapMarker(latitude, val);
+                }}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              />
+              <select
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              >
+                <option value="cash">Наличный расчет</option>
+                <option value="bank_transfer">Безналичный расчет</option>
+                <option value="card">Карта</option>
+              </select>
+              <input
+                type="number"
+                placeholder="Кредитный лимит (TJS)"
+                value={creditLimit}
+                onChange={(e) => setCreditLimit(parseInt(e.target.value))}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              />
+              <select
+                value={priceCategoryId}
+                onChange={(e) => setPriceCategoryId(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white md:col-span-2"
+              >
+                <option value="">Ценовая категория: Базовая розница</option>
+                {priceCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="submit"
+                className="px-4 py-2.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white font-bold text-xs shadow-sm transition-all"
+              >
+                {editingClient ? 'Сохранить изменения' : 'Создать точку'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setEditingClient(null);
+                }}
+                className="px-4 py-2.5 rounded-lg bg-slate-50 dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-white font-bold text-xs transition-all"
+              >
+                Отмена
+              </button>
+            </div>
+          </form>
+
+          {/* Right Map Column */}
+          <div className="lg:col-span-5 flex flex-col space-y-2.5 h-full min-h-[300px] lg:min-h-[400px]">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Выбор точки на карте</span>
+            <p className="text-[9px] text-[#86868b] dark:text-slate-400 leading-relaxed">
+              Кликните в любое место на карте или перетащите маркер, чтобы автоматически считать координаты (широту и долготу).
+            </p>
+            <div id="client-select-map" className="flex-1 w-full min-h-[260px] rounded-xl border border-[#e9e9e7] dark:border-[#1a1a1a] z-0 overflow-hidden shadow-inner" />
+          </div>
+        </div>
       )}
 
       <div className="bg-white border border-[#e9e9e7] rounded-xl overflow-x-auto shadow-sm">
