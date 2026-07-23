@@ -1,6 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
 import { Plus, Navigation, Wallet, Edit, Trash } from 'lucide-react';
+import L from 'leaflet';
+
+// Fix for default Leaflet icon paths in React production bundles
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 export default function Clients() {
   const [clients, setClients] = useState<any[]>([]);
@@ -26,6 +35,60 @@ export default function Clients() {
   const [creditLimit, setCreditLimit] = useState(0);
   const [priceCategoryId, setPriceCategoryId] = useState('');
   const [error, setError] = useState('');
+
+  // Map refs
+  const mapRef = useRef<L.Map | null>(null);
+  const markerRef = useRef<L.Marker | null>(null);
+
+  // Helper to update marker position manually
+  const updateMapMarker = (lat: number, lng: number) => {
+    if (mapRef.current && markerRef.current) {
+      markerRef.current.setLatLng([lat, lng]);
+      mapRef.current.panTo([lat, lng]);
+    }
+  };
+
+  useEffect(() => {
+    if (!showAddForm) {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      }
+      return;
+    }
+
+    // Delay initialization to ensure the DOM container exists
+    const timer = setTimeout(() => {
+      const mapEl = document.getElementById('client-select-map');
+      if (!mapEl || mapRef.current) return;
+
+      const map = L.map('client-select-map').setView([latitude, longitude], 13);
+      mapRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
+      markerRef.current = marker;
+
+      marker.on('dragend', () => {
+        const latLng = marker.getLatLng();
+        setLatitude(parseFloat(latLng.lat.toFixed(6)));
+        setLongitude(parseFloat(latLng.lng.toFixed(6)));
+      });
+
+      map.on('click', (e) => {
+        const { lat, lng } = e.latlng;
+        marker.setLatLng([lat, lng]);
+        setLatitude(parseFloat(lat.toFixed(6)));
+        setLongitude(parseFloat(lng.toFixed(6)));
+      });
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [showAddForm]);
 
   const loadData = async () => {
     try {
@@ -294,7 +357,11 @@ export default function Clients() {
               placeholder="Широта (Latitude)*"
               required
               value={latitude}
-              onChange={(e) => setLatitude(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setLatitude(val);
+                updateMapMarker(val, longitude);
+              }}
               className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
             />
             <input
@@ -303,9 +370,17 @@ export default function Clients() {
               placeholder="Долгота (Longitude)*"
               required
               value={longitude}
-              onChange={(e) => setLongitude(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setLongitude(val);
+                updateMapMarker(latitude, val);
+              }}
               className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
             />
+            <div className="md:col-span-2 space-y-1">
+              <label className="text-[10px] font-semibold text-slate-500 block">Укажите точку на карте или перетащите маркер:</label>
+              <div id="client-select-map" className="w-full h-48 rounded-lg border border-[#e9e9e7] dark:border-[#1a1a1a] z-0" />
+            </div>
             <select
               value={paymentType}
               onChange={(e) => setPaymentType(e.target.value)}
