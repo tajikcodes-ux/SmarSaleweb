@@ -694,10 +694,16 @@ export default function RoutesMap() {
                       // Find any visit that has an audioUrl, or fallback to the first visit
                       const visitWithAudio = routePoint.visits?.find((v: any) => v.audioUrl);
                       const visit = visitWithAudio || (routePoint.visits && routePoint.visits.length > 0 ? routePoint.visits[0] : null);
-                      const audioUrl = visit?.audioUrl;
+                      
+                      const sanitizeUrl = (urlStr: string) => {
+                        if (!urlStr) return '';
+                        return urlStr.replace('https://savdo.tech', window.location.origin);
+                      };
+
+                      const audioUrl = sanitizeUrl(visit?.audioUrl || '');
                       
                       // Collect all photo reports from all visits for this route point
-                      const photos = routePoint.visits?.flatMap((v: any) => v.photoReports || []).map((p: any) => p.photoUrl) || [];
+                      const photos = routePoint.visits?.flatMap((v: any) => v.photoReports || []).map((p: any) => sanitizeUrl(p.photoUrl)) || [];
 
                       return (
                         <div key={routePoint.id} className="flex gap-2 items-start p-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl hover:bg-slate-50 transition-colors">
