@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import {
   MessageSquare, Bug, Lightbulb, Star, ChevronDown, ChevronUp,
-  RefreshCw, CheckCircle2, Clock, Archive, Send, Filter
+  RefreshCw, CheckCircle2, Clock, Archive, Send, Filter, Plus, X
 } from 'lucide-react';
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
@@ -26,13 +26,27 @@ export default function FeedbackPanel() {
   const [responseText, setResponseText] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
 
+  // User and Role state
+  const userStr = localStorage.getItem('user');
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+  const isModerator = currentUser && ['OWNER', 'SUPER_ADMIN', 'SALES_MANAGER', 'DEVELOPER'].includes(currentUser.role);
+
+  // New feedback form state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newType, setNewType] = useState('SUGGESTION');
+  const [newSubject, setNewSubject] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [creating, setCreating] = useState(false);
+
   const fetchFeedbacks = async () => {
     setLoading(true);
     try {
       const params: any = {};
       if (filterStatus) params.status = filterStatus;
       if (filterType) params.type = filterType;
-      const res = await api.get('/feedbacks', { params });
+      
+      const endpoint = isModerator ? '/feedbacks' : '/feedbacks/my';
+      const res = await api.get(endpoint, { params });
       setFeedbacks(res.data || []);
     } catch (err) {
       console.error('Failed to load feedbacks', err);
@@ -62,6 +76,28 @@ export default function FeedbackPanel() {
     }
   };
 
+  const handleCreateFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubject.trim() || !newContent.trim()) return;
+    setCreating(true);
+    try {
+      await api.post('/feedbacks', {
+        type: newType,
+        subject: newSubject,
+        content: newContent,
+      });
+      setShowCreateModal(false);
+      setNewSubject('');
+      setNewContent('');
+      await fetchFeedbacks();
+    } catch (err) {
+      console.error('Failed to create feedback', err);
+      alert('Не удалось отправить обращение');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const totalNew = feedbacks.filter(f => f.status === 'new').length;
   const totalUnderReview = feedbacks.filter(f => f.status === 'under_review').length;
 
@@ -76,13 +112,22 @@ export default function FeedbackPanel() {
           </h1>
           <p className="text-sm text-[#86868b] dark:text-slate-400 mt-0.5">Отзывы и предложения сотрудников</p>
         </div>
-        <button
-          onClick={fetchFeedbacks}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f7] dark:bg-white/5 text-[#1d1d1f] dark:text-white text-sm hover:bg-[#e5e5ea] dark:hover:bg-white/10 transition-colors"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Обновить
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#0071e3] text-white text-sm hover:bg-[#005bb5] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Написать</span>
+          </button>
+          <button
+            onClick={fetchFeedbacks}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f7] dark:bg-white/5 text-[#1d1d1f] dark:text-white text-sm hover:bg-[#e5e5ea] dark:hover:bg-white/10 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Обновить
+          </button>
+        </div>
       </div>
 
       {/* Stats cards */}
@@ -207,8 +252,8 @@ export default function FeedbackPanel() {
                       </div>
                     )}
 
-                    {/* Moderate form (only for non-closed) */}
-                    {fb.status !== 'closed' && (
+                    {/* Moderate form (only for non-closed AND only for moderators/admins) */}
+                    {isModerator && fb.status !== 'closed' && (
                       <div className="space-y-3">
                         <textarea
                           placeholder="Напишите ответ сотруднику (необязательно)..."
@@ -258,6 +303,89 @@ export default function FeedbackPanel() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* New Feedback Creation Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <form
+            onSubmit={handleCreateFeedback}
+            className="w-full max-w-md p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-[#e9e9e7] dark:border-[#1a1a1a] shadow-2xl relative animate-card-entrance text-slate-800 dark:text-slate-100"
+          >
+            <button
+              type="button"
+              onClick={() => setShowCreateModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+              Новое обращение
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1.5">
+                  Тип обращения
+                </label>
+                <select
+                  value={newType}
+                  onChange={e => setNewType(e.target.value)}
+                  className="w-full text-sm px-3 py-2 rounded-xl border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#050505] text-[#1d1d1f] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                >
+                  <option value="SUGGESTION">Предложение</option>
+                  <option value="REVIEW">Отзыв / Жалоба</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1.5">
+                  Тема обращения
+                </label>
+                <input
+                  type="text"
+                  placeholder="Например: Ошибка при открытии смены"
+                  required
+                  value={newSubject}
+                  onChange={e => setNewSubject(e.target.value)}
+                  className="w-full text-sm px-3 py-2 rounded-xl border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#050505] text-[#1d1d1f] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#86868b] mb-1.5">
+                  Содержание
+                </label>
+                <textarea
+                  placeholder="Опишите ваше предложение или проблему подробно..."
+                  required
+                  value={newContent}
+                  onChange={e => setNewContent(e.target.value)}
+                  className="w-full text-sm px-3 py-2 rounded-xl border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#050505] text-[#1d1d1f] dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                  rows={4}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="px-4 py-2 border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-xs font-bold rounded-xl transition-all"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#0071e3] hover:bg-[#005bb5] text-white text-xs font-bold rounded-xl shadow-lg shadow-[#0071e3]/20 transition-all disabled:opacity-50"
+              >
+                {creating ? 'Отправка...' : 'Отправить'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
