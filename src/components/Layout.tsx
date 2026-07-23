@@ -163,6 +163,7 @@ export default function Layout({ children }: LayoutProps) {
         { path: '/branches', label: 'Филиалы', icon: MapPin },
         { path: '/roles', label: 'Управление ролями', icon: Shield },
         { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
+        { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
       ]
     }
   ];
