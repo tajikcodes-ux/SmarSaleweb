@@ -25,10 +25,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    if (error.response) {
+      if (error.response.status === 401) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      } else if (error.response.status === 403) {
+        alert(error.response.data?.message || 'Доступ запрещен: у вашей роли нет прав на выполнение этого действия.');
+      }
     }
     return Promise.reject(error);
   }

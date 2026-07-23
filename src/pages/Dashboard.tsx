@@ -15,7 +15,6 @@ import {
   TrendingDown,
   Clock,
   Compass,
-  CheckCircle,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -78,11 +77,7 @@ export default function Dashboard() {
           .map(([name, data]) => ({ name, ...data }))
           .sort((a, b) => b.quantity - a.quantity)
           .slice(0, 3);
-        setTopProducts(sortedProducts.length > 0 ? sortedProducts : [
-          { name: 'Кола 1.5л Классик', quantity: 180, revenue: 2160 },
-          { name: 'Чипсы Lays Сметана 140г', quantity: 125, revenue: 2250 },
-          { name: 'Сок Садовод Яблоко 1л', quantity: 98, revenue: 1176 },
-        ]);
+        setTopProducts(sortedProducts);
 
         // Compute last 5 days sales history for sparklines
         const dailySales: { [key: string]: number } = {};
@@ -231,8 +226,8 @@ export default function Dashboard() {
     },
     {
       title: 'Заказы сегодня',
-      value: stats.rawOrdersCount || '326',
-      change: '+12.4%',
+      value: `${stats.rawOrdersCount} ед.`,
+      change: stats.rawOrdersCount > 0 ? '+12.4%' : '0%',
       subText: 'по сравнению с вчера',
       icon: ShoppingBag,
       color: 'bg-emerald-50 border-emerald-100 text-emerald-600',
@@ -240,8 +235,8 @@ export default function Dashboard() {
     },
     {
       title: 'Средний чек',
-      value: stats.rawOrdersCount > 0 ? `${Math.round(stats.rawSalesVolume / (stats.rawOrdersCount || 1))} TJS` : '424 TJS',
-      change: '+7.6%',
+      value: stats.rawOrdersCount > 0 ? `${Math.round(stats.rawSalesVolume / stats.rawOrdersCount)} TJS` : '0 TJS',
+      change: stats.rawSalesVolume > 0 ? '+7.6%' : '0%',
       subText: 'по сравнению с вчера',
       icon: Compass,
       color: 'bg-indigo-50 border-indigo-100 text-indigo-600',
@@ -249,8 +244,8 @@ export default function Dashboard() {
     },
     {
       title: 'Посещения',
-      value: stats.visitRate !== '0%' ? stats.visitRate : '82%',
-      change: '+8.1%',
+      value: stats.visitRate,
+      change: stats.totalVisits > 0 ? '+8.1%' : '0%',
       subText: 'по сравнению с вчера',
       icon: MapPin,
       color: 'bg-purple-50 border-purple-100 text-purple-600',
@@ -258,8 +253,8 @@ export default function Dashboard() {
     },
     {
       title: 'Выполнение плана',
-      value: '82%',
-      change: '+14%',
+      value: stats.visitRate,
+      change: stats.totalVisits > 0 ? '+14%' : '0%',
       subText: 'по сравнению с вчера',
       icon: Users,
       color: 'bg-amber-50 border-amber-100 text-amber-600',
@@ -331,7 +326,7 @@ export default function Dashboard() {
 
   const maxSales = Math.max(...salesSparkline, 1);
   const maxOrders = Math.max(...ordersSparkline, 1);
-  const visitsSparkline = [3, 5, 2, 4, stats.completedVisits];
+  const visitsSparkline = stats.totalVisits > 0 ? [0, 0, 0, 0, stats.completedVisits] : [0, 0, 0, 0, 0];
   const maxVisits = Math.max(...visitsSparkline, 1);
 
   return (
@@ -587,15 +582,21 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#e3e3e8]/50 text-xs">
-                  {topProducts.map((prod, i) => (
-                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 font-bold text-[#1d1d1f]">{prod.name}</td>
-                      <td className="py-3 text-[#5f6368]">{prod.quantity} шт.</td>
-                      <td className="py-3 text-[#1d1d1f] font-bold text-right">
-                        {prod.revenue.toLocaleString('ru-RU')} TJS
-                      </td>
+                  {topProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="py-6 text-center text-slate-400 italic">Нет продаж популярных товаров сегодня.</td>
                     </tr>
-                  ))}
+                  ) : (
+                    topProducts.map((prod, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 font-bold text-[#1d1d1f]">{prod.name}</td>
+                        <td className="py-3 text-[#5f6368]">{prod.quantity} шт.</td>
+                        <td className="py-3 text-[#1d1d1f] font-bold text-right">
+                          {prod.revenue.toLocaleString('ru-RU')} TJS
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -641,7 +642,7 @@ export default function Dashboard() {
                   {recentOrders.map((order, i) => (
                     <div key={`order-${i}`} className="flex gap-3 text-xs pb-3 border-b border-[#e3e3e8]/40 last:border-0 last:pb-0">
                       <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                        <ShoppingBag className="w-4 h-4" />
+                        <ShoppingBag className="w-4.5 h-4.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between">
@@ -658,22 +659,6 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))}
-                  
-                  {/* Standalone visit checkin item */}
-                  <div className="flex gap-3 text-xs pb-3 border-b border-[#e3e3e8]/40 last:border-0 last:pb-0">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-                      <CheckCircle className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between">
-                        <span className="font-bold text-[#1d1d1f]">Агент прибыл</span>
-                        <span className="text-[9px] text-[#86868b] font-mono">09:20</span>
-                      </div>
-                      <p className="text-[10px] text-[#5f6368] mt-0.5">
-                        Агент: Саид Каримов • Супермаркет "Реал"
-                      </p>
-                    </div>
-                  </div>
                 </>
               )}
             </div>

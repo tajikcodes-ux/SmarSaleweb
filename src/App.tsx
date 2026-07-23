@@ -17,6 +17,7 @@ import Promotions from './pages/Promotions';
 import Roles from './pages/Roles';
 import SmmPanel from './pages/SmmPanel';
 import FeedbackPanel from './pages/FeedbackPanel';
+import SuperAdmin from './pages/SuperAdmin';
 import Layout from './components/Layout';
 
 // Guard for authenticated pages
@@ -156,6 +157,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <FeedbackPanel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/superadmin"
+          element={
+            <PrivateRoute>
+              <SuperAdmin />
             </PrivateRoute>
           }
         />

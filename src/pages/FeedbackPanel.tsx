@@ -70,15 +70,15 @@ export default function FeedbackPanel() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1d1d1f] flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-[#1d1d1f] dark:text-white flex items-center gap-2">
             <MessageSquare className="w-6 h-6 text-[#0071e3]" />
             Обратная связь
           </h1>
-          <p className="text-sm text-[#86868b] mt-0.5">Отзывы и предложения сотрудников</p>
+          <p className="text-sm text-[#86868b] dark:text-slate-400 mt-0.5">Отзывы и предложения сотрудников</p>
         </div>
         <button
           onClick={fetchFeedbacks}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f7] text-[#1d1d1f] text-sm hover:bg-[#e5e5ea] transition-colors"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#f5f5f7] dark:bg-white/5 text-[#1d1d1f] dark:text-white text-sm hover:bg-[#e5e5ea] dark:hover:bg-white/10 transition-colors"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           Обновить
@@ -88,12 +88,12 @@ export default function FeedbackPanel() {
       {/* Stats cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Всего обращений', value: feedbacks.length, colorClass: 'text-[#0071e3]', bgClass: 'bg-[#eff6ff]' },
-          { label: 'Новые',           value: totalNew,          colorClass: 'text-[#3b82f6]', bgClass: 'bg-[#dbeafe]' },
-          { label: 'На рассмотрении', value: totalUnderReview,  colorClass: 'text-[#f59e0b]', bgClass: 'bg-[#fef3c7]' },
+          { label: 'Всего обращений', value: feedbacks.length, colorClass: 'text-[#0071e3] dark:text-blue-400', bgClass: 'bg-[#eff6ff] dark:bg-white/5' },
+          { label: 'Новые',           value: totalNew,          colorClass: 'text-[#3b82f6] dark:text-blue-400', bgClass: 'bg-[#dbeafe] dark:bg-white/5' },
+          { label: 'На рассмотрении', value: totalUnderReview,  colorClass: 'text-[#f59e0b] dark:text-amber-400', bgClass: 'bg-[#fef3c7] dark:bg-white/5' },
         ].map((stat) => (
-          <div key={stat.label} className={`rounded-2xl p-4 border border-[#e9e9e7] ${stat.bgClass}`}>
-            <p className="text-xs text-[#86868b] font-medium mb-1">{stat.label}</p>
+          <div key={stat.label} className={`rounded-2xl p-4 border border-[#e9e9e7] dark:border-[#1a1a1a] ${stat.bgClass}`}>
+            <p className="text-xs text-[#86868b] dark:text-slate-400 font-medium mb-1">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.colorClass}`}>{stat.value}</p>
           </div>
         ))}
@@ -101,13 +101,13 @@ export default function FeedbackPanel() {
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <div className="flex items-center gap-1.5 text-sm text-[#86868b]">
+        <div className="flex items-center gap-1.5 text-sm text-[#86868b] dark:text-slate-400">
           <Filter className="w-4 h-4" /> Фильтры:
         </div>
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[#e9e9e7] bg-white text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+          className="text-sm px-3 py-1.5 rounded-lg border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#0a0a0a] text-[#1d1d1f] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
         >
           <option value="">Все статусы</option>
           <option value="new">Новые</option>
@@ -117,7 +117,7 @@ export default function FeedbackPanel() {
         <select
           value={filterType}
           onChange={e => setFilterType(e.target.value)}
-          className="text-sm px-3 py-1.5 rounded-lg border border-[#e9e9e7] bg-white text-[#1d1d1f] focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+          className="text-sm px-3 py-1.5 rounded-lg border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#0a0a0a] text-[#1d1d1f] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
         >
           <option value="">Все типы</option>
           <option value="SUGGESTION">Предложения</option>
@@ -152,7 +152,7 @@ export default function FeedbackPanel() {
             return (
               <div
                 key={fb.id}
-                className="border border-[#e9e9e7] rounded-2xl overflow-hidden bg-white transition-shadow hover:shadow-sm"
+                className="border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-2xl overflow-hidden bg-white dark:bg-[#0a0a0a] transition-shadow hover:shadow-sm"
               >
                 {/* Row header */}
                 <div
@@ -169,8 +169,8 @@ export default function FeedbackPanel() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-[#1d1d1f] truncate">{fb.subject}</p>
-                    <p className="text-xs text-[#86868b] mt-0.5">
+                    <p className="font-semibold text-sm text-[#1d1d1f] dark:text-white truncate">{fb.subject}</p>
+                    <p className="text-xs text-[#86868b] dark:text-slate-400 mt-0.5">
                       {fb.user?.firstName} {fb.user?.lastName} · @{fb.user?.username} · {dateStr}
                     </p>
                   </div>
@@ -193,17 +193,17 @@ export default function FeedbackPanel() {
 
                 {/* Expanded section */}
                 {isExpanded && (
-                  <div className="border-t border-[#f5f5f7] px-4 pb-4 pt-3 bg-[#fafafa]">
+                  <div className="border-t border-[#f5f5f7] dark:border-[#1a1a1a] px-4 pb-4 pt-3 bg-[#fafafa] dark:bg-[#111]">
                     {/* Content */}
-                    <div className="bg-white border border-[#e9e9e7] rounded-xl p-3 mb-4 text-sm text-[#37352f] whitespace-pre-wrap leading-relaxed">
+                    <div className="bg-white dark:bg-[#050505] border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-xl p-3 mb-4 text-sm text-[#37352f] dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
                       {fb.content}
                     </div>
 
                     {/* Existing response */}
                     {fb.response && (
-                      <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-xl p-3 mb-4">
-                        <p className="text-xs font-semibold text-[#1d4ed8] mb-1">✉️ Ответ администрации:</p>
-                        <p className="text-sm text-[#1e3a8a] whitespace-pre-wrap">{fb.response}</p>
+                      <div className="bg-[#eff6ff] dark:bg-blue-950/40 border border-[#bfdbfe] dark:border-blue-900/30 rounded-xl p-3 mb-4">
+                        <p className="text-xs font-semibold text-[#1d4ed8] dark:text-blue-400 mb-1">✉️ Ответ администрации:</p>
+                        <p className="text-sm text-[#1e3a8a] dark:text-blue-200 whitespace-pre-wrap">{fb.response}</p>
                       </div>
                     )}
 
@@ -214,7 +214,7 @@ export default function FeedbackPanel() {
                           placeholder="Напишите ответ сотруднику (необязательно)..."
                           value={responseText[fb.id] || ''}
                           onChange={e => setResponseText(prev => ({ ...prev, [fb.id]: e.target.value }))}
-                          className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#e9e9e7] bg-white text-[#1d1d1f] resize-none focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
+                          className="w-full text-sm px-3 py-2.5 rounded-xl border border-[#e9e9e7] dark:border-[#1a1a1a] bg-white dark:bg-[#050505] text-[#1d1d1f] dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30"
                           rows={3}
                         />
                         <div className="flex gap-2">

@@ -163,7 +163,6 @@ export default function Layout({ children }: LayoutProps) {
         { path: '/branches', label: 'Филиалы', icon: MapPin },
         { path: '/roles', label: 'Управление ролями', icon: Shield },
         { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
-        { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
       ]
     }
   ];
@@ -172,9 +171,22 @@ export default function Layout({ children }: LayoutProps) {
     const role = user.role;
     const permissions = user.permissions || {};
 
+    if (role === 'SUPER_ADMIN') {
+      return [
+        {
+          key: 'platform',
+          title: 'Управление SaaS',
+          items: [
+            { path: '/superadmin', label: 'Компании и Лицензии', icon: Shield },
+            { path: '/feedbacks', label: 'Баг-репорты', icon: MessageSquare },
+          ]
+        }
+      ];
+    }
+
     return menuStructure.map(group => {
       const filteredItems = group.items.filter(item => {
-        if (role === 'OWNER' || role === 'SUPER_ADMIN') return true;
+        if (role === 'OWNER') return true;
 
         if (permissions && Object.keys(permissions).length > 0) {
           if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/feedbacks') return true;
@@ -203,7 +215,7 @@ export default function Layout({ children }: LayoutProps) {
           return permissions[resource]?.includes('read') || false;
         }
 
-        if (role === 'SUPER_ADMIN' || role === 'OWNER' || role === 'SALES_MANAGER') {
+        if (role === 'OWNER' || role === 'SALES_MANAGER') {
           return true;
         }
         if (role === 'SUPERVISOR') {

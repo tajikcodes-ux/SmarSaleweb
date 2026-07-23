@@ -97,9 +97,9 @@ export default function Payments() {
       });
       closeForm();
       loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to register payment', err);
-      alert('Ошибка при регистрации платежа');
+      alert(err.response?.data?.message || 'Ошибка при регистрации платежа');
     }
   };
 

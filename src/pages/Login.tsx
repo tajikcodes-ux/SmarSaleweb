@@ -13,6 +13,13 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate login@company format
+    if (!username.includes('@')) {
+      setError('Введите логин в формате: имя@компания');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -77,7 +84,7 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-4 text-xs font-medium">
           <div className="group">
             <label className="block text-[10px] font-bold text-[#86868b] uppercase tracking-wider mb-1.5 px-1 group-focus-within:text-[#0b57d0] transition-colors duration-300">
-              Имя пользователя
+              Логин
             </label>
             <div className="relative">
               <User className="absolute left-4 top-3.5 w-4 h-4 text-[#86868b] group-focus-within:text-[#0b57d0] group-focus-within:scale-110 transition-all duration-300" />
@@ -86,10 +93,11 @@ export default function Login() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Имя пользователя"
+                placeholder="имя@компания"
                 className="w-full bg-white/60 border border-[#e3e3e8] rounded-2xl py-3.5 pl-11 pr-4 text-xs text-[#1d1d1f] placeholder-slate-400 focus:outline-none focus:border-[#0b57d0] focus:bg-white focus:shadow-[0_0_0_3px_rgba(11,87,208,0.08)] transition-all duration-300"
               />
             </div>
+            <p className="text-[9px] text-[#86868b] mt-1 px-1">Например: admin@somonsavdo</p>
           </div>
 
           <div className="group">
