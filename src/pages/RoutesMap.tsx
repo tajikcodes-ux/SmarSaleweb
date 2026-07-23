@@ -690,8 +690,14 @@ export default function RoutesMap() {
                     {selectedAgentRoutes.map((routePoint) => {
                       const cli = clients.find((c) => c.id === routePoint.clientId);
                       const isVisited = routePoint.visited === true;
-                      const visit = routePoint.visits && routePoint.visits.length > 0 ? routePoint.visits[0] : null;
+                      
+                      // Find any visit that has an audioUrl, or fallback to the first visit
+                      const visitWithAudio = routePoint.visits?.find((v: any) => v.audioUrl);
+                      const visit = visitWithAudio || (routePoint.visits && routePoint.visits.length > 0 ? routePoint.visits[0] : null);
                       const audioUrl = visit?.audioUrl;
+                      
+                      // Collect all photo reports from all visits for this route point
+                      const photos = routePoint.visits?.flatMap((v: any) => v.photoReports || []).map((p: any) => p.photoUrl) || [];
 
                       return (
                         <div key={routePoint.id} className="flex gap-2 items-start p-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl hover:bg-slate-50 transition-colors">
@@ -724,11 +730,24 @@ export default function RoutesMap() {
                                   🎙️ Запись разговора
                                 </span>
                                 <audio 
-                                  src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
+                                  src={audioUrl} 
                                   controls 
                                   className="w-full h-6 scale-90 origin-left"
                                   style={{ outline: 'none' }}
                                 />
+                              </div>
+                            )}
+                            {photos.length > 0 && (
+                              <div className="mt-1.5 flex gap-1.5 overflow-x-auto py-1">
+                                {photos.map((url: string, idx: number) => (
+                                  <a key={idx} href={url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                                    <img 
+                                      src={url} 
+                                      alt="Витрина" 
+                                      className="w-10 h-10 rounded-lg object-cover border border-[#e9e9e7] hover:scale-105 transition-all" 
+                                    />
+                                  </a>
+                                ))}
                               </div>
                             )}
                           </div>
