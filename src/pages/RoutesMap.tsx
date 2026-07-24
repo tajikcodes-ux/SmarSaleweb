@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -44,6 +44,57 @@ export default function RoutesMap() {
 
   const [mobileTab, setMobileTab] = useState<'map' | 'list'>('map');
   const [showLegend, setShowLegend] = useState(true);
+
+  // Advanced Filtering & Timeline playback states
+  const [mapFilter, setMapFilter] = useState<'ALL' | 'SALES_REP' | 'DELIVERY' | 'SUPERVISOR' | 'VISITS' | 'DEBT' | 'STORES'>('ALL');
+  const [agentSearch, setAgentSearch] = useState('');
+  const [agentStatusFilter, setAgentStatusFilter] = useState<'ALL' | 'ONLINE' | 'OFFLINE'>('ALL');
+  const [timelineTime, setTimelineTime] = useState(720); // 720 mins = 12:00
+  const [isPlayingTimeline, setIsPlayingTimeline] = useState(false);
+  const [timelineSpeed, setTimelineSpeed] = useState(1);
+
+  // Timeline playback timer
+  useEffect(() => {
+    let interval: any = null;
+    if (isPlayingTimeline) {
+      interval = setInterval(() => {
+        setTimelineTime((prev) => {
+          if (prev >= 1200) { // 20:00
+            setIsPlayingTimeline(false);
+            return 480; // 08:00
+          }
+          return prev + 5 * timelineSpeed;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlayingTimeline, timelineSpeed]);
+
+  const formatMinutesToTime = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  };
+
+  const getAgentStatusInfo = (agent: any) => {
+    if (!agent.recordedAt) {
+      return { isOnline: false, text: 'Нет GPS данных', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
+    }
+    const lastTime = new Date(agent.recordedAt).getTime();
+    const now = new Date().getTime();
+    const diffMins = Math.floor((now - lastTime) / (1000 * 60));
+
+    if (diffMins < 10) {
+      return { isOnline: true, text: `В сети (${diffMins === 0 ? 'сейчас' : diffMins + ' мин назад'})`, color: 'bg-emerald-500', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    } else if (diffMins < 60) {
+      return { isOnline: false, text: `Вне сети (${diffMins} мин)`, color: 'bg-amber-500', badgeClass: 'bg-amber-50 text-amber-800 border-amber-200' };
+    } else {
+      const diffHours = Math.floor(diffMins / 60);
+      return { isOnline: false, text: `Вне сети (${diffHours} ч назад)`, color: 'bg-rose-500', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' };
+    }
+  };
 
   // Sync selected agent ref
   useEffect(() => {
@@ -595,6 +646,133 @@ export default function RoutesMap() {
         <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           <div ref={mapContainerRef} className="w-full h-full min-h-[300px] z-0" />
 
+          {/* Left Vertical Role/Type Floating Toolbar */}
+          <div className="absolute top-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-1.5 shadow-xl flex flex-col gap-1.5 transition-all">
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider text-center py-0.5">Фильтр</span>
+            <button
+              type="button"
+              title="Все категории"
+              onClick={() => setMapFilter('ALL')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'ALL' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Все</span>
+            </button>
+            <button
+              type="button"
+              title="Торговые представители"
+              onClick={() => setMapFilter('SALES_REP')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'SALES_REP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Торговые</span>
+            </button>
+            <button
+              type="button"
+              title="Доставка / Экспедиторы"
+              onClick={() => setMapFilter('DELIVERY')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'DELIVERY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Truck className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Доставка</span>
+            </button>
+            <button
+              type="button"
+              title="Супервайзеры"
+              onClick={() => setMapFilter('SUPERVISOR')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'SUPERVISOR' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Супервайзеры</span>
+            </button>
+            <div className="h-[1px] bg-slate-200 dark:bg-slate-800 my-0.5" />
+            <button
+              type="button"
+              title="Запланированные визиты"
+              onClick={() => setMapFilter('VISITS')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'VISITS' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Визиты</span>
+            </button>
+            <button
+              type="button"
+              title="Клиенты с превышением лимита задолженности"
+              onClick={() => setMapFilter('DEBT')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'DEBT' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Должники</span>
+            </button>
+            <button
+              type="button"
+              title="Все магазины (Клиенты)"
+              onClick={() => setMapFilter('STORES')}
+              className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                mapFilter === 'STORES' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Store className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px]">Магазины</span>
+            </button>
+          </div>
+
+          {/* Bottom Timeline History Scrubber / Playback Player */}
+          <div className="absolute top-4 right-4 sm:top-auto sm:bottom-4 left-24 sm:left-72 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-2 shadow-xl flex items-center gap-2.5 transition-all max-w-[380px] sm:max-w-none">
+            <button
+              type="button"
+              onClick={() => setIsPlayingTimeline(!isPlayingTimeline)}
+              className="p-2 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg transition-all shadow-sm flex items-center justify-center shrink-0"
+              title={isPlayingTimeline ? 'Пауза' : 'Воспроизведение трека'}
+            >
+              {isPlayingTimeline ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+            </button>
+
+            <div className="flex items-center gap-1 shrink-0">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-[11px] font-bold font-mono text-slate-800 dark:text-slate-100 w-11">
+                {formatMinutesToTime(timelineTime)}
+              </span>
+            </div>
+
+            <input
+              type="range"
+              min={480}
+              max={1200}
+              step={5}
+              value={timelineTime}
+              onChange={(e) => setTimelineTime(Number(e.target.value))}
+              className="flex-1 accent-[#0071e3] cursor-pointer h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg min-w-[80px]"
+            />
+
+            <div className="flex items-center gap-1 shrink-0">
+              {[1, 2, 5].map((speed) => (
+                <button
+                  key={speed}
+                  type="button"
+                  onClick={() => setTimelineSpeed(speed)}
+                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${
+                    timelineSpeed === speed ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Map Legend Overlay (Обозначения меток) */}
           <div className="absolute bottom-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-3 shadow-xl max-w-[270px] text-[#37352f] dark:text-slate-200 transition-all">
             <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
@@ -866,47 +1044,127 @@ export default function RoutesMap() {
           ) : (
             <div className="flex flex-col h-full overflow-hidden">
               {/* Default header showing list of agents */}
-              <h4 className="font-bold text-[#1d1d1f] text-xs pb-3 border-b border-[#e9e9e7] flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-[#86868b]" />
-                Список Агентов на карте
-              </h4>
+              <div className="pb-3 border-b border-[#e9e9e7] dark:border-[#333] space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-[#1d1d1f] dark:text-slate-100 text-xs flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-[#0071e3]" />
+                    Мониторинг Агентов
+                  </h4>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Всего: {agents.length}
+                  </span>
+                </div>
+
+                {/* Agent Search Input */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Поиск сотрудника..."
+                    value={agentSearch}
+                    onChange={(e) => setAgentSearch(e.target.value)}
+                    className="w-full pl-8 pr-3 py-1.5 bg-[#fbfbfa] dark:bg-slate-800 border border-[#e9e9e7] dark:border-slate-700 rounded-lg text-xs text-[#37352f] dark:text-slate-200 focus:outline-none focus:border-[#0071e3]"
+                  />
+                </div>
+
+                {/* Online/Offline Status Filter Badges */}
+                <div className="flex items-center gap-1 pt-1">
+                  {(() => {
+                    const onlineCount = agents.filter(a => getAgentStatusInfo(a).isOnline).length;
+                    const offlineCount = agents.length - onlineCount;
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setAgentStatusFilter('ALL')}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                            agentStatusFilter === 'ALL'
+                              ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 border-slate-800'
+                              : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          Все ({agents.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAgentStatusFilter('ONLINE')}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                            agentStatusFilter === 'ONLINE'
+                              ? 'bg-emerald-600 text-white border-emerald-600'
+                              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                          }`}
+                        >
+                          В сети ({onlineCount})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAgentStatusFilter('OFFLINE')}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                            agentStatusFilter === 'OFFLINE'
+                              ? 'bg-rose-600 text-white border-rose-600'
+                              : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                          }`}
+                        >
+                          Вне сети ({offlineCount})
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
 
               {/* Scrollable list of agents */}
               <div className="flex-1 overflow-y-auto space-y-2 mt-3 pr-1">
-                {agents.map((agent) => {
-                  const isSelected = agent.userId === selectedAgentId;
-                  const agentPlanned = routes.filter((r) => r.salesRepId === agent.userId);
-                  const agentVisited = agentPlanned.filter((r) => r.visited === true);
+                {agents
+                  .filter((agent) => {
+                    const status = getAgentStatusInfo(agent);
+                    if (agentStatusFilter === 'ONLINE' && !status.isOnline) return false;
+                    if (agentStatusFilter === 'OFFLINE' && status.isOnline) return false;
+                    if (agentSearch.trim()) {
+                      const fullName = `${agent.firstName} ${agent.lastName}`.toLowerCase();
+                      return fullName.includes(agentSearch.toLowerCase());
+                    }
+                    return true;
+                  })
+                  .map((agent) => {
+                    const isSelected = agent.userId === selectedAgentId;
+                    const agentPlanned = routes.filter((r) => r.salesRepId === agent.userId);
+                    const agentVisited = agentPlanned.filter((r) => r.visited === true);
+                    const statusInfo = getAgentStatusInfo(agent);
 
-                  return (
-                    <div
-                      key={agent.userId}
-                      onClick={() => setSelectedAgentId(isSelected ? null : agent.userId)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-[#0071e3] bg-blue-50/20'
-                          : 'border-[#e9e9e7] bg-[#fbfbfa] hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-xs text-[#1d1d1f]">
-                            {agent.firstName} {agent.lastName}
+                    return (
+                      <div
+                        key={agent.userId}
+                        onClick={() => setSelectedAgentId(isSelected ? null : agent.userId)}
+                        className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-[#0071e3] bg-blue-50/30 dark:bg-blue-950/20 shadow-sm'
+                            : 'border-[#e9e9e7] dark:border-slate-800 bg-[#fbfbfa] dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.color} shrink-0 ${statusInfo.isOnline ? 'animate-pulse' : ''}`} />
+                            <span className="font-bold text-xs text-[#1d1d1f] dark:text-slate-100">
+                              {agent.firstName} {agent.lastName}
+                            </span>
+                          </div>
+                          <span className="text-[9px] font-mono text-slate-400">
+                            🔋 {agent.batteryLevel || 100}%
                           </span>
-                          <span className={`w-2 h-2 rounded-full ${
-                            agent.onShift ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'
-                          }`} title={agent.onShift ? 'На смене' : 'Вне смены'} />
                         </div>
-                        <span className="text-[9px] font-mono text-[#86868b]">
-                          Батарея: {agent.batteryLevel || 100}%
-                        </span>
+
+                        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                          <span className={`px-2 py-0.5 rounded-md border font-semibold text-[9px] ${statusInfo.badgeClass}`}>
+                            {statusInfo.text}
+                          </span>
+                          <span className="text-[#86868b] dark:text-slate-400 font-medium">
+                            Визиты: <strong className="text-slate-800 dark:text-slate-200">{agentVisited.length}/{agentPlanned.length}</strong>
+                          </span>
+                        </div>
                       </div>
-                      <span className="block text-[10px] text-[#86868b] mt-0.5">
-                        Маршрут: {agentVisited.length} / {agentPlanned.length} точек пройдено
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
           )}
