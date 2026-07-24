@@ -59,9 +59,9 @@ export default function RoutesMap() {
     if (isPlayingTimeline) {
       interval = setInterval(() => {
         setTimelineTime((prev) => {
-          if (prev >= 1200) { // 20:00
+          if (prev >= 1320) { // 22:00
             setIsPlayingTimeline(false);
-            return 480; // 08:00
+            return 360; // 06:00
           }
           return prev + 5 * timelineSpeed;
         });
@@ -79,6 +79,9 @@ export default function RoutesMap() {
   };
 
   const getAgentStatusInfo = (agent: any) => {
+    if (agent.onShift === false) {
+      return { isOnline: false, text: 'Смена закрыта', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
+    }
     if (!agent.recordedAt) {
       return { isOnline: false, text: 'Нет GPS данных', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
     }
@@ -777,8 +780,8 @@ export default function RoutesMap() {
 
             <input
               type="range"
-              min={480}
-              max={1200}
+              min={360}
+              max={1320}
               step={5}
               value={timelineTime}
               onChange={(e) => setTimelineTime(Number(e.target.value))}
