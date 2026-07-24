@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -43,6 +43,7 @@ export default function RoutesMap() {
   const [optimizing, setOptimizing] = useState(false);
 
   const [mobileTab, setMobileTab] = useState<'map' | 'list'>('map');
+  const [showLegend, setShowLegend] = useState(true);
 
   // Sync selected agent ref
   useEffect(() => {
@@ -591,8 +592,67 @@ export default function RoutesMap() {
       {/* Main interactive split view */}
       <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
         {/* Left column: Leaflet map view */}
-        <div className={`flex-1 bg-white border border-[#e9e9e7] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+        <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           <div ref={mapContainerRef} className="w-full h-full min-h-[300px] z-0" />
+
+          {/* Map Legend Overlay (Обозначения меток) */}
+          <div className="absolute bottom-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-3 shadow-xl max-w-[270px] text-[#37352f] dark:text-slate-200 transition-all">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
+              <span className="text-[11px] font-bold tracking-tight flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
+                <Info className="w-3.5 h-3.5 text-[#0071e3]" />
+                Легенда карты (Метки)
+              </span>
+              <button 
+                type="button"
+                onClick={() => setShowLegend(!showLegend)} 
+                className="text-[10px] text-[#0071e3] hover:underline font-bold"
+              >
+                {showLegend ? 'Свернуть' : 'Развернуть'}
+              </button>
+            </div>
+            
+            {showLegend && (
+              <div className="space-y-2 text-[10px] leading-tight">
+                <div className="font-bold text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-wider mt-1">Торговые агенты</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">A</div>
+                  <span className="text-slate-700 dark:text-slate-300">Агент на смене</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-[#0071e3] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">★</div>
+                  <span className="text-slate-700 dark:text-slate-300">Выбранный агент</span>
+                </div>
+
+                <div className="font-bold text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-wider pt-1.5 border-t border-slate-100 dark:border-slate-800">Торговые точки</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">✓</div>
+                  <span className="text-slate-700 dark:text-slate-300">Посещенная точка (Визит завершен)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">📍</div>
+                  <span className="text-slate-700 dark:text-slate-300">Запланирована в маршруте</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-rose-600 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">$</div>
+                  <span className="text-slate-700 dark:text-slate-300">Превышен лимит (Долг)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-[#86868b] text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">S</div>
+                  <span className="text-slate-700 dark:text-slate-300">Обычный клиент (Вне маршрута)</span>
+                </div>
+
+                <div className="font-bold text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-wider pt-1.5 border-t border-slate-100 dark:border-slate-800">Линии на карте</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 bg-[#0071e3] flex-shrink-0"></div>
+                  <span className="text-slate-700 dark:text-slate-300">План маршрута обхода</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-0.5 border-t-2 border-dashed border-emerald-500 flex-shrink-0"></div>
+                  <span className="text-slate-700 dark:text-slate-300">Трек движения (GPS история)</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right column: Supervisor sidebar panel */}
