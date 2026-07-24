@@ -353,6 +353,30 @@ export default function RoutesMap() {
     };
   }, [loading]);
 
+  const getCheckInWarning = (visit: any, client: any) => {
+    if (!visit || !visit.checkInLat || !visit.checkInLon || !client || !client.latitude || !client.longitude) {
+      return null;
+    }
+    const cLat = parseFloat(client.latitude.toString());
+    const cLon = parseFloat(client.longitude.toString());
+    const vLat = parseFloat(visit.checkInLat.toString());
+    const vLon = parseFloat(visit.checkInLon.toString());
+    if (isNaN(cLat) || isNaN(cLon) || isNaN(vLat) || isNaN(vLon) || (vLat === 0 && vLon === 0)) {
+      return null;
+    }
+    const R = 6371000;
+    const dLat = (vLat - cLat) * Math.PI / 180;
+    const dLon = (vLon - cLon) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(cLat * Math.PI / 180) * Math.cos(vLat * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distMeters = Math.round(R * c);
+
+    if (distMeters > 150) {
+      return { isViolation: true, text: `⚠️ Чекин вне геозоны (${distMeters}м от магазина)` };
+    }
+    return { isViolation: false, text: `✓ В геозоне (${distMeters}м)` };
+  };
+
   // Plot Map Elements (Agents, Clients, Polyline paths)
   useEffect(() => {
     if (!mapRef.current || !markersGroupRef.current) return;
@@ -384,8 +408,6 @@ export default function RoutesMap() {
       iconAnchor: [18, 18],
     });
 
-
-
     const routeClientIcon = L.divIcon({
       className: 'custom-route-client-icon',
       html: `<div class="w-7 h-7 bg-amber-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white font-bold text-[10px]">📍</div>`,
@@ -406,6 +428,9 @@ export default function RoutesMap() {
       const debtVal = typeof client.currentDebt === 'number' ? client.currentDebt : parseFloat(client.currentDebt || 0) || 0;
       const limitVal = typeof client.creditLimit === 'number' ? client.creditLimit : parseFloat(client.creditLimit || 0) || 0;
       const isOverLimit = limitVal > 0 && debtVal > limitVal;
+
+      if (mapFilter === 'VISITS' && clientRoutesForDay.length === 0) return;
+      if (mapFilter === 'DEBT' && !isOverLimit) return;
       
       let markerColor = 'bg-[#86868b]'; // Gray
       let iconSymbol = 'S';
@@ -462,6 +487,10 @@ export default function RoutesMap() {
     // Plot agents
     agents.forEach((agent) => {
       if (!agent.latitude || !agent.longitude) return;
+      if (mapFilter === 'SALES_REP' && agent.role && agent.role !== 'SALES_REP') return;
+      if (mapFilter === 'DELIVERY' && agent.role !== 'DELIVERY' && agent.role !== 'DRIVER') return;
+      if (mapFilter === 'SUPERVISOR' && agent.role !== 'SUPERVISOR') return;
+
       const isSelected = agent.userId === selectedAgentId;
       L.marker([agent.latitude, agent.longitude], { icon: isSelected ? activeAgentIcon : agentIcon })
         .addTo(markersGroup)
@@ -518,8 +547,15 @@ export default function RoutesMap() {
         }
       });
 
-      // Draw actual history path
-      const validHistoryCoords = historyTrack
+      // Filter historyTrack up to timelineTime
+      const filteredTrack = historyTrack.filter((pt) => {
+        if (!pt.recordedAt) return true;
+        const dateObj = new Date(pt.recordedAt);
+        const ptMins = dateObj.getHours() * 60 + dateObj.getMinutes();
+        return ptMins <= timelineTime;
+      });
+
+      const validHistoryCoords = filteredTrack
         .filter((pt) => pt.latitude !== null && pt.latitude !== undefined && pt.longitude !== null && pt.longitude !== undefined)
         .map((pt) => [parseFloat(pt.latitude.toString()), parseFloat(pt.longitude.toString())])
         .filter((coords) => !isNaN(coords[0]) && !isNaN(coords[1])) as L.LatLngExpression[];
@@ -528,18 +564,30 @@ export default function RoutesMap() {
         const actualPath = L.polyline(validHistoryCoords, {
           color: '#10b981',
           weight: 5,
-          opacity: 0.8,
+          opacity: 0.85,
         }).addTo(mapRef.current);
         
         historyPathRef.current = actualPath;
-        try {
-          const bounds = actualPath.getBounds();
-          if (bounds.isValid()) {
-            mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-          }
-        } catch (e) {
-          console.warn(e);
-        }
+      }
+
+      // If validHistoryCoords has points, render the animated playback position marker 🎯 at the latest coordinate for timelineTime!
+      if (validHistoryCoords.length > 0 && mapRef.current) {
+        const latestCoord = validHistoryCoords[validHistoryCoords.length - 1];
+        const playbackIcon = L.divIcon({
+          className: 'custom-playback-icon',
+          html: `<div class="relative w-8 h-8 flex items-center justify-center bg-[#0071e3] text-white rounded-full border-2 border-white shadow-lg font-bold text-xs"><span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60 animate-ping"></span>🎯</div>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16],
+        });
+
+        L.marker(latestCoord, { icon: playbackIcon })
+          .addTo(markersGroup)
+          .bindPopup(`
+            <div class="text-[#37352f] font-sans p-1 min-w-[140px]">
+              <h4 class="font-bold text-xs">🎯 Позиция на ${formatMinutesToTime(timelineTime)}</h4>
+              <p class="text-[10px] text-slate-500 mt-0.5">${selectedAgentDetails ? selectedAgentDetails.firstName + ' ' + selectedAgentDetails.lastName : 'Сотрудник'}</p>
+            </div>
+          `);
       }
 
       if (pathCoords.length > 1 && mapRef.current) {
@@ -551,31 +599,11 @@ export default function RoutesMap() {
         }).addTo(mapRef.current);
         
         polylineRef.current = polyline;
-        if (validHistoryCoords.length <= 1) {
-          try {
-            const bounds = polyline.getBounds();
-            if (bounds.isValid()) {
-              mapRef.current.fitBounds(bounds, { padding: [40, 40] });
-            }
-          } catch (e) {
-            console.warn(e);
-          }
-        }
-      }
-
-      // Pan to selected agent if they only have 1 coordinate (no history line yet)
-      const activeAgent = agents.find((a) => a.userId === selectedAgentId);
-      if (activeAgent && activeAgent.latitude !== null && activeAgent.latitude !== undefined && activeAgent.longitude !== null && activeAgent.longitude !== undefined && mapRef.current && validHistoryCoords.length <= 1) {
-        const agentLat = parseFloat(activeAgent.latitude.toString());
-        const agentLon = parseFloat(activeAgent.longitude.toString());
-        if (!isNaN(agentLat) && !isNaN(agentLon)) {
-          mapRef.current.setView([agentLat, agentLon], 15);
-        }
       }
     }
 
     // Auto-fit bounds disabled to show all Tajikistan by default
-  }, [agents, clients, routes, selectedAgentId, historyTrack, loading]);
+  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime]);
 
   const selectedAgentDetails = agents.find((a) => a.userId === selectedAgentId);
   const selectedAgentRoutes = routes
@@ -968,6 +996,17 @@ export default function RoutesMap() {
                             <span className="block text-[9px] text-[#86868b] truncate mt-0.5">
                               {cli?.address}
                             </span>
+                            {(() => {
+                              const warning = getCheckInWarning(visit, cli);
+                              if (!warning) return null;
+                              return (
+                                <div className={`mt-1 px-1.5 py-0.5 text-[9px] font-bold rounded border flex items-center gap-1 ${
+                                  warning.isViolation ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                }`}>
+                                  <span>{warning.text}</span>
+                                </div>
+                              );
+                            })()}
                             {audioUrl && (
                               <div className="mt-1.5 p-1 bg-emerald-50 rounded border border-emerald-100 flex flex-col gap-1">
                                 <span className="text-[9px] text-emerald-800 font-bold flex items-center gap-1">
