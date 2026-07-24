@@ -490,9 +490,15 @@ export default function RoutesMap() {
     // Plot agents
     agents.forEach((agent) => {
       if (!agent.latitude || !agent.longitude) return;
-      if (mapFilter === 'SALES_REP' && agent.role && agent.role !== 'SALES_REP') return;
-      if (mapFilter === 'DELIVERY' && agent.role !== 'DELIVERY' && agent.role !== 'DRIVER') return;
-      if (mapFilter === 'SUPERVISOR' && agent.role !== 'SUPERVISOR') return;
+
+      const roleUpper = (agent.role || '').toUpperCase();
+      if (mapFilter === 'SALES_REP') {
+        if (roleUpper.includes('DELIVER') || roleUpper.includes('DRIVER')) return;
+      } else if (mapFilter === 'DELIVERY') {
+        if (!roleUpper.includes('DELIVER') && !roleUpper.includes('DRIVER')) return;
+      } else if (mapFilter === 'SUPERVISOR') {
+        if (!roleUpper.includes('SUPERVISOR')) return;
+      }
 
       const isSelected = agent.userId === selectedAgentId;
       L.marker([agent.latitude, agent.longitude], { icon: isSelected ? activeAgentIcon : agentIcon })
