@@ -491,7 +491,13 @@ export default function RoutesMap() {
     agents.forEach((agent) => {
       if (!agent.latitude || !agent.longitude) return;
 
-      const roleUpper = (agent.role || '').toUpperCase();
+      const getRoleString = (r: any): string => {
+        if (!r) return '';
+        if (typeof r === 'string') return r.toUpperCase();
+        if (typeof r === 'object') return (r.name || r.code || r.title || '').toString().toUpperCase();
+        return String(r).toUpperCase();
+      };
+      const roleUpper = getRoleString(agent.role);
       if (mapFilter === 'SALES_REP') {
         if (roleUpper.includes('DELIVER') || roleUpper.includes('DRIVER')) return;
       } else if (mapFilter === 'DELIVERY') {
