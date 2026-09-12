@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Package, Check, Play } from 'lucide-react';
+import { Package, Check, Play, Printer } from 'lucide-react';
 
 export default function Warehouse() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   const loadOrders = async () => {
     try {
@@ -22,6 +23,63 @@ export default function Warehouse() {
   useEffect(() => {
     loadOrders();
   }, []);
+
+  const toggleCheckItem = (itemId: string) => {
+    setCheckedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
+  };
+
+  const handlePrintPickingList = (order: any) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsRows = (order.items || []).map((item: any, idx: number) => `
+      <tr>
+        <td style="padding: 6px; border: 1px solid #ccc; text-align: center;">${idx + 1}</td>
+        <td style="padding: 6px; border: 1px solid #ccc;">${item.product?.name || 'Товар'}</td>
+        <td style="padding: 6px; border: 1px solid #ccc; font-family: monospace;">${item.product?.sku || '—'}</td>
+        <td style="padding: 6px; border: 1px solid #ccc; text-align: right; font-weight: bold;">${parseFloat(item.quantity).toFixed(0)} ${item.product?.unit || 'шт'}</td>
+        <td style="padding: 6px; border: 1px solid #ccc; text-align: center;">[  ]</td>
+      </tr>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Сборочный лист Заказ #${order.id.slice(0, 8).toUpperCase()}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+            h2 { margin-bottom: 5px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+            th { background: #f0f0f0; padding: 8px; border: 1px solid #ccc; }
+          </style>
+        </head>
+        <body>
+          <h2>СБОРОЧНЫЙ ЛИСТ КЛАДОВЩИКА</h2>
+          <p><strong>Заказ №:</strong> ${order.id.toUpperCase()}</p>
+          <p><strong>Клиент:</strong> ${order.client?.name || '—'} (${order.client?.address || '—'})</p>
+          <p><strong>Торговый агент:</strong> ${order.salesRep?.firstName || ''} ${order.salesRep?.lastName || ''}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>Наименование товара</th>
+                <th>Артикул (SKU)</th>
+                <th>Кол-во к сборке</th>
+                <th>Отметка</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+          <br/><br/>
+          <p style="text-align: right;"><strong>Подпись кладовщика: ____________________</strong></p>
+          <script>window.onload = function() { window.print(); }</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const handleUpdateStatus = async (orderId: string, status: string) => {
     try {
@@ -77,6 +135,14 @@ export default function Warehouse() {
                 </div>
 
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePrintPickingList(order)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 border border-[#e9e9e7] hover:bg-slate-50 text-slate-700 rounded-lg font-semibold text-xs transition-all bg-white shadow-sm"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Печать сборочного листа</span>
+                  </button>
+
                   {order.status === 'pending' && (
                     <button
                       onClick={() => handleUpdateStatus(order.id, 'assembling')}
@@ -102,22 +168,39 @@ export default function Warehouse() {
               <div className="space-y-2">
                 <span className="text-[9px] uppercase font-bold text-[#86868b] tracking-wider">Спецификация заказа:</span>
                 <div className="divide-y divide-[#e9e9e7]/60 border border-[#e9e9e7] rounded-lg overflow-hidden">
-                  {order.items?.map((item: any) => (
-                    <div key={item.id} className="flex justify-between items-center p-3 bg-[#fbfbfa] text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <Package className="w-4 h-4 text-slate-400" />
-                        <div>
-                          <p className="font-semibold text-[#37352f]">{item.product?.name}</p>
-                          <span className="text-[9px] text-[#86868b] font-mono">SKU: {item.product?.sku}</span>
+                  {order.items?.map((item: any) => {
+                    const isChecked = !!checkedItems[item.id];
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => toggleCheckItem(item.id)}
+                        className={`flex justify-between items-center p-3 text-xs cursor-pointer transition-colors ${
+                          isChecked ? 'bg-emerald-50/50' : 'bg-[#fbfbfa] hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleCheckItem(item.id)}
+                            className="w-4 h-4 rounded text-emerald-600 cursor-pointer"
+                          />
+                          <Package className="w-4 h-4 text-slate-400" />
+                          <div>
+                            <p className={`font-semibold ${isChecked ? 'line-through text-slate-400' : 'text-[#37352f]'}`}>
+                              {item.product?.name}
+                            </p>
+                            <span className="text-[9px] text-[#86868b] font-mono">SKU: {item.product?.sku}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-bold text-[#0071e3] bg-blue-50 px-2.5 py-1 rounded-lg font-mono">
+                            {parseFloat(item.quantity).toFixed(0)} {item.product?.unit}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className="font-bold text-[#0071e3] bg-blue-50 px-2 py-0.5 rounded font-mono">
-                          {parseFloat(item.quantity).toFixed(0)} {item.product?.unit}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Shield, Plus, Key, Sparkles, Building, Check, Loader2, Trash2, Edit2, AlertTriangle, X } from 'lucide-react';
+import { Shield, Plus, Key, Sparkles, Building, Check, Loader2, Trash2, Edit2, AlertTriangle, X, LogIn } from 'lucide-react';
 
 interface Company {
   id: string;
@@ -30,6 +30,35 @@ export default function SuperAdmin() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [tempResetPass, setTempResetPass] = useState<{ username: string; pass: string } | null>(null);
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+
+  const handleImpersonate = async (company: Company) => {
+    setError('');
+    setImpersonatingId(company.id);
+    try {
+      const res = await api.post(`/companies/${company.id}/impersonate`);
+      const { access_token, user } = res.data;
+
+      // Backup superadmin credentials
+      const currentToken = localStorage.getItem('access_token');
+      const currentUser = localStorage.getItem('user');
+      if (currentToken) localStorage.setItem('superadmin_token', currentToken);
+      if (currentUser) localStorage.setItem('superadmin_user', currentUser);
+
+      // Save target company admin credentials
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('impersonated_by_superadmin', 'true');
+
+      // Redirect to main app dashboard
+      window.location.href = '/';
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Не удалось войти от имени этой компании.');
+      console.error(err);
+    } finally {
+      setImpersonatingId(null);
+    }
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -256,30 +285,48 @@ export default function SuperAdmin() {
               </div>
 
               {/* Card Actions */}
-              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-[#e3e3e8]/50 dark:border-[#1a1a1a]/50">
+              <div className="flex items-center justify-between gap-2 mt-4 pt-3 border-t border-[#e3e3e8]/50 dark:border-[#1a1a1a]/50">
                 <button
-                  onClick={() => handleResetAdminPassword(c.id)}
-                  className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-amber-500/10 hover:text-amber-500 text-[#86868b] transition-all"
-                  title="Сбросить пароль админа"
+                  onClick={() => handleImpersonate(c)}
+                  disabled={impersonatingId === c.id}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0b57d0] hover:bg-[#094cb3] text-white text-xs font-bold transition-all shadow-md shadow-[#0b57d0]/20 active:scale-95 disabled:opacity-50"
+                  title="Войти в систему от имени администратора этой компании"
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
+                  {impersonatingId === c.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>Войти как Админ</span>
+                    </>
+                  )}
                 </button>
-                <button
-                  onClick={() => handleOpenEdit(c)}
-                  className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-[#3b82f6]/10 hover:text-[#3b82f6] text-[#86868b] transition-all"
-                  title="Редактировать"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                {c.slug !== 'savdotech' && (
+                
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setDeletingId(c.id)}
-                    className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-rose-500/10 hover:text-rose-500 text-[#86868b] transition-all"
-                    title="Удалить компанию"
+                    onClick={() => handleResetAdminPassword(c.id)}
+                    className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-amber-500/10 hover:text-amber-500 text-[#86868b] transition-all"
+                    title="Сбросить пароль админа"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Sparkles className="w-3.5 h-3.5" />
                   </button>
-                )}
+                  <button
+                    onClick={() => handleOpenEdit(c)}
+                    className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-[#3b82f6]/10 hover:text-[#3b82f6] text-[#86868b] transition-all"
+                    title="Редактировать"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  {c.slug !== 'savdotech' && (
+                    <button
+                      onClick={() => setDeletingId(c.id)}
+                      className="p-2 rounded-xl bg-slate-50 dark:bg-white/5 border border-[#e3e3e8] dark:border-white/5 hover:bg-rose-500/10 hover:text-rose-500 text-[#86868b] transition-all"
+                      title="Удалить компанию"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

@@ -256,6 +256,7 @@ export default function Salary() {
                   <th className="p-3.5">Посещения (KPI)</th>
                   <th className="p-3.5">Личные продажи</th>
                   <th className="p-3.5">Бонус</th>
+                  <th className="p-3.5 text-rose-600">Штрафы</th>
                   <th className="p-3.5">Итого к выплате</th>
                   <th className="p-3.5 text-center">Условие KPI</th>
                 </tr>
@@ -298,21 +299,59 @@ export default function Salary() {
                       <td className="p-3.5 font-mono font-bold text-emerald-700">
                         {parseFloat(item.bonusEarned).toFixed(2)} TJS
                       </td>
+                      <td className="p-3.5 font-mono font-bold text-rose-600">
+                        {item.penaltyAmount && parseFloat(item.penaltyAmount) > 0 ? (
+                          <div>
+                            <span>-{parseFloat(item.penaltyAmount).toFixed(2)} TJS</span>
+                            {item.penaltyReason && (
+                              <span className="block text-[9px] text-rose-400 font-normal italic">{item.penaltyReason}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[#86868b] font-normal">0.00 TJS</span>
+                        )}
+                      </td>
                       <td className="p-3.5 font-mono font-bold text-[#1d1d1f] text-sm bg-slate-50/40">
                         {parseFloat(item.totalSalary).toFixed(2)} TJS
                       </td>
                       <td className="p-3.5 text-center">
-                        {kpiPassed ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full text-[9px] border border-emerald-100">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Выполнен
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full text-[9px] border border-amber-100">
-                            <AlertCircle className="w-3 h-3" />
-                            Недостаточно
-                          </span>
-                        )}
+                        <div className="flex items-center justify-center gap-2">
+                          {kpiPassed ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full text-[9px] border border-emerald-100">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Выполнен
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full text-[9px] border border-amber-100">
+                              <AlertCircle className="w-3 h-3" />
+                              Недостаточно
+                            </span>
+                          )}
+                          <button
+                            onClick={() => {
+                              const amountStr = prompt(`Введите сумму штрафа (TJS) для ${item.user?.firstName}:`, item.penaltyAmount || '100');
+                              if (amountStr !== null) {
+                                const reasonStr = prompt(`Укажите причину штрафа:`, item.penaltyReason || 'Нарушение регламента / Опоздание') || 'Ручной штраф администратора';
+                                api.post('/salary/apply-penalty', {
+                                  userId: item.userId,
+                                  month,
+                                  penaltyAmount: parseFloat(amountStr) || 0,
+                                  penaltyReason: reasonStr
+                                }).then(() => {
+                                  alert('Штраф успешно применен!');
+                                  fetchCalculations();
+                                }).catch(err => {
+                                  console.error(err);
+                                  alert('Ошибка выписки штрафа');
+                                });
+                              }
+                            }}
+                            title="Выписать ручной штраф"
+                            className="px-2 py-1 bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 text-[10px] font-bold rounded-lg transition-colors"
+                          >
+                            ⛔ Штраф
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

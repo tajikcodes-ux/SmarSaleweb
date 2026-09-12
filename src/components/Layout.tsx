@@ -59,6 +59,7 @@ export default function Layout({ children }: LayoutProps) {
   }, [location.pathname]);
 
   const fetchNotifications = async () => {
+    if (user && user.role === 'SUPER_ADMIN') return;
     try {
       const response = await api.get('/notifications');
       setNotifications(response.data || []);
@@ -162,6 +163,7 @@ export default function Layout({ children }: LayoutProps) {
         { path: '/clients', label: 'Клиенты', icon: UserCheck },
         { path: '/branches', label: 'Филиалы', icon: MapPin },
         { path: '/roles', label: 'Управление ролями', icon: Shield },
+        { path: '/audit-logs', label: 'Журнал Аудита', icon: Shield },
         { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
         { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
       ]
@@ -392,6 +394,33 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main Content Pane */}
       <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Impersonation Banner for SuperAdmin */}
+        {localStorage.getItem('impersonated_by_superadmin') === 'true' && (
+          <div className="bg-amber-500 text-slate-950 font-bold px-4 py-2 text-xs flex items-center justify-between shadow-md z-50">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-slate-950" />
+              <span>
+                Вы вошли от имени компании: <strong>{user.firstName || user.username} {user.lastName || ''}</strong>
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                const superToken = localStorage.getItem('superadmin_token');
+                const superUser = localStorage.getItem('superadmin_user');
+                if (superToken) localStorage.setItem('access_token', superToken);
+                if (superUser) localStorage.setItem('user', superUser);
+                localStorage.removeItem('superadmin_token');
+                localStorage.removeItem('superadmin_user');
+                localStorage.removeItem('impersonated_by_superadmin');
+                window.location.href = '/superadmin';
+              }}
+              className="px-3 py-1 bg-slate-950 hover:bg-slate-900 text-amber-400 rounded-lg text-[11px] font-bold transition-all shadow-sm flex items-center gap-1"
+            >
+              <span>⚡ Вернуться в Суперадмин</span>
+            </button>
+          </div>
+        )}
+
         {/* Header - Premium clean bar */}
         <header className="h-16 bg-white border-b border-[#e3e3e8] flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
           <div className="flex items-center gap-2 lg:gap-4">

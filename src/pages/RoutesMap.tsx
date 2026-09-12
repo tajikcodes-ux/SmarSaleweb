@@ -59,9 +59,9 @@ export default function RoutesMap() {
     if (isPlayingTimeline) {
       interval = setInterval(() => {
         setTimelineTime((prev) => {
-          if (prev >= 1320) { // 22:00
+          if (prev >= 1435) { // 23:55 (24 hours)
             setIsPlayingTimeline(false);
-            return 360; // 06:00
+            return 0; // 00:00
           }
           return prev + 5 * timelineSpeed;
         });
@@ -122,8 +122,12 @@ export default function RoutesMap() {
       }
       handleAssignClientDirectly(clientId);
     };
+    (window as any).jumpTimelineToMinutes = (mins: number) => {
+      setTimelineTime(mins);
+    };
     return () => {
       delete (window as any).assignRouteFromMap;
+      delete (window as any).jumpTimelineToMinutes;
     };
   }, [routes, selectedAgentId, date]);
 
@@ -324,6 +328,14 @@ export default function RoutesMap() {
       try {
         const response = await api.get(`/gps/history/${selectedAgentId}`, { params: { date } });
         setHistoryTrack(response.data);
+        if (Array.isArray(response.data) && response.data.length > 0) {
+          const firstPt = response.data[0];
+          if (firstPt && firstPt.recordedAt) {
+            const d = new Date(firstPt.recordedAt);
+            const firstMins = d.getHours() * 60 + d.getMinutes();
+            setTimelineTime(firstMins);
+          }
+        }
       } catch (err) {
         console.error('Failed to load GPS history', err);
       }
@@ -341,11 +353,58 @@ export default function RoutesMap() {
     const map = L.map(mapContainerRef.current).setView([centerLat, centerLon], 7);
     mapRef.current = map;
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      subdomains: 'abcd',
-      maxZoom: 20,
-    }).addTo(map);
+    // Tile Layer 1: OpenStreetMap Humanitarian (Vibrant, high detail, 0 watermarks)
+    const hotLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles courtesy of <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 2: Esri Light Gray Canvas (Clean, modern light aesthetic, 0 watermarks)
+    const lightGrayLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 3: Esri Topo Map (Rich topographic & street detail, 0 watermarks)
+    const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 4: Esri Street Map (Commercial street map, 0 watermarks)
+    const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 5: Esri World Imagery (High-res Satellite view, 0 watermarks)
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 6: OpenStreetMap Standard
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    });
+
+    // Add default reliable high-speed layer (OpenStreetMap Standard - 100% stable & 0 watermarks)
+    osmLayer.addTo(map);
+
+    // Layer switcher control (top-right)
+    L.control.layers(
+      {
+        '🌐 Стандартная карта (OpenStreetMap)': osmLayer,
+        '🗺️ Топографическая (Esri Topo)': topoLayer,
+        '🤍 Светлый минимализм (Esri Light)': lightGrayLayer,
+        '🏙️ Городские улицы (Esri Street)': streetLayer,
+        '🎨 Детализированная (OSM HOT)': hotLayer,
+        '🛰️ Спутниковая карта (Satellite)': satelliteLayer,
+      },
+      undefined,
+      { position: 'topright' }
+    ).addTo(map);
 
     const markersGroup = L.layerGroup().addTo(map);
     markersGroupRef.current = markersGroup;
@@ -487,39 +546,43 @@ export default function RoutesMap() {
         `);
     });
 
-    // Plot agents
-    agents.forEach((agent) => {
-      if (!agent.latitude || !agent.longitude) return;
+    const isToday = date === new Date().toISOString().split('T')[0];
 
-      const getRoleString = (r: any): string => {
-        if (!r) return '';
-        if (typeof r === 'string') return r.toUpperCase();
-        if (typeof r === 'object') return (r.name || r.code || r.title || '').toString().toUpperCase();
-        return String(r).toUpperCase();
-      };
-      const roleUpper = getRoleString(agent.role);
-      if (mapFilter === 'SALES_REP') {
-        if (roleUpper.includes('DELIVER') || roleUpper.includes('DRIVER')) return;
-      } else if (mapFilter === 'DELIVERY') {
-        if (!roleUpper.includes('DELIVER') && !roleUpper.includes('DRIVER')) return;
-      } else if (mapFilter === 'SUPERVISOR') {
-        if (!roleUpper.includes('SUPERVISOR')) return;
-      }
+    // Plot live agents (Only when viewing today's map)
+    if (isToday) {
+      agents.forEach((agent) => {
+        if (!agent.latitude || !agent.longitude) return;
 
-      const isSelected = agent.userId === selectedAgentId;
-      L.marker([agent.latitude, agent.longitude], { icon: isSelected ? activeAgentIcon : agentIcon })
-        .addTo(markersGroup)
-        .bindPopup(`
-          <div class="text-[#37352f] font-sans p-0.5">
-            <h4 class="font-bold text-xs">${agent.firstName} ${agent.lastName}</h4>
-            <p class="text-[10px] text-slate-400 mt-0.5">Торговый представитель</p>
-            <div class="space-y-0.5 text-[10px] mt-1">
-              <div><strong>Батарея:</strong> ${agent.batteryLevel || 100}%</div>
-              <div><strong>Скорость:</strong> ${agent.speed || 0} км/ч</div>
+        const getRoleString = (r: any): string => {
+          if (!r) return '';
+          if (typeof r === 'string') return r.toUpperCase();
+          if (typeof r === 'object') return (r.name || r.code || r.title || '').toString().toUpperCase();
+          return String(r).toUpperCase();
+        };
+        const roleUpper = getRoleString(agent.role);
+        if (mapFilter === 'SALES_REP') {
+          if (roleUpper.includes('DELIVER') || roleUpper.includes('DRIVER')) return;
+        } else if (mapFilter === 'DELIVERY') {
+          if (!roleUpper.includes('DELIVER') && !roleUpper.includes('DRIVER')) return;
+        } else if (mapFilter === 'SUPERVISOR') {
+          if (!roleUpper.includes('SUPERVISOR')) return;
+        }
+
+        const isSelected = agent.userId === selectedAgentId;
+        L.marker([agent.latitude, agent.longitude], { icon: isSelected ? activeAgentIcon : agentIcon })
+          .addTo(markersGroup)
+          .bindPopup(`
+            <div class="text-[#37352f] font-sans p-0.5">
+              <h4 class="font-bold text-xs">${agent.firstName} ${agent.lastName}</h4>
+              <p class="text-[10px] text-slate-400 mt-0.5">Торговый представитель (В сети)</p>
+              <div class="space-y-0.5 text-[10px] mt-1">
+                <div><strong>Батарея:</strong> ${agent.batteryLevel || 100}%</div>
+                <div><strong>Скорость:</strong> ${agent.speed || 0} км/ч</div>
+              </div>
             </div>
-          </div>
-        `);
-    });
+          `);
+      });
+    }
 
     // If an agent is selected, gather their routes, sort by visitSequence and draw path
     if (selectedAgentId) {
@@ -529,22 +592,24 @@ export default function RoutesMap() {
 
       const pathCoords: L.LatLngExpression[] = [];
 
-      // Find selected agent's position to start the path
-      const selectedAgent = agents.find((a) => a.userId === selectedAgentId);
-      if (selectedAgent && selectedAgent.latitude !== null && selectedAgent.latitude !== undefined && selectedAgent.longitude !== null && selectedAgent.longitude !== undefined) {
-        const agentLat = parseFloat(selectedAgent.latitude.toString());
-        const agentLon = parseFloat(selectedAgent.longitude.toString());
-        if (!isNaN(agentLat) && !isNaN(agentLon)) {
-          pathCoords.push([agentLat, agentLon]);
-        }
-      }
+      // Helper to calculate distance in km
+      const getKmDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
 
+      // Collect route client coordinates first
+      const routeClientCoords: [number, number][] = [];
       agentRoutes.forEach((r) => {
         const cli = clients.find((c) => c.id === r.clientId);
         if (cli && cli.latitude !== null && cli.latitude !== undefined && cli.longitude !== null && cli.longitude !== undefined) {
           const lat = parseFloat(cli.latitude.toString());
           const lon = parseFloat(cli.longitude.toString());
           if (!isNaN(lat) && !isNaN(lon)) {
+            routeClientCoords.push([lat, lon]);
             pathCoords.push([lat, lon]);
 
             // Highlight clients on this agent's active route
@@ -562,47 +627,327 @@ export default function RoutesMap() {
         }
       });
 
-      // Filter historyTrack up to timelineTime
-      const filteredTrack = historyTrack.filter((pt) => {
-        if (!pt.recordedAt) return true;
-        const dateObj = new Date(pt.recordedAt);
-        const ptMins = dateObj.getHours() * 60 + dateObj.getMinutes();
-        return ptMins <= timelineTime;
-      });
-
-      const validHistoryCoords = filteredTrack
-        .filter((pt) => pt.latitude !== null && pt.latitude !== undefined && pt.longitude !== null && pt.longitude !== undefined)
-        .map((pt) => [parseFloat(pt.latitude.toString()), parseFloat(pt.longitude.toString())])
-        .filter((coords) => !isNaN(coords[0]) && !isNaN(coords[1])) as L.LatLngExpression[];
-
-      if (validHistoryCoords.length > 1 && mapRef.current) {
-        const actualPath = L.polyline(validHistoryCoords, {
-          color: '#10b981',
-          weight: 5,
-          opacity: 0.85,
-        }).addTo(mapRef.current);
-        
-        historyPathRef.current = actualPath;
+      // Only prepend selected agent's live position if viewing TODAY and within 15 km of the route
+      if (isToday) {
+        const selectedAgent = agents.find((a) => a.userId === selectedAgentId);
+        if (selectedAgent && selectedAgent.latitude !== null && selectedAgent.latitude !== undefined && selectedAgent.longitude !== null && selectedAgent.longitude !== undefined) {
+          const agentLat = parseFloat(selectedAgent.latitude.toString());
+          const agentLon = parseFloat(selectedAgent.longitude.toString());
+          if (!isNaN(agentLat) && !isNaN(agentLon)) {
+            if (routeClientCoords.length === 0 || getKmDistance(agentLat, agentLon, routeClientCoords[0][0], routeClientCoords[0][1]) < 15) {
+              pathCoords.unshift([agentLat, agentLon]);
+            }
+          }
+        }
       }
 
-      // If validHistoryCoords has points, render the animated playback position marker 🎯 at the latest coordinate for timelineTime!
-      if (validHistoryCoords.length > 0 && mapRef.current) {
-        const latestCoord = validHistoryCoords[validHistoryCoords.length - 1];
+      const formatExactGpsTime = (recordedAtStr: any, fallbackMins: number) => {
+        if (!recordedAtStr) return formatMinutesToTime(fallbackMins);
+        try {
+          let str = String(recordedAtStr);
+          if (!str.endsWith('Z') && !str.includes('+')) {
+            str += '+05:00';
+          }
+          const d = new Date(str);
+          return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Asia/Dushanbe' });
+        } catch (_) {
+          return formatMinutesToTime(fallbackMins);
+        }
+      };
+
+      // Sort historyTrack points by timestamp
+      const rawHistoryPoints = historyTrack
+        .filter((pt) => pt.latitude !== null && pt.latitude !== undefined && pt.longitude !== null && pt.longitude !== undefined)
+        .map((pt) => {
+          const lat = parseFloat(pt.latitude.toString());
+          const lon = parseFloat(pt.longitude.toString());
+          let mins = 0;
+          if (pt.recordedAt) {
+            let str = String(pt.recordedAt);
+            if (!str.endsWith('Z') && !str.includes('+')) {
+              str += '+05:00';
+            }
+            const dateObj = new Date(str);
+            const dushanbeTimeStr = dateObj.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dushanbe', hour12: false });
+            const parts = dushanbeTimeStr.split(':').map(Number);
+            if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+              mins = parts[0] * 60 + parts[1];
+            } else {
+              mins = dateObj.getHours() * 60 + dateObj.getMinutes();
+            }
+          }
+          return { lat, lon, mins, raw: pt };
+        })
+        .filter((pt) => !isNaN(pt.lat) && !isNaN(pt.lon))
+        .sort((a, b) => a.mins - b.mins);
+
+      // Filter out GPS jump anomalies (Outlier rejection: impossible speed >90km/h or short-lived >400m spikes)
+      const sortedHistoryPoints: typeof rawHistoryPoints = [];
+      for (let i = 0; i < rawHistoryPoints.length; i++) {
+        const pt = rawHistoryPoints[i];
+        if (sortedHistoryPoints.length === 0) {
+          sortedHistoryPoints.push(pt);
+        } else {
+          const lastPt = sortedHistoryPoints[sortedHistoryPoints.length - 1];
+          const distKm = getKmDistance(lastPt.lat, lastPt.lon, pt.lat, pt.lon);
+          const timeDiffMins = Math.abs(pt.mins - lastPt.mins);
+
+          // Calculate implied speed between consecutive points
+          const speedKmH = timeDiffMins > 0 ? (distKm / (timeDiffMins / 60)) : 0;
+
+          // Reject impossible jumps (>90 km/h city speed, >400m jump within 1 min, or >800m cell-tower jump on low battery <=10%)
+          const batLevel = pt.raw?.batteryLevel !== undefined && pt.raw?.batteryLevel !== null ? parseInt(pt.raw.batteryLevel) : 100;
+          const isLowBatteryJump = batLevel <= 10 && distKm > 0.8;
+          const isOutlierJump = (speedKmH > 90 && distKm > 0.5) || (distKm > 0.4 && timeDiffMins <= 1) || isLowBatteryJump;
+          
+          if (!isOutlierJump && distKm < 10) {
+            sortedHistoryPoints.push(pt);
+          }
+        }
+      }
+
+      // Function to compute continuous time-of-day color gradient
+      const getTimeOfDayColor = (mins: number): string => {
+        const clamped = Math.max(360, Math.min(1320, mins));
+        const t = (clamped - 360) / (1320 - 360); // 0.0 to 1.0
+
+        if (t <= 0.33) {
+          // 06:00 - 11:20: Royal Blue (#0071e3) -> Cyan (#06b6d4)
+          const factor = t / 0.33;
+          const r = Math.round(0 + (6 - 0) * factor);
+          const g = Math.round(113 + (182 - 113) * factor);
+          const b = Math.round(227 + (212 - 227) * factor);
+          return `rgb(${r}, ${g}, ${b})`;
+        } else if (t <= 0.66) {
+          // 11:20 - 16:40: Cyan (#06b6d4) -> Emerald Green (#10b981)
+          const factor = (t - 0.33) / 0.33;
+          const r = Math.round(6 + (16 - 6) * factor);
+          const g = Math.round(182 + (185 - 182) * factor);
+          const b = Math.round(212 + (129 - 212) * factor);
+          return `rgb(${r}, ${g}, ${b})`;
+        } else {
+          // 16:40 - 22:00: Emerald Green (#10b981) -> Amber Orange (#f59e0b)
+          const factor = (t - 0.66) / 0.34;
+          const r = Math.round(16 + (245 - 16) * factor);
+          const g = Math.round(185 + (158 - 185) * factor);
+          const b = Math.round(129 + (11 - 129) * factor);
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+      };
+
+      // Filter micro-jitter (<15m jitter while stationary) so lines follow street centerlines cleanly
+      const smoothedHistoryPoints: typeof sortedHistoryPoints = [];
+      for (let i = 0; i < sortedHistoryPoints.length; i++) {
+        const pt = sortedHistoryPoints[i];
+        if (smoothedHistoryPoints.length === 0) {
+          smoothedHistoryPoints.push(pt);
+        } else {
+          const lastPt = smoothedHistoryPoints[smoothedHistoryPoints.length - 1];
+          const distKm = getKmDistance(lastPt.lat, lastPt.lon, pt.lat, pt.lon);
+          const timeDiffMins = Math.abs(pt.mins - lastPt.mins);
+          
+          // Keep point if moved > 15 meters OR if more than 3 minutes passed
+          if (distKm >= 0.015 || timeDiffMins >= 3 || i === sortedHistoryPoints.length - 1) {
+            smoothedHistoryPoints.push(pt);
+          }
+        }
+      }
+
+      // 1. Draw smooth continuous time-of-day gradient polyline along streets
+      if (smoothedHistoryPoints.length > 1 && mapRef.current) {
+        for (let i = 0; i < smoothedHistoryPoints.length - 1; i++) {
+          const pt = smoothedHistoryPoints[i];
+          const nextPt = smoothedHistoryPoints[i + 1];
+          const segmentColor = getTimeOfDayColor(pt.mins);
+
+          const segmentPoly = L.polyline([[pt.lat, pt.lon], [nextPt.lat, nextPt.lon]], {
+            color: segmentColor,
+            weight: 6,
+            opacity: 0.85,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(mapRef.current);
+
+          segmentPoly.on('click', () => {
+            const raw = pt.raw || {};
+            const speed = raw.speed !== undefined && raw.speed !== null ? Math.round(Number(raw.speed)) : 0;
+            const battery = raw.batteryLevel !== undefined && raw.batteryLevel !== null ? Number(raw.batteryLevel) : 100;
+            const isLowBat = battery <= 15;
+            const timeStr = formatExactGpsTime(raw.recordedAt, pt.mins);
+
+            L.popup()
+              .setLatLng([pt.lat, pt.lon])
+              .setContent(`
+                <div class="text-[#37352f] font-sans p-1.5 min-w-[190px]">
+                  <div class="font-bold text-xs text-[#0071e3] border-b border-slate-100 pb-1 flex items-center justify-between">
+                    <span>📍 GPS Точка трека</span>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-mono text-white" style="background: ${segmentColor}">${formatMinutesToTime(pt.mins)}</span>
+                  </div>
+                  <div class="mt-2 space-y-1 text-[11px]">
+                    <div><strong>🕒 Время:</strong> <span class="font-semibold text-slate-800">${timeStr}</span></div>
+                    <div><strong>🚀 Скорость:</strong> <span class="font-semibold text-slate-800">${speed} км/ч</span></div>
+                    <div><strong>🔋 Заряд батареи:</strong> <span class="${isLowBat ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${battery}% ${isLowBat ? '⚠️ (Энергосбережение)' : ''}</span></div>
+                    <div><strong>🌐 Координаты:</strong> ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}</div>
+                  </div>
+                  <button onclick="window.jumpTimelineToMinutes(${pt.mins})" style="margin-top: 10px; width: 100%; padding: 5px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                    ⏩ Перемотать плеер на ${formatMinutesToTime(pt.mins)}
+                  </button>
+                </div>
+              `)
+              .openOn(mapRef.current!);
+          });
+        }
+      }
+
+      // 2. Calculate current interpolated location and traveled track up to timelineTime
+      if (sortedHistoryPoints.length > 0 && mapRef.current) {
+        let currentLat = sortedHistoryPoints[0].lat;
+        let currentLon = sortedHistoryPoints[0].lon;
+        let statusNote = `Позиция на ${formatMinutesToTime(timelineTime)}`;
+
+        const firstMins = sortedHistoryPoints[0].mins;
+        const lastMins = sortedHistoryPoints[sortedHistoryPoints.length - 1].mins;
+
+        if (sortedHistoryPoints.length === 1 || timelineTime <= firstMins) {
+          currentLat = sortedHistoryPoints[0].lat;
+          currentLon = sortedHistoryPoints[0].lon;
+          statusNote = `Старт дня (${formatMinutesToTime(firstMins)})`;
+        } else if (timelineTime >= lastMins) {
+          currentLat = sortedHistoryPoints[sortedHistoryPoints.length - 1].lat;
+          currentLon = sortedHistoryPoints[sortedHistoryPoints.length - 1].lon;
+          statusNote = `Финиш дня (${formatMinutesToTime(lastMins)})`;
+        } else {
+          // Find bounding segment for timelineTime and interpolate
+          for (let i = 0; i < sortedHistoryPoints.length - 1; i++) {
+            const p1 = sortedHistoryPoints[i];
+            const p2 = sortedHistoryPoints[i + 1];
+            if (timelineTime >= p1.mins && timelineTime <= p2.mins) {
+              const span = p2.mins - p1.mins;
+              const ratio = span > 0 ? (timelineTime - p1.mins) / span : 0;
+              currentLat = p1.lat + (p2.lat - p1.lat) * ratio;
+              currentLon = p1.lon + (p2.lon - p1.lon) * ratio;
+              break;
+            }
+          }
+        }
+
+        // Traveled coords up to timelineTime
+        const traveledPoints = sortedHistoryPoints.filter((pt) => pt.mins <= timelineTime);
+        const traveledCoords: L.LatLngExpression[] = traveledPoints.map((pt) => [pt.lat, pt.lon]);
+        traveledCoords.push([currentLat, currentLon]);
+
+        if (traveledCoords.length > 1) {
+          const activeLine = L.polyline(traveledCoords, {
+            color: '#10b981',
+            weight: 7,
+            opacity: 0.9,
+          }).addTo(markersGroup);
+
+          activeLine.on('click', (e: L.LeafletMouseEvent) => {
+            const clickLat = e.latlng.lat;
+            const clickLon = e.latlng.lng;
+            let closest = sortedHistoryPoints[0];
+            let minDist = Infinity;
+            sortedHistoryPoints.forEach((pt) => {
+              const dist = Math.hypot(pt.lat - clickLat, pt.lon - clickLon);
+              if (dist < minDist) {
+                minDist = dist;
+                closest = pt;
+              }
+            });
+
+            if (closest) {
+              const raw = closest.raw || {};
+              const speed = raw.speed !== undefined && raw.speed !== null ? Math.round(Number(raw.speed)) : 0;
+              const battery = raw.batteryLevel !== undefined && raw.batteryLevel !== null ? raw.batteryLevel : '100';
+              const timeStr = formatExactGpsTime(raw.recordedAt, closest.mins);
+
+              L.popup()
+                .setLatLng([closest.lat, closest.lon])
+                .setContent(`
+                  <div class="text-[#37352f] font-sans p-1.5 min-w-[170px]">
+                    <div class="font-bold text-xs text-[#0071e3] border-b border-slate-100 pb-1 flex items-center gap-1">
+                      📍 GPS Точка трека
+                    </div>
+                    <div class="mt-2 space-y-1 text-[11px]">
+                      <div><strong>🕒 Время:</strong> <span class="font-semibold text-slate-800">${timeStr}</span></div>
+                      <div><strong>🚀 Скорость:</strong> <span class="font-semibold text-slate-800">${speed} км/ч</span></div>
+                      <div><strong>🔋 Заряд батареи:</strong> <span class="font-bold text-emerald-600">${battery}%</span></div>
+                      <div><strong>🌐 Координаты:</strong> ${closest.lat.toFixed(5)}, ${closest.lon.toFixed(5)}</div>
+                    </div>
+                    <button onclick="window.jumpTimelineToMinutes(${closest.mins})" style="margin-top: 10px; width: 100%; padding: 5px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                      ⏩ Перемотать плеер на ${formatMinutesToTime(closest.mins)}
+                    </button>
+                  </div>
+                `)
+                .openOn(mapRef.current!);
+            }
+          });
+        }
+
         const playbackIcon = L.divIcon({
           className: 'custom-playback-icon',
-          html: `<div class="relative w-8 h-8 flex items-center justify-center bg-[#0071e3] text-white rounded-full border-2 border-white shadow-lg font-bold text-xs"><span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60 animate-ping"></span>🎯</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
+          html: `<div class="relative w-9 h-9 flex items-center justify-center bg-[#0071e3] text-white rounded-full border-2 border-white shadow-xl font-bold text-xs"><span class="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping"></span>🎯</div>`,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
         });
 
-        L.marker(latestCoord, { icon: playbackIcon })
+        L.marker([currentLat, currentLon], { icon: playbackIcon })
           .addTo(markersGroup)
           .bindPopup(`
-            <div class="text-[#37352f] font-sans p-1 min-w-[140px]">
-              <h4 class="font-bold text-xs">🎯 Позиция на ${formatMinutesToTime(timelineTime)}</h4>
+            <div class="text-[#37352f] font-sans p-1 min-w-[150px]">
+              <h4 class="font-bold text-xs">🎯 ${statusNote}</h4>
               <p class="text-[10px] text-slate-500 mt-0.5">${selectedAgentDetails ? selectedAgentDetails.firstName + ' ' + selectedAgentDetails.lastName : 'Сотрудник'}</p>
+              <p class="text-[9px] text-emerald-600 font-semibold mt-1">Широта: ${currentLat.toFixed(5)}, Долгота: ${currentLon.toFixed(5)}</p>
             </div>
           `);
+      }
+
+      // 3. Detect Idle Stops (>10 mins at same spot) & Mark Store Visits vs Idle Parking
+      if (sortedHistoryPoints.length > 1 && mapRef.current) {
+        let stopStart = sortedHistoryPoints[0];
+        let stopEnd = sortedHistoryPoints[0];
+
+        for (let i = 1; i < sortedHistoryPoints.length; i++) {
+          const pt = sortedHistoryPoints[i];
+          const dist = getKmDistance(stopStart.lat, stopStart.lon, pt.lat, pt.lon);
+
+          if (dist < 0.08) {
+            stopEnd = pt;
+          } else {
+            const durationMins = stopEnd.mins - stopStart.mins;
+            if (durationMins >= 10) {
+              const nearClient = clients.find((c) => {
+                if (!c.latitude || !c.longitude) return false;
+                const cLat = parseFloat(c.latitude.toString());
+                const cLon = parseFloat(c.longitude.toString());
+                return !isNaN(cLat) && !isNaN(cLon) && getKmDistance(stopStart.lat, stopStart.lon, cLat, cLon) < 0.15;
+              });
+
+              const isStoreVisit = !!nearClient;
+              const stopIcon = L.divIcon({
+                className: 'custom-stop-icon',
+                html: `<div class="px-2 py-0.5 ${isStoreVisit ? 'bg-emerald-600' : 'bg-rose-600'} text-white text-[10px] font-bold rounded-full border-2 border-white shadow-md flex items-center gap-1">${isStoreVisit ? '🏪' : '🅿️'} ${durationMins}м</div>`,
+                iconSize: [60, 24],
+                iconAnchor: [30, 12],
+              });
+
+              L.marker([stopStart.lat, stopStart.lon], { icon: stopIcon })
+                .addTo(markersGroup)
+                .bindPopup(`
+                  <div class="text-[#37352f] font-sans p-1 min-w-[160px]">
+                    <h4 class="font-bold text-xs ${isStoreVisit ? 'text-emerald-700' : 'text-rose-600'} font-bold">
+                      ${isStoreVisit ? '🏪 Визит в магазин' : '🅿️ Простой вне маршрута'} (${durationMins} мин)
+                    </h4>
+                    ${nearClient ? `<p class="text-[10px] font-semibold text-slate-700 mt-0.5">${nearClient.name}</p>` : ''}
+                    <p class="text-[9px] text-slate-500 mt-1">Интервал: ${formatMinutesToTime(stopStart.mins)} – ${formatMinutesToTime(stopEnd.mins)}</p>
+                  </div>
+                `);
+            }
+            stopStart = pt;
+            stopEnd = pt;
+          }
+        }
       }
 
       if (pathCoords.length > 1 && mapRef.current) {
@@ -624,6 +969,43 @@ export default function RoutesMap() {
   const selectedAgentRoutes = routes
     .filter((r) => r.salesRepId === selectedAgentId)
     .sort((a, b) => (a.visitSequence || 0) - (b.visitSequence || 0));
+
+  const shiftMetrics = (() => {
+    if (!historyTrack || historyTrack.length < 2) return null;
+    let totalDistKm = 0;
+    let maxSpeed = 0;
+
+    for (let i = 0; i < historyTrack.length - 1; i++) {
+      const p1 = historyTrack[i];
+      const p2 = historyTrack[i + 1];
+      if (p1.latitude && p1.longitude && p2.latitude && p2.longitude) {
+        const lat1 = parseFloat(p1.latitude.toString());
+        const lon1 = parseFloat(p1.longitude.toString());
+        const lat2 = parseFloat(p2.latitude.toString());
+        const lon2 = parseFloat(p2.longitude.toString());
+        if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)) {
+          const R = 6371;
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          if (dist < 15) {
+            totalDistKm += dist;
+          }
+        }
+      }
+      if (p1.speed) {
+        const spd = Number(p1.speed);
+        if (spd > maxSpeed && spd < 150) maxSpeed = spd;
+      }
+    }
+
+    return {
+      distanceKm: totalDistKm.toFixed(1),
+      maxSpeed: Math.round(maxSpeed),
+      pointsCount: historyTrack.length,
+    };
+  })();
 
   if (loading) {
     return (
@@ -772,6 +1154,32 @@ export default function RoutesMap() {
             </button>
           </div>
 
+          {/* Top Right Shift Metrics Summary Widget */}
+          {selectedAgentId && (
+            <div className="absolute top-4 right-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3.5 py-2 shadow-xl flex items-center gap-3 text-[#37352f] dark:text-slate-200 transition-all">
+              <div className="flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-[#0071e3]" />
+                <span className="text-[11px] font-bold">
+                  {selectedAgentDetails ? `${selectedAgentDetails.firstName || ''} ${selectedAgentDetails.lastName || ''}`.trim() || 'Сотрудник' : 'Сотрудник'}
+                </span>
+              </div>
+              {shiftMetrics && (
+                <>
+                  <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex items-center gap-1 text-[11px]">
+                    <span className="text-slate-400">Пробег:</span>
+                    <span className="font-bold text-emerald-600">{shiftMetrics.distanceKm} км</span>
+                  </div>
+                  <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700" />
+                  <div className="flex items-center gap-1 text-[11px]">
+                    <span className="text-slate-400">Макс:</span>
+                    <span className="font-bold text-blue-600">{shiftMetrics.maxSpeed} км/ч</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Bottom Timeline History Scrubber / Playback Player */}
           <div className="absolute top-4 right-4 sm:top-auto sm:bottom-4 left-24 sm:left-72 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-2 shadow-xl flex items-center gap-2.5 transition-all max-w-[380px] sm:max-w-none">
             <button
@@ -792,8 +1200,8 @@ export default function RoutesMap() {
 
             <input
               type="range"
-              min={360}
-              max={1320}
+              min={0}
+              max={1435}
               step={5}
               value={timelineTime}
               onChange={(e) => setTimelineTime(Number(e.target.value))}

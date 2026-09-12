@@ -1,18 +1,30 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { UserPlus, Shield, Smartphone, Clock, X } from 'lucide-react';
+import { UserPlus, Shield, Clock, X, Pencil, Trash2 } from 'lucide-react';
 
 export default function Agents() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Edit / Delete Modal State
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [deletingUser, setDeletingUser] = useState<any | null>(null);
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editBranchId, setEditBranchId] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editStatus, setEditStatus] = useState('active');
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingAction, setDeletingAction] = useState(false);
+
   // Shifts modal state
   const [selectedUserForShifts, setSelectedUserForShifts] = useState<any | null>(null);
   const [shiftsHistory, setShiftsHistory] = useState<any[]>([]);
   const [loadingShifts, setLoadingShifts] = useState(false);
 
-  // Form states
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -20,19 +32,23 @@ export default function Agents() {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('SALES_REP');
   const [roles, setRoles] = useState<any[]>([]);
+  const [branchId, setBranchId] = useState('');
+  const [branches, setBranches] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
   const loadUsers = async () => {
     try {
-      const [usersRes, rolesRes] = await Promise.all([
+      const [usersRes, rolesRes, branchesRes] = await Promise.all([
         api.get('/users'),
         api.get('/roles'),
+        api.get('/branches').catch(() => ({ data: [] })),
       ]);
       setUsers(usersRes.data);
       setRoles(rolesRes.data || []);
+      setBranches(branchesRes.data || []);
     } catch (err) {
-      console.error('Failed to load users or roles', err);
+      console.error('Failed to load users, roles or branches', err);
     } finally {
       setLoading(false);
     }
@@ -41,6 +57,59 @@ export default function Agents() {
   useEffect(() => {
     loadUsers();
   }, []);
+
+  const handleOpenEdit = (u: any) => {
+    setEditingUser(u);
+    setEditFirstName(u.firstName || '');
+    setEditLastName(u.lastName || '');
+    setEditPhone(u.phone || '');
+    setEditRole(typeof u.role === 'object' ? u.role.name : u.role || 'SALES_REP');
+    setEditBranchId(u.branchId || u.branch?.id || '');
+    setEditPassword('');
+    setEditStatus(u.status || 'active');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSavingEdit(true);
+    try {
+      const payload: any = {
+        firstName: editFirstName,
+        lastName: editLastName,
+        phone: editPhone,
+        role: editRole,
+        branchId: editBranchId || null,
+        status: editStatus,
+      };
+      if (editPassword.trim()) {
+        payload.password = editPassword.trim();
+      }
+      await api.put(`/users/${editingUser.id}`, payload);
+      setEditingUser(null);
+      loadUsers();
+    } catch (err: any) {
+      console.error('Failed to update user', err);
+      alert(err.response?.data?.message || 'Ошибка обновления пользователя');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+    setDeletingAction(true);
+    try {
+      await api.delete(`/users/${deletingUser.id}`);
+      setDeletingUser(null);
+      loadUsers();
+    } catch (err: any) {
+      console.error('Failed to delete user', err);
+      alert(err.response?.data?.message || 'Ошибка удаления сотрудника');
+    } finally {
+      setDeletingAction(false);
+    }
+  };
 
   const loadShiftsHistory = async (userId: string) => {
     setLoadingShifts(true);
@@ -71,6 +140,7 @@ export default function Agents() {
         lastName,
         phone,
         role,
+        branchId: branchId || undefined,
         email: email || undefined,
       });
       setShowAddForm(false);
@@ -82,6 +152,7 @@ export default function Agents() {
       setLastName('');
       setPhone('');
       setEmail('');
+      setBranchId('');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Ошибка при создании сотрудника');
     }
@@ -188,7 +259,19 @@ export default function Agents() {
             >
               {roles.map((r: any) => (
                 <option key={r.id} value={r.name}>
-                  {r.name}
+                  {r.description || r.title || r.name}
+                </option>
+              ))}
+            </select>
+            <select
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+            >
+              <option value="">Без привязки к филиалу (Общий)</option>
+              {branches.map((b: any) => (
+                <option key={b.id} value={b.id}>
+                  🏢 {b.name}
                 </option>
               ))}
             </select>
@@ -216,22 +299,26 @@ export default function Agents() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#e9e9e7]/60 text-xs">
-            {users.map((item) => (
+            {users.map((item) => {
+              const matchedRole = roles.find(r => r.name === item.role || (typeof item.role === 'object' && item.role?.name === r.name));
+              const roleTitle = matchedRole?.description || matchedRole?.title || (typeof item.role === 'object' ? item.role?.description || item.role?.name : item.role);
+              
+              return (
               <tr key={item.id} className="hover:bg-[#fbfbfa] transition-colors">
                 <td className="p-3.5 font-bold text-[#37352f]">
                   {item.firstName} {item.lastName}
                 </td>
                 <td className="p-3.5 text-[#6a6a65]">{item.username}</td>
                 <td className="p-3.5">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[9px] ${
-                    item.role === 'OWNER'
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] ${
+                    item.role === 'OWNER' || (item.role?.name === 'OWNER')
                       ? 'bg-rose-50 text-rose-700 border border-rose-100'
-                      : item.role === 'SALES_REP'
+                      : item.role === 'SALES_REP' || (item.role?.name === 'SALES_REP')
                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                       : 'bg-indigo-50 text-indigo-700 border border-indigo-100'
                   }`}>
-                    {item.role === 'SALES_REP' ? <Smartphone className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
-                    {item.role}
+                    <Shield className="w-3 h-3" />
+                    {roleTitle}
                   </span>
                 </td>
                 <td className="p-3.5 text-[#37352f]">{item.phone}</td>
@@ -257,22 +344,195 @@ export default function Agents() {
                     {item.status || 'active'}
                   </span>
                 </td>
-                <td className="p-3.5 text-right">
-                  {item.role === 'SALES_REP' && (
+                <td className="p-3.5 text-right whitespace-nowrap">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {item.role === 'SALES_REP' && (
+                      <button
+                        onClick={() => setSelectedUserForShifts(item)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#37352f] dark:text-slate-200 rounded-lg font-semibold text-[11px] transition-all"
+                        title="История смен"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>История смен</span>
+                      </button>
+                    )}
                     <button
-                      onClick={() => setSelectedUserForShifts(item)}
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-[#37352f] rounded-lg font-semibold text-[11px] transition-all"
+                      onClick={() => handleOpenEdit(item)}
+                      className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-[#0071e3] dark:text-blue-400 rounded-lg transition-all flex items-center justify-center"
+                      title="Редактировать сотрудника"
                     >
-                      <Clock className="w-3 h-3" />
-                      <span>История смен</span>
+                      <Pencil className="w-4 h-4" />
                     </button>
-                  )}
+                    <button
+                      onClick={() => setDeletingUser(item)}
+                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-lg transition-all flex items-center justify-center"
+                      title="Удалить сотрудника"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </td>
               </tr>
-            ))}
+            );
+          })}
           </tbody>
         </table>
       </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white border border-[#e9e9e7] w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-scaleUp">
+            <div className="flex justify-between items-center bg-[#fbfbfa] border-b border-[#e9e9e7] p-4">
+              <div>
+                <h4 className="font-bold text-[#1d1d1f] text-sm">Редактирование сотрудника</h4>
+                <p className="text-[11px] text-[#86868b] mt-0.5">Логин: @{editingUser.username}</p>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="p-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Имя</label>
+                  <input
+                    type="text"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    required
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Фамилия</label>
+                  <input
+                    type="text"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    required
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Телефон</label>
+                  <input
+                    type="text"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Роль доступа</label>
+                  <select
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value)}
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  >
+                    {roles.map((r: any) => (
+                      <option key={r.id} value={r.name}>
+                        {r.description || r.title || r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Филиал</label>
+                  <select
+                    value={editBranchId}
+                    onChange={(e) => setEditBranchId(e.target.value)}
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  >
+                    <option value="">Без привязки (Общий)</option>
+                    {branches.map((b: any) => (
+                      <option key={b.id} value={b.id}>
+                        🏢 {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Статус аккаунта</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                  >
+                    <option value="active">Активен</option>
+                    <option value="disabled">Заблокирован</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Сбросить пароль (необязательно)</label>
+                <input
+                  type="password"
+                  placeholder="Введите новый пароль для сброса"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-4 py-2 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white font-semibold text-xs shadow-sm transition-all disabled:opacity-50"
+                >
+                  {savingEdit ? 'Сохранение...' : 'Сохранить изменения'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white border border-[#e9e9e7] w-full max-w-sm rounded-2xl shadow-xl p-5 animate-scaleUp">
+            <h4 className="font-bold text-[#1d1d1f] text-base mb-2">Удалить сотрудника?</h4>
+            <p className="text-xs text-[#86868b] mb-4">
+              Вы уверены, что хотите удалить аккаунт <strong className="text-[#37352f]">{deletingUser.firstName} {deletingUser.lastName}</strong> (@{deletingUser.username})? Это действие нельзя отменить.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeletingUser(null)}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deletingAction}
+                className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs shadow-sm transition-all disabled:opacity-50"
+              >
+                {deletingAction ? 'Удаление...' : 'Да, удалить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Shifts History Modal */}
       {selectedUserForShifts && (

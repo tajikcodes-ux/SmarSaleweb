@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { 
-  Plus, Package, Map, Edit, Trash, Users, Truck, ArrowLeftRight, Check, X, ClipboardList 
+  Plus, Package, Map, Edit, Trash, Users, ArrowLeftRight, Check, X, ClipboardList 
 } from 'lucide-react';
 
 export default function Catalog() {
@@ -35,9 +35,10 @@ export default function Catalog() {
   const [movToWarehouseId, setMovToWarehouseId] = useState('');
   const [movItems, setMovItems] = useState<Array<{ productId: string; quantity: number }>>([]);
 
-  // Form states (Products & Warehouses)
+  // Form states (Products & Warehouses & Categories)
   const [showProductForm, setShowProductForm] = useState(false);
   const [showWarehouseForm, setShowWarehouseForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
 
   const [prodName, setProdName] = useState('');
@@ -47,18 +48,22 @@ export default function Catalog() {
   const [catId, setCatId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
+  const [newCatName, setNewCatName] = useState('');
   const [whName, setWhName] = useState('');
   const [whAddress, setWhAddress] = useState('');
+  const [whBranchId, setWhBranchId] = useState('');
+  const [branches, setBranches] = useState<any[]>([]);
 
   const loadCatalog = async () => {
     try {
-      const [prodRes, catRes, whRes, supRes, procRes, movRes] = await Promise.all([
+      const [prodRes, catRes, whRes, supRes, procRes, movRes, branchRes] = await Promise.all([
         api.get('/catalog/products'),
         api.get('/catalog/categories'),
         api.get('/stocks/warehouses'),
         api.get('/procurements/suppliers'),
         api.get('/procurements/incoming'),
         api.get('/procurements/movements'),
+        api.get('/branches').catch(() => ({ data: [] })),
       ]);
       setProducts(prodRes.data);
       setCategories(catRes.data);
@@ -66,6 +71,7 @@ export default function Catalog() {
       setSuppliers(supRes.data);
       setProcurements(procRes.data);
       setMovements(movRes.data);
+      setBranches(branchRes.data || []);
 
       if (whRes.data.length > 0) {
         setSelectedWarehouseId(whRes.data[0].id);
@@ -158,6 +164,24 @@ export default function Catalog() {
     }
   };
 
+  // Category Create
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    try {
+      const res = await api.post('/catalog/categories', { name: newCatName.trim() });
+      setShowCategoryForm(false);
+      setNewCatName('');
+      await loadCatalog();
+      if (res.data && res.data.id) {
+        setCatId(res.data.id);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Ошибка создания категории');
+    }
+  };
+
   // Warehouse Create
   const handleCreateWarehouse = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,11 +189,13 @@ export default function Catalog() {
       await api.post('/stocks/warehouses', {
         name: whName,
         address: whAddress,
+        branchId: whBranchId || undefined,
       });
       setShowWarehouseForm(false);
       loadCatalog();
       setWhName('');
       setWhAddress('');
+      setWhBranchId('');
     } catch (err) {
       console.error(err);
     }
@@ -302,6 +328,13 @@ export default function Catalog() {
             <span>Новый товар</span>
           </button>
           <button
+            onClick={() => setShowCategoryForm(true)}
+            className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-all shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Категория</span>
+          </button>
+          <button
             onClick={() => setShowWarehouseForm(!showWarehouseForm)}
             className="flex items-center gap-1.5 px-4 py-2 bg-white border border-[#e3e3e8] hover:bg-[#f5f5f7] rounded-xl font-bold text-xs text-[#1d1d1f] transition-all shadow-sm"
           >
@@ -346,7 +379,7 @@ export default function Catalog() {
             activeTab === 'incoming' ? 'border-[#0b57d0] text-[#0b57d0]' : 'border-transparent text-[#5f6368] hover:text-[#1d1d1f]'
           }`}
         >
-          <Truck className="w-3.5 h-3.5 inline-block mr-1.5 align-text-bottom" />
+          <Package className="w-3.5 h-3.5 inline-block mr-1.5 align-text-bottom" />
           Приход товара
         </button>
         <button
@@ -361,6 +394,38 @@ export default function Catalog() {
       </div>
 
       {/* Forms Section */}
+      {showCategoryForm && (
+        <form onSubmit={handleCreateCategory} className="bg-white border border-emerald-200 p-6 rounded-2xl space-y-4 max-w-lg shadow-sm">
+          <div className="flex justify-between items-center">
+            <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-1.5">
+              📁 Новая категория товаров
+            </h4>
+            <button type="button" onClick={() => setShowCategoryForm(false)} className="text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1">Название категории (например: Напитки, Бытовая химия)</label>
+            <input
+              type="text"
+              placeholder="Введите название категории*"
+              required
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              className="w-full bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-emerald-600 text-[#1d1d1f]"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button type="button" onClick={() => setShowCategoryForm(false)} className="px-4 py-2 border border-[#e3e3e8] hover:bg-slate-50 text-[#1d1d1f] rounded-xl font-semibold text-xs">
+              Отмена
+            </button>
+            <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm">
+              Сохранить категорию
+            </button>
+          </div>
+        </form>
+      )}
+
       {showProductForm && (
         <form onSubmit={handleCreateOrUpdateProduct} className="bg-white border border-[#e3e3e8] p-6 rounded-2xl space-y-4 max-w-2xl shadow-sm">
           <h4 className="font-bold text-[#1d1d1f] text-sm">
@@ -401,16 +466,26 @@ export default function Catalog() {
               <option value="kg">Килограмм (kg)</option>
               <option value="box">Коробка (box)</option>
             </select>
-            <select
-              value={catId}
-              onChange={(e) => setCatId(e.target.value)}
-              className="bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f]"
-            >
-              <option value="">Выберите категорию</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={catId}
+                onChange={(e) => setCatId(e.target.value)}
+                className="flex-1 bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f]"
+              >
+                <option value="">Выберите категорию</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowCategoryForm(true)}
+                className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold whitespace-nowrap"
+                title="Добавить новую категорию"
+              >
+                + Категория
+              </button>
+            </div>
             <input
               type="text"
               placeholder="Ссылка на изображение товара (URL)"
@@ -449,6 +524,18 @@ export default function Catalog() {
               onChange={(e) => setWhAddress(e.target.value)}
               className="bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f]"
             />
+            <select
+              value={whBranchId}
+              onChange={(e) => setWhBranchId(e.target.value)}
+              className="bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f]"
+            >
+              <option value="">Привязка к филиалу (По умолчанию Общий)</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  🏢 {b.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex gap-2 justify-end">
             <button type="button" onClick={() => setShowWarehouseForm(false)} className="px-4 py-2 border border-[#e3e3e8] hover:bg-slate-50 text-[#1d1d1f] rounded-xl font-semibold text-xs">

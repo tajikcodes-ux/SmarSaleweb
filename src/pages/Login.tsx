@@ -145,8 +145,8 @@ export default function Login() {
           <p className="text-[9px] text-[#5f6368] mt-0.5 leading-relaxed">Для торговых агентов и водителей-экспедиторов</p>
         </div>
         <a
-          href={`${window.location.protocol}//${window.location.hostname}/uploads/smartsale.apk`}
-          download
+          href="/SmartSale_app.apk"
+          download="SmartSale_app.apk"
           className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-bold rounded-xl transition-all shadow-sm hover:shadow-md active:scale-[0.97]"
         >
           <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">

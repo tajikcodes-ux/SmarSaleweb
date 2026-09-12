@@ -17,6 +17,7 @@ import Promotions from './pages/Promotions';
 import Roles from './pages/Roles';
 import SmmPanel from './pages/SmmPanel';
 import FeedbackPanel from './pages/FeedbackPanel';
+import AuditLogs from './pages/AuditLogs';
 import SuperAdmin from './pages/SuperAdmin';
 import Layout from './components/Layout';
 
@@ -24,6 +25,20 @@ import Layout from './components/Layout';
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('access_token');
   return token ? <Layout>{children}</Layout> : <Navigate to="/login" replace />;
+}
+
+// Redirect home page based on user role
+function HomeRedirect() {
+  try {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (user?.role === 'SUPER_ADMIN') {
+      return <Navigate to="/superadmin" replace />;
+    }
+  } catch (e) {
+    console.error('Error parsing user profile', e);
+  }
+  return <Dashboard />;
 }
 
 export default function App() {
@@ -36,7 +51,7 @@ export default function App() {
           path="/"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <HomeRedirect />
             </PrivateRoute>
           }
         />
@@ -157,6 +172,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <FeedbackPanel />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/audit-logs"
+          element={
+            <PrivateRoute>
+              <AuditLogs />
             </PrivateRoute>
           }
         />

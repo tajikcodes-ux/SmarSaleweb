@@ -13,27 +13,36 @@ interface Role {
 // Define the modules, their human-readable names, and the actions available for each
 const PERMISSION_STRUCTURE = [
   {
+    category: 'Аналитика и Управление',
+    modules: [
+      { key: 'dashboard', label: 'Дашборд и Аналитика', actions: ['read'] },
+      { key: 'ai', label: 'AI Ассистент', actions: ['read', 'query'] },
+      { key: 'roles', label: 'Управление ролями', actions: ['read', 'create', 'update', 'delete'] },
+      { key: 'branches', label: 'Филиалы и Настройки', actions: ['read', 'create', 'update', 'delete'] },
+    ]
+  },
+  {
     category: 'Продажи и Клиенты',
     modules: [
-      { key: 'orders', label: 'Заказы', actions: ['read', 'create', 'update', 'delete', 'deliver'] },
-      { key: 'clients', label: 'Клиенты', actions: ['read', 'create', 'update', 'delete'] },
+      { key: 'orders', label: 'Заказы и Продажи', actions: ['read', 'create', 'update', 'delete', 'deliver'] },
+      { key: 'clients', label: 'Магазины и Клиенты', actions: ['read', 'create', 'update', 'delete'] },
       { key: 'promotions', label: 'Акции и Скидки', actions: ['read', 'create', 'update', 'delete'] },
-      { key: 'returns', label: 'Возвраты', actions: ['read', 'create', 'update', 'delete'] },
+      { key: 'returns', label: 'Возвраты товаров', actions: ['read', 'create', 'update', 'delete'] },
     ]
   },
   {
     category: 'Команда и Отслеживание',
     modules: [
-      { key: 'agents', label: 'Агенты', actions: ['read', 'create', 'update', 'delete'] },
-      { key: 'map', label: 'Карта и GPS', actions: ['read'] },
-      { key: 'tasks', label: 'Задачи', actions: ['read', 'create', 'update', 'delete'] },
+      { key: 'agents', label: 'Агенты и Персонал', actions: ['read', 'create', 'update', 'delete'] },
+      { key: 'map', label: 'Карта и GPS мониторинг', actions: ['read'] },
+      { key: 'tasks', label: 'Задачи и Чек-листы', actions: ['read', 'create', 'update', 'delete'] },
     ]
   },
   {
     category: 'Финансы и Зарплаты',
     modules: [
-      { key: 'payments', label: 'Оплаты', actions: ['read', 'create', 'update', 'delete', 'collect', 'reconcile'] },
-      { key: 'salary', label: 'Расчет зарплат', actions: ['read', 'create', 'update', 'delete', 'recalculate'] },
+      { key: 'payments', label: 'Оплаты и Касса', actions: ['read', 'create', 'update', 'delete', 'collect', 'reconcile'] },
+      { key: 'salary', label: 'Расчет зарплат и КПИ', actions: ['read', 'create', 'update', 'delete', 'recalculate'] },
     ]
   },
   {
@@ -41,14 +50,8 @@ const PERMISSION_STRUCTURE = [
     modules: [
       { key: 'warehouse', label: 'Сборка на складе', actions: ['read', 'assemble'] },
       { key: 'catalog', label: 'Товарный каталог', actions: ['read', 'create', 'update', 'delete'] },
-      { key: 'branches', label: 'Филиалы', actions: ['read', 'create', 'update', 'delete'] },
-    ]
-  },
-  {
-    category: 'Администрирование и Рост',
-    modules: [
-      { key: 'roles', label: 'Управление ролями', actions: ['read', 'create', 'update', 'delete'] },
       { key: 'smm', label: 'Маркетинг и SMM', actions: ['read', 'create', 'update', 'delete', 'submit'] },
+      { key: 'feedback', label: 'Обратная связь', actions: ['read', 'respond'] },
     ]
   }
 ];
@@ -202,6 +205,7 @@ export default function Roles() {
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
           {roles.map((role) => {
             const isSelected = selectedRole?.id === role.id;
+            const displayTitle = role.description || role.name;
             return (
               <div
                 key={role.id}
@@ -213,7 +217,7 @@ export default function Roles() {
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-bold text-xs truncate uppercase tracking-wide">{role.name}</span>
+                  <span className="font-bold text-xs truncate tracking-wide">{displayTitle}</span>
                   {role.isSystem ? (
                     <span className="px-1.5 py-0.5 rounded text-[8px] font-bold tracking-wider uppercase bg-slate-100 text-slate-600 border border-slate-200 flex-shrink-0 flex items-center gap-0.5">
                       <Shield className="w-2.5 h-2.5" /> Системная
@@ -224,8 +228,8 @@ export default function Roles() {
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-[#86868b] line-clamp-2">
-                  {role.description || 'Нет описания'}
+                <p className="text-[10px] text-[#86868b] font-mono">
+                  Системный код: {role.name}
                 </p>
               </div>
             );

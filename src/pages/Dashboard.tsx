@@ -28,6 +28,9 @@ export default function Dashboard() {
     totalVisits: 0,
     completedVisits: 0,
     rawSalesVolume: 0,
+    akbCount: 0,
+    okbCount: 0,
+    akbPercentage: 0,
   });
   const [agents, setAgents] = useState<any[]>([]);
   const [photoReports, setPhotoReports] = useState<any[]>([]);
@@ -35,18 +38,20 @@ export default function Dashboard() {
   const [topProducts, setTopProducts] = useState<any[]>([]);
   const [salesSparkline, setSalesSparkline] = useState<number[]>([]);
   const [ordersSparkline, setOrdersSparkline] = useState<number[]>([]);
+  const [agentsPerformance, setAgentsPerformance] = useState<any[]>([]);
   const [weather, setWeather] = useState({ temp: '28°C', desc: 'Солнечно' });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const [usersRes, ordersRes, routesRes, gpsRes, photoRes] = await Promise.all([
+        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes] = await Promise.all([
           api.get('/users').catch(() => ({ data: [] })),
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes', { params: { date: today } }).catch(() => ({ data: [] })),
           api.get('/gps/live').catch(() => ({ data: [] })),
           api.get('/routes/photo-reports').catch(() => ({ data: [] })),
+          api.get('/clients').catch(() => ({ data: [] })),
         ]);
 
         setPhotoReports(photoRes.data || []);
@@ -109,6 +114,31 @@ export default function Dashboard() {
 
         const totalSales = allOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
 
+        // --- AKB / OKB Logic ---
+        const clients = clientsRes.data || [];
+        const totalClientsCount = clients.length;
+        
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const thisMonthOrders = allOrders.filter((o: any) => o.createdAt && o.createdAt.startsWith(currentMonth) && o.status !== 'cancelled');
+        
+        const uniqueActiveClients = new Set(thisMonthOrders.map((o: any) => o.clientId || (o.client?.id)));
+        const akbCount = uniqueActiveClients.size;
+        const akbPercentage = totalClientsCount > 0 ? Math.round((akbCount / totalClientsCount) * 100) : 0;
+        
+        const performanceData = reps.map((rep: any) => {
+          const repOrders = thisMonthOrders.filter((o: any) => o.salesRepId === rep.id);
+          const repAkb = new Set(repOrders.map((o: any) => o.clientId || (o.client?.id))).size;
+          const repSales = repOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
+          return {
+            id: rep.id,
+            name: `${rep.firstName} ${rep.lastName}`,
+            akb: repAkb,
+            sales: repSales,
+          };
+        }).sort((a: any, b: any) => b.akb - a.akb);
+        setAgentsPerformance(performanceData);
+        // -------------------------
+
         const routes = routesRes.data || [];
         const visitedCount = routes.filter((r: any) => r.visited).length;
         const rate = routes.length > 0 ? Math.round((visitedCount / routes.length) * 100) : 0;
@@ -122,6 +152,9 @@ export default function Dashboard() {
           totalVisits: routes.length,
           completedVisits: visitedCount,
           rawSalesVolume: totalSales,
+          akbCount,
+          okbCount: totalClientsCount,
+          akbPercentage,
         });
 
         if (gpsRes.data.length > 0) {
@@ -260,6 +293,15 @@ export default function Dashboard() {
       color: 'bg-amber-50 border-amber-100 text-amber-600',
       trendUp: true,
     },
+    {
+      title: 'АКБ / ОКБ (МЕС)',
+      value: `${stats.akbCount} / ${stats.okbCount}`,
+      change: `${stats.akbPercentage}% покрытие`,
+      subText: 'уникальных клиентов',
+      icon: Activity,
+      color: stats.akbPercentage >= 70 ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-amber-50 border-amber-100 text-amber-600',
+      trendUp: stats.akbPercentage >= 70,
+    },
   ];
 
   if (loading) {
@@ -362,7 +404,7 @@ export default function Dashboard() {
       </div>
 
       {/* Grid of KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
@@ -569,6 +611,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Top Products Table */}
           <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm">
             <h3 className="text-sm font-bold text-[#1d1d1f] mb-4">Популярные товары</h3>
@@ -600,6 +643,40 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* AKB Leaderboard Table */}
+          <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm">
+            <h3 className="text-sm font-bold text-[#1d1d1f] mb-4">Покрытие (АКБ) по агентам</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#e3e3e8] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
+                    <th className="pb-3 font-semibold">Агент</th>
+                    <th className="pb-3 font-semibold">АКБ (в этом мес)</th>
+                    <th className="pb-3 font-semibold text-right">Выручка</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e3e3e8]/50 text-xs">
+                  {agentsPerformance.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="py-6 text-center text-slate-400 italic">Нет данных по агентам.</td>
+                    </tr>
+                  ) : (
+                    agentsPerformance.map((rep, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 font-bold text-[#1d1d1f]">{rep.name}</td>
+                        <td className="py-3 text-emerald-600 font-bold">{rep.akb} шт</td>
+                        <td className="py-3 text-[#1d1d1f] font-bold text-right">
+                          {rep.sales.toLocaleString('ru-RU')} TJS
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
           </div>
         </div>
 

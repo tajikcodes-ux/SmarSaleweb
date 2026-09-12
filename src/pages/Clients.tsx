@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
-import { Plus, Navigation, Wallet, Edit, Trash, X } from 'lucide-react';
+import { Plus, Navigation, Wallet, Edit, Trash, X, FileText } from 'lucide-react';
 import L from 'leaflet';
 
 // Fix for default Leaflet icon paths in React production bundles
@@ -16,6 +16,19 @@ export default function Clients() {
   const [priceCategories, setPriceCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const handlePrintReconciliation = async (clientId: string) => {
+    try {
+      const res = await api.get(`/documents/client/${clientId}/reconciliation`, { responseType: 'text' });
+      const printWin = window.open('', '_blank');
+      if (printWin) {
+        printWin.document.write(res.data);
+        printWin.document.close();
+      }
+    } catch (err) {
+      console.error('Error loading reconciliation statement:', err);
+    }
+  };
 
   // Settings states
   const [salesRepCanCreateClient, setSalesRepCanCreateClient] = useState(false);
@@ -485,6 +498,13 @@ export default function Clients() {
                 </td>
                 <td className="p-3.5 text-right">
                   <div className="flex justify-end gap-1.5">
+                    <button
+                      onClick={() => handlePrintReconciliation(item.id)}
+                      className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-blue-50 text-[#0071e3] hover:border-blue-200"
+                      title="Акт сверки взаиморасчетов"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={() => handleOpenEdit(item)}
                       className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-[#f8f9fa] text-[#5f6368]"
