@@ -99,6 +99,26 @@ export default function RoutesMap() {
     }
   };
 
+  const getAgentRoleLabel = (agent: any) => {
+    let roleName = '';
+    if (typeof agent.role === 'string') {
+      roleName = agent.role;
+    } else if (agent.role && typeof agent.role === 'object') {
+      roleName = agent.role.name || agent.role.code || '';
+    }
+
+    if (roleName === 'DELIVERY_DRIVER' || roleName === 'DRIVER') {
+      return { label: '🚚 Экспедитор', badgeClass: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800' };
+    }
+    if (roleName === 'SUPERVISOR') {
+      return { label: '🛡️ Супервайзер', badgeClass: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-800' };
+    }
+    if (roleName === 'OWNER' || roleName === 'SUPERADMIN' || roleName === 'ADMIN') {
+      return { label: '👑 Админ', badgeClass: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800' };
+    }
+    return { label: '💼 Торговый агент', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-300 dark:border-emerald-800' };
+  };
+
   // Sync selected agent ref
   useEffect(() => {
     selectedAgentIdRef.current = selectedAgentId;
@@ -1593,12 +1613,20 @@ export default function RoutesMap() {
                     const agentPlanned = routes.filter((r) => r.salesRepId === agent.userId);
                     const agentVisited = agentPlanned.filter((r) => r.visited === true);
                     const statusInfo = getAgentStatusInfo(agent);
+                    const roleBadge = getAgentRoleLabel(agent);
+
+                    const agentTodayOrders = orders.filter(o => o.salesRepId === agent.userId && o.createdAt?.startsWith(date));
+                    const agentTodayPayments = payments.filter(p => p.salesRepId === agent.userId && p.createdAt?.startsWith(date));
+                    const agentSalesSum = agentTodayOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0);
+                    const agentCashSum = agentTodayPayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+                    const progressPct = agentPlanned.length > 0 ? Math.round((agentVisited.length / agentPlanned.length) * 100) : 0;
 
                     return (
                       <div
                         key={agent.userId}
                         onClick={() => setSelectedAgentId(isSelected ? null : agent.userId)}
-                        className={`p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        className={`p-3 rounded-xl border cursor-pointer transition-all space-y-2 ${
                           isSelected
                             ? 'border-[#0071e3] bg-blue-50/30 dark:bg-blue-950/20 shadow-sm'
                             : 'border-[#e9e9e7] dark:border-slate-800 bg-[#fbfbfa] dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/80'
@@ -1607,22 +1635,71 @@ export default function RoutesMap() {
                         <div className="flex justify-between items-start">
                           <div className="flex items-center gap-2">
                             <span className={`w-2.5 h-2.5 rounded-full ${statusInfo.color} shrink-0 ${statusInfo.isOnline ? 'animate-pulse' : ''}`} />
-                            <span className="font-bold text-xs text-[#1d1d1f] dark:text-slate-100">
-                              {agent.firstName} {agent.lastName}
-                            </span>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-xs text-[#1d1d1f] dark:text-slate-100">
+                                  {agent.firstName} {agent.lastName}
+                                </span>
+                              </div>
+                              <div className="mt-0.5">
+                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${roleBadge.badgeClass}`}>
+                                  {roleBadge.label}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[9px] font-mono text-slate-400">
-                            🔋 {agent.batteryLevel || 100}%
-                          </span>
+
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[9px] font-mono text-slate-400">
+                              🔋 {agent.batteryLevel || 100}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedAgentId(agent.userId);
+                                setMobileTab('map');
+                                if (mapRef.current && agent.latitude && agent.longitude) {
+                                  const lat = parseFloat(agent.latitude);
+                                  const lon = parseFloat(agent.longitude);
+                                  if (!isNaN(lat) && !isNaN(lon)) {
+                                    mapRef.current.setView([lat, lon], 15);
+                                  }
+                                }
+                              }}
+                              className="px-2 py-0.5 bg-[#0071e3] hover:bg-[#0077ed] text-white text-[9px] font-bold rounded-md transition-all flex items-center gap-1 shadow-sm"
+                            >
+                              <MapPin className="w-2.5 h-2.5" />
+                              <span>На карту</span>
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                        {/* Visit Progress bar */}
+                        {agentPlanned.length > 0 && (
+                          <div className="space-y-1 pt-1">
+                            <div className="flex justify-between text-[9px] text-slate-500 font-medium">
+                              <span>Прогресс визитов</span>
+                              <span className="font-bold text-slate-700 dark:text-slate-300">{agentVisited.length} / {agentPlanned.length} ({progressPct}%)</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div className="h-full bg-emerald-500 rounded-full transition-all duration-300" style={{ width: `${progressPct}%` }} />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
                           <span className={`px-2 py-0.5 rounded-md border font-semibold text-[9px] ${statusInfo.badgeClass}`}>
                             {statusInfo.text}
                           </span>
-                          <span className="text-[#86868b] dark:text-slate-400 font-medium">
-                            Визиты: <strong className="text-slate-800 dark:text-slate-200">{agentVisited.length}/{agentPlanned.length}</strong>
-                          </span>
+                          <div className="flex items-center gap-2 text-[9px] font-mono">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-bold" title="Продажи за день">
+                              🛒 {agentSalesSum > 0 ? `${agentSalesSum.toFixed(0)} TJS` : '0 TJS'}
+                            </span>
+                            <span className="text-blue-700 dark:text-blue-400 font-bold" title="Собрано оплат за день">
+                              💵 {agentCashSum > 0 ? `${agentCashSum.toFixed(0)} TJS` : '0 TJS'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     );
