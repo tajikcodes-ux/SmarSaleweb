@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Plus, Edit, Trash, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash, Building2, Warehouse as WarehouseIcon, Users, Store } from 'lucide-react';
 
 export default function Branches() {
   const [branches, setBranches] = useState<any[]>([]);
@@ -72,12 +72,12 @@ export default function Branches() {
       {/* Header */}
       <div className="flex justify-between items-center bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
         <div>
-          <h3 className="font-bold text-[#1d1d1f] text-base flex items-center gap-1.5">
-            <MapPin className="w-4.5 h-4.5 text-[#37352f]" />
+          <h3 className="font-bold text-[#1d1d1f] text-base flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-[#37352f]" />
             Филиалы Компании
           </h3>
           <p className="text-[11px] text-[#86868b] mt-0.5">
-            Управление региональными филиалами дистрибуции ЧДММ "Сомон Камолот"
+            Управление региональными филиалами, карточками подразделений и привязанными складами
           </p>
         </div>
         <button
@@ -96,36 +96,74 @@ export default function Branches() {
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-bold text-[#1d1d1f] text-sm">{branch.name}</h4>
-                <span className="text-[9px] text-slate-400 font-mono block mt-0.5">{branch.id}</span>
+                <span className="text-[9px] text-slate-400 font-mono block mt-0.5">ID: {branch.id.slice(0, 8)}...</span>
               </div>
               <div className="flex gap-1.5 font-sans">
                 <button
                   onClick={() => setEditingBranch(branch)}
                   className="p-1.5 hover:bg-slate-50 text-slate-500 hover:text-[#0071e3] rounded-lg transition-colors border border-transparent hover:border-slate-100"
+                  title="Редактировать филиал"
                 >
                   <Edit className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => handleDeleteBranch(branch.id)}
                   className="p-1.5 hover:bg-slate-50 text-slate-500 hover:text-rose-600 rounded-lg transition-colors border border-transparent hover:border-slate-100"
+                  title="Удалить филиал"
                 >
                   <Trash className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 border-t border-[#e9e9e7]/60 pt-4 text-center">
+            {/* Attached Warehouses */}
+            <div className="space-y-1.5 border-t border-[#e9e9e7]/60 pt-3">
+              <span className="text-[9px] uppercase font-bold text-[#86868b] tracking-wider flex items-center gap-1">
+                <WarehouseIcon className="w-3 h-3" />
+                Привязанные склады:
+              </span>
+              {branch.warehouses && branch.warehouses.length > 0 ? (
+                <div className="space-y-1 max-h-28 overflow-y-auto pr-1">
+                  {branch.warehouses.map((wh: any) => (
+                    <div key={wh.id} className="bg-[#fbfbfa] border border-[#e9e9e7]/60 rounded-lg p-2 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <WarehouseIcon className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span className="font-semibold text-slate-700 text-[11px]">{wh.name}</span>
+                      </div>
+                      {wh.address && (
+                        <span className="text-[9px] text-[#86868b] truncate max-w-[120px]" title={wh.address}>
+                          {wh.address}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-400 italic bg-[#fbfbfa] p-2 rounded-lg border border-[#e9e9e7]/40">
+                  Склады не привязаны
+                </p>
+              )}
+            </div>
+
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-2 border-t border-[#e9e9e7]/60 pt-3 text-center">
               <div className="bg-[#fbfbfa] p-2 rounded-lg border border-[#e9e9e7]/40">
                 <div className="text-base font-bold text-slate-700">{branch._count?.users || 0}</div>
-                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5">Агенты</div>
+                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">
+                  <Users className="w-2.5 h-2.5" /> Агенты
+                </div>
               </div>
               <div className="bg-[#fbfbfa] p-2 rounded-lg border border-[#e9e9e7]/40">
                 <div className="text-base font-bold text-slate-700">{branch._count?.clients || 0}</div>
-                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5">Клиенты</div>
+                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">
+                  <Store className="w-2.5 h-2.5" /> Клиенты
+                </div>
               </div>
               <div className="bg-[#fbfbfa] p-2 rounded-lg border border-[#e9e9e7]/40">
                 <div className="text-base font-bold text-slate-700">{branch._count?.warehouses || 0}</div>
-                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5">Склады</div>
+                <div className="text-[9px] font-bold text-[#86868b] uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">
+                  <WarehouseIcon className="w-2.5 h-2.5" /> Склады
+                </div>
               </div>
             </div>
           </div>
