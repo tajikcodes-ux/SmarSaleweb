@@ -437,6 +437,35 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #2a2a2a !important;
 }
 
+/* Leaflet Popup overrides for Light & Dark Mode */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  background-color: #ffffff !important;
+  color: #1d1d1f !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+.leaflet-popup-content {
+  color: #1d1d1f !important;
+  font-family: 'Inter', sans-serif !important;
+}
+.leaflet-popup-content * {
+  color: #1d1d1f !important;
+}
+
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background-color: #18181b !important;
+  color: #ffffff !important;
+  border: 1px solid #27272a !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+.dark .leaflet-popup-content {
+  color: #ffffff !important;
+}
+.dark .leaflet-popup-content * {
+  color: #ffffff !important;
+}
+
 /* Feedback Panel Stats Cards Overrides */
 .dark .bg-\[\#eff6ff\] {
   background-color: #050505 !important;
