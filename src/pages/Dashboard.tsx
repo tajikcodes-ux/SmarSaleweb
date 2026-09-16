@@ -15,6 +15,9 @@ import {
   TrendingDown,
   Clock,
   Compass,
+  Sparkles,
+  Trophy,
+  Send,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -40,21 +43,27 @@ export default function Dashboard() {
   const [ordersSparkline, setOrdersSparkline] = useState<number[]>([]);
   const [agentsPerformance, setAgentsPerformance] = useState<any[]>([]);
   const [weather, setWeather] = useState({ temp: '28°C', desc: 'Солнечно' });
+  const [aiForecast, setAiForecast] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes] = await Promise.all([
+        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes] = await Promise.all([
           api.get('/users').catch(() => ({ data: [] })),
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes', { params: { date: today } }).catch(() => ({ data: [] })),
           api.get('/gps/live').catch(() => ({ data: [] })),
           api.get('/routes/photo-reports').catch(() => ({ data: [] })),
           api.get('/clients').catch(() => ({ data: [] })),
+          api.get('/ai/predictions/sales').catch(() => ({ data: [] })),
+          api.get('/smm/leaderboard').catch(() => ({ data: [] })),
         ]);
 
         setPhotoReports(photoRes.data || []);
+        setAiForecast(Array.isArray(aiRes.data) ? aiRes.data : []);
+        setLeaderboard(Array.isArray(smmRes.data) ? smmRes.data : []);
         
         // Save first few orders for activity feed
         const allOrders = ordersRes.data || [];
@@ -739,6 +748,111 @@ export default function Dashboard() {
                 </>
               )}
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Predictions, SMM Leaderboard & Telegram Assistant Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* AI Forecast Card (8 cols) */}
+        <div className="lg:col-span-8 bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-sm">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#1d1d1f]">ИИ-Прогнозирование спроса и продаж</h3>
+                <p className="text-[11px] text-[#86868b]">Нейросетевой анализ остатков и прогнозирование закупок на следующую неделю</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
+              AI Powered
+            </span>
+          </div>
+
+          {aiForecast.length === 0 ? (
+            <p className="text-xs text-[#86868b] italic py-6 text-center">Недостаточно исторических данных для формирования прогноза спроса.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {aiForecast.slice(0, 4).map((item, idx) => (
+                <div key={idx} className="p-3.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="font-bold text-xs text-[#1d1d1f] truncate block max-w-[180px]">{item.name}</span>
+                    <span className="text-[10px] font-mono font-bold text-[#0071e3]">Точность: {Math.round(item.confidenceScore * 100)}%</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-[#86868b] block text-[9px]">Остаток на складе:</span>
+                      <strong className="font-mono">{item.currentStock} шт.</strong>
+                    </div>
+                    <div>
+                      <span className="text-[#86868b] block text-[9px]">Прогноз спроса (неделя):</span>
+                      <strong className="text-emerald-700 font-mono">~{item.predictedNextWeekDemand} шт.</strong>
+                    </div>
+                  </div>
+                  <div className="text-[10px] p-2 bg-white border border-slate-200 rounded-lg text-slate-700 leading-tight">
+                    💡 {item.recommendation}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: SMM Leaderboard & Telegram (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* SMM Leaderboard */}
+          <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#1d1d1f]">Лидеры Продаж & SMM</h3>
+                  <p className="text-[10px] text-[#86868b]">Рейтинг активности агентов</p>
+                </div>
+              </div>
+            </div>
+
+            {leaderboard.length === 0 ? (
+              <p className="text-xs text-[#86868b] italic py-4 text-center">Баллы за активность еще не начислены.</p>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.slice(0, 3).map((agent, rank) => (
+                  <div key={agent.id} className="flex items-center justify-between p-2.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
+                        rank === 0 ? 'bg-amber-400 text-white' : rank === 1 ? 'bg-slate-300 text-slate-800' : 'bg-amber-700 text-white'
+                      }`}>
+                        {rank + 1}
+                      </span>
+                      <span className="font-bold text-[#1d1d1f]">{agent.firstName} {agent.lastName}</span>
+                    </div>
+                    <span className="font-bold text-amber-700 font-mono">
+                      +{agent.smmPoints} pts
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Telegram Bot Card */}
+          <div className="bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-100 p-5 rounded-2xl shadow-sm space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-sky-500 text-white rounded-xl shadow-sm">
+                <Send className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs text-[#1d1d1f]">Telegram Ассистент</h4>
+                <p className="text-[10px] text-[#5f6368]">Управление бизнесом с телефона</p>
+              </div>
+            </div>
+            <p className="text-[11px] text-[#37352f] leading-relaxed">
+              Отправьте в боте команду <code className="px-1.5 py-0.5 bg-white rounded border border-sky-200 font-bold font-mono text-sky-800">/sales</code> для сводки выручки или <code className="px-1.5 py-0.5 bg-white rounded border border-sky-200 font-bold font-mono text-sky-800">/status</code> для проверки агентов на карте.
+            </p>
           </div>
         </div>
       </div>

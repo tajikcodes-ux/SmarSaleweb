@@ -185,6 +185,43 @@ export default function Orders() {
     }
   };
 
+  const handleApproveHold = async (orderId: string) => {
+    if (!window.confirm('Одобрить данный заблокированный заказ (Hold)?')) return;
+    try {
+      await api.post(`/orders/${orderId}/approve-hold`);
+      alert('Заказ успешно одобрен!');
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при одобрении заказа');
+    }
+  };
+
+  const handleRejectHold = async (orderId: string) => {
+    const reason = window.prompt('Укажите причину отклонения заказа:');
+    if (!reason) return;
+    try {
+      await api.post(`/orders/${orderId}/reject-hold`, { reason });
+      alert('Заказ отклонен.');
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при отклонении заказа');
+    }
+  };
+
+  const handlePrintTorg12 = async (orderId: string) => {
+    try {
+      const res = await api.get(`/documents/order/${orderId}/torg12`, { responseType: 'text' });
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(res.data);
+        win.document.close();
+        win.print();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при получении ТОРГ-12');
+    }
+  };
+
   const parseOrderDetails = (order: any) => {
     try {
       if (order.notes && order.notes.startsWith('{')) {
@@ -695,13 +732,43 @@ export default function Orders() {
                     </td>
                   )}
                   <td className="p-3.5 text-right">
-                    <button
-                      onClick={() => setPrintOrder(item)}
-                      className="px-2.5 py-1 bg-slate-100 hover:bg-[#0071e3] hover:text-white rounded border border-[#e9e9e7] text-[#515154] text-[10px] font-bold transition-all flex items-center gap-1.5 ml-auto shadow-sm"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Накладная</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {item.status === 'hold' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleApproveHold(item.id)}
+                            className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all shadow-sm"
+                            title="Одобрить заблокированный заказ"
+                          >
+                            ✅ Hold
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRejectHold(item.id)}
+                            className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded text-[10px] font-bold transition-all shadow-sm"
+                            title="Отклонить заблокированный заказ"
+                          >
+                            ❌ Hold
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => setPrintOrder(item)}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-[#0071e3] hover:text-white rounded border border-[#e9e9e7] text-[#515154] text-[10px] font-bold transition-all flex items-center gap-1 shadow-sm"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Накладная</span>
+                      </button>
+                      <button
+                        onClick={() => handlePrintTorg12(item.id)}
+                        className="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded border border-blue-200 text-[10px] font-bold transition-all flex items-center gap-1 shadow-sm"
+                        title="Печать бухгалтерской ТОРГ-12"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>ТОРГ-12</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

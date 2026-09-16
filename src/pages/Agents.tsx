@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { UserPlus, Shield, Clock, X, Pencil, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, Clock, X, Pencil, Trash2, Key, Send } from 'lucide-react';
 
 export default function Agents() {
   const [users, setUsers] = useState<any[]>([]);
@@ -19,6 +19,11 @@ export default function Agents() {
   const [editStatus, setEditStatus] = useState('active');
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingAction, setDeletingAction] = useState(false);
+
+  // License & Telegram modals state
+  const [licenseUser, setLicenseUser] = useState<any | null>(null);
+  const [telegramUser, setTelegramUser] = useState<any | null>(null);
+  const [renewingLicense, setRenewingLicense] = useState(false);
 
   // Shifts modal state
   const [selectedUserForShifts, setSelectedUserForShifts] = useState<any | null>(null);
@@ -120,6 +125,21 @@ export default function Agents() {
       console.error('Failed to load shifts history', err);
     } finally {
       setLoadingShifts(false);
+    }
+  };
+
+  const handleRenewLicense = async (months: number) => {
+    if (!licenseUser) return;
+    setRenewingLicense(true);
+    try {
+      await api.post(`/users/${licenseUser.id}/renew-license`, { months });
+      alert(months === -1 ? 'Установлена бессрочная лицензия!' : `Лицензия продлена на ${months} мес.!`);
+      setLicenseUser(null);
+      loadUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при обновлении лицензии');
+    } finally {
+      setRenewingLicense(false);
     }
   };
 
@@ -295,6 +315,7 @@ export default function Agents() {
               <th className="p-3.5">Телефон</th>
               <th className="p-3.5">Смена</th>
               <th className="p-3.5">Статус</th>
+              <th className="p-3.5">Лицензия</th>
               <th className="p-3.5 text-right">Действия</th>
             </tr>
           </thead>
@@ -344,6 +365,27 @@ export default function Agents() {
                     {item.status || 'active'}
                   </span>
                 </td>
+                <td className="p-3.5 whitespace-nowrap">
+                  {(() => {
+                    if (!item.licenseExpirationDate) {
+                      return (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-sm">
+                          <span>♾️</span> Бессрочно
+                        </span>
+                      );
+                    }
+                    const exp = new Date(item.licenseExpirationDate);
+                    const isExpired = exp < new Date();
+                    return (
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
+                        isExpired ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                      }`}>
+                        <span>{isExpired ? '⚠️' : '🗓️'}</span>
+                        {isExpired ? 'Истекла ' : 'До '} {exp.toLocaleDateString()}
+                      </span>
+                    );
+                  })()}
+                </td>
                 <td className="p-3.5 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-1.5">
                     {item.role === 'SALES_REP' && (
@@ -356,6 +398,20 @@ export default function Agents() {
                         <span>История смен</span>
                       </button>
                     )}
+                    <button
+                      onClick={() => setLicenseUser(item)}
+                      className="p-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 rounded-lg transition-all flex items-center justify-center"
+                      title="Управление лицензией"
+                    >
+                      <Key className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setTelegramUser(item)}
+                      className="p-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 rounded-lg transition-all flex items-center justify-center"
+                      title="Привязка Telegram"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleOpenEdit(item)}
                       className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-[#0071e3] dark:text-blue-400 rounded-lg transition-all flex items-center justify-center"
@@ -598,6 +654,177 @@ export default function Agents() {
                 className="px-4 py-1.5 border border-[#e9e9e7] bg-white hover:bg-slate-50 text-xs font-bold rounded-lg transition-colors"
               >
                 Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* License Renewal Modal */}
+      {licenseUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white border border-[#e9e9e7] w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-scaleUp">
+            <div className="flex justify-between items-center bg-[#fbfbfa] border-b border-[#e9e9e7] p-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-50 rounded-lg text-amber-600">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#1d1d1f] text-sm">Управление лицензией</h4>
+                  <p className="text-[11px] text-[#86868b]">
+                    {licenseUser.firstName} {licenseUser.lastName} (@{licenseUser.username})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLicenseUser(null)}
+                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <div className="p-3 bg-slate-50 border border-[#e9e9e7] rounded-xl text-xs space-y-1">
+                <div className="text-[#86868b]">Текущий статус лицензии:</div>
+                <div className="font-bold text-[#1d1d1f]">
+                  {!licenseUser.licenseExpirationDate ? (
+                    <span className="text-emerald-700 flex items-center gap-1 font-bold">
+                      <span>♾️</span> Бессрочная лицензия (активна без ограничений)
+                    </span>
+                  ) : new Date(licenseUser.licenseExpirationDate) < new Date() ? (
+                    <span className="text-rose-600 font-bold">
+                      ⚠️ Истекла {new Date(licenseUser.licenseExpirationDate).toLocaleDateString()}
+                    </span>
+                  ) : (
+                    <span className="text-blue-700 font-bold">
+                      🗓️ Активна до {new Date(licenseUser.licenseExpirationDate).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-[11px] font-bold text-[#86868b] uppercase">
+                  Выберите период продления:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={renewingLicense}
+                    onClick={() => handleRenewLicense(1)}
+                    className="p-3 border border-[#e9e9e7] hover:border-[#0071e3] hover:bg-blue-50/40 rounded-xl text-xs font-bold text-[#37352f] transition-all disabled:opacity-50 text-left"
+                  >
+                    <div>+ 1 месяц</div>
+                    <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Краткосрочный доступ</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={renewingLicense}
+                    onClick={() => handleRenewLicense(6)}
+                    className="p-3 border border-[#e9e9e7] hover:border-[#0071e3] hover:bg-blue-50/40 rounded-xl text-xs font-bold text-[#37352f] transition-all disabled:opacity-50 text-left"
+                  >
+                    <div>+ 6 месяцев</div>
+                    <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Полгода работы</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={renewingLicense}
+                    onClick={() => handleRenewLicense(12)}
+                    className="p-3 border border-[#e9e9e7] hover:border-[#0071e3] hover:bg-blue-50/40 rounded-xl text-xs font-bold text-[#37352f] transition-all disabled:opacity-50 text-left"
+                  >
+                    <div>+ 1 год</div>
+                    <div className="text-[10px] text-[#86868b] font-normal mt-0.5">Годовая лицензия</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={renewingLicense}
+                    onClick={() => handleRenewLicense(-1)}
+                    className="p-3 border-2 border-emerald-500 bg-emerald-50/60 hover:bg-emerald-100/60 rounded-xl text-xs font-bold text-emerald-800 transition-all disabled:opacity-50 text-left"
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>♾️</span> Бессрочно
+                    </div>
+                    <div className="text-[10px] text-emerald-700 font-normal mt-0.5">Снять ограничения</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end p-4 border-t border-[#e9e9e7] bg-[#fbfbfa]">
+              <button
+                type="button"
+                onClick={() => setLicenseUser(null)}
+                className="px-4 py-2 border border-[#e9e9e7] bg-white hover:bg-slate-50 text-xs font-bold rounded-lg transition-colors"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Telegram Linking Modal */}
+      {telegramUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white border border-[#e9e9e7] w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-scaleUp">
+            <div className="flex justify-between items-center bg-[#fbfbfa] border-b border-[#e9e9e7] p-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-sky-50 rounded-lg text-sky-600">
+                  <Send className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-[#1d1d1f] text-sm">Привязка Telegram</h4>
+                  <p className="text-[11px] text-[#86868b]">
+                    {telegramUser.firstName} {telegramUser.lastName} (@{telegramUser.username})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setTelegramUser(null)}
+                className="p-1 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-xs text-[#37352f]">
+              <p className="leading-relaxed">
+                Для получения мгновенных отчётов по продажам, статусу агентов и PUSH-уведомлений о заказах выполните следующие шаги:
+              </p>
+
+              <div className="space-y-3 bg-[#fbfbfa] border border-[#e9e9e7] p-4 rounded-xl">
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-[#0071e3] text-white rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+                  <span>Откройте корпоративного бота SmartSale в приложении Telegram.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-[#0071e3] text-white rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+                  <div>
+                    <span>Отправьте боту персональную команду привязки:</span>
+                    <div className="mt-1.5 p-2 bg-white border border-slate-200 rounded-lg font-mono font-bold text-sky-700 select-all flex items-center justify-between">
+                      <code>/link {telegramUser.username}</code>
+                      <span className="text-[9px] text-[#86868b] font-sans">нажмите для копирования</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-[#0071e3] text-white rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+                  <span>Бот автоматически подтвердит авторизацию и привяжет ваш аккаунт!</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end p-4 border-t border-[#e9e9e7] bg-[#fbfbfa]">
+              <button
+                type="button"
+                onClick={() => setTelegramUser(null)}
+                className="px-4 py-2 bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold rounded-lg transition-colors"
+              >
+                Понятно
               </button>
             </div>
           </div>
