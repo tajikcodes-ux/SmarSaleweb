@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import {
   LayoutDashboard,
+  BarChart3,
   Users,
   MapPin,
   ShoppingBag,
@@ -125,6 +126,7 @@ export default function Layout({ children }: LayoutProps) {
       title: 'Аналитика',
       items: [
         { path: '/', label: 'Дашборд', icon: LayoutDashboard },
+        { path: '/reports', label: 'Конструктор отчетов', icon: BarChart3 },
         { path: '/ai-assistant', label: 'AI Ассистент', icon: Sparkles },
       ]
     },
@@ -192,7 +194,7 @@ export default function Layout({ children }: LayoutProps) {
         if (role === 'OWNER') return true;
 
         if (permissions && Object.keys(permissions).length > 0) {
-          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/feedbacks') return true;
+          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/reports' || item.path === '/feedbacks') return true;
 
           const resourceMap: Record<string, string> = {
             '/agents': 'agents',

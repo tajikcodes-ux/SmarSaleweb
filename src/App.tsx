@@ -19,6 +19,7 @@ import SmmPanel from './pages/SmmPanel';
 import FeedbackPanel from './pages/FeedbackPanel';
 import AuditLogs from './pages/AuditLogs';
 import SuperAdmin from './pages/SuperAdmin';
+import ReportConstructor from './pages/ReportConstructor';
 import Layout from './components/Layout';
 
 // Guard for authenticated pages
@@ -180,6 +181,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <AuditLogs />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <ReportConstructor />
             </PrivateRoute>
           }
         />
