@@ -16,7 +16,8 @@ import {
   MoveRight,
   Coins,
   FileSpreadsheet,
-  AlertCircle
+  AlertCircle,
+  Eye
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../services/api';
@@ -25,14 +26,12 @@ interface MetricDef {
   code: string;
   name: string;
   format: 'currency' | 'number' | 'percent';
-  icon?: any;
 }
 
 interface DimensionDef {
   code: string;
   name: string;
   category: 'team' | 'clients' | 'products' | 'logistics' | 'time';
-  icon?: any;
 }
 
 interface Preset {
@@ -139,6 +138,12 @@ export default function ReportConstructor() {
   const [reportData, setReportData] = useState<any>(null);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
+  // View Mode: 'data' (Live Data) vs 'structure' (Smartup Layout Skeleton Preview)
+  const [viewMode, setViewMode] = useState<'data' | 'structure'>('data');
+
+  // Modal: A4 Print Preview
+  const [showPrintPreview, setShowPrintPreview] = useState<boolean>(false);
+
   // Drilldown modal
   const [drilldown, setDrilldown] = useState<{
     open: boolean;
@@ -170,16 +175,19 @@ export default function ReportConstructor() {
     }
   };
 
+  // Live recalculation whenever rows, columns, values or dates change
   useEffect(() => {
-    runReport();
-  }, [startDate, endDate]);
+    const timer = setTimeout(() => {
+      runReport();
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [startDate, endDate, selectedRows, selectedColumns, selectedValues]);
 
   const applyPreset = (preset: Preset) => {
     setActivePreset(preset.id);
     setSelectedRows(preset.rows);
     setSelectedColumns(preset.columns);
     setSelectedValues(preset.values);
-    runReport({ rows: preset.rows, columns: preset.columns, values: preset.values });
   };
 
   // Drag and Drop handlers
@@ -216,14 +224,12 @@ export default function ReportConstructor() {
     if (targetZone === 'rows') {
       if (item.type !== 'dim') return;
       if (!selectedRows.includes(item.code)) {
-        // If it was in columns, remove from columns
         setSelectedColumns(prev => prev.filter(c => c !== item.code));
         setSelectedRows(prev => [...prev, item.code]);
       }
     } else if (targetZone === 'columns') {
       if (item.type !== 'dim') return;
       if (!selectedColumns.includes(item.code)) {
-        // If it was in rows, remove from rows
         setSelectedRows(prev => prev.filter(r => r !== item.code));
         setSelectedColumns(prev => [...prev, item.code]);
       }
@@ -313,10 +319,8 @@ export default function ReportConstructor() {
     const primaryMetric = selectedValues[0];
 
     if (is2D) {
-      // 2D MATRIX EXCEL
       const colDimName = meta.dimensions.find(d => d.code === reportData.columnDimension)?.name || 'Столбец';
       
-      // Header row
       const header = [
         `${rowDimName} \ ${colDimName}`,
         ...reportData.columnKeys,
@@ -324,7 +328,6 @@ export default function ReportConstructor() {
       ];
       rowsData.push(header);
 
-      // Rows
       reportData.rows.forEach((r: any) => {
         const rowVals = [
           r.name,
@@ -345,7 +348,6 @@ export default function ReportConstructor() {
         }
       });
 
-      // Bottom summary row
       if (reportData.colTotals && reportData.totals) {
         const totalRow = [
           'ИТОГО ПО КОМПАНИИ',
@@ -355,7 +357,6 @@ export default function ReportConstructor() {
         rowsData.push(totalRow);
       }
     } else {
-      // 1D STANDARD TABLE EXCEL
       const header = [
         rowDimName,
         ...selectedValues.map(v => meta.metrics.find(m => m.code === v)?.name || v),
@@ -391,7 +392,6 @@ export default function ReportConstructor() {
 
     const ws = XLSX.utils.aoa_to_sheet(rowsData);
 
-    // Calculate auto column widths
     const colWidths = rowsData[0].map((_, colIndex) => {
       let maxLen = 12;
       for (let r = 0; r < rowsData.length; r++) {
@@ -505,12 +505,12 @@ export default function ReportConstructor() {
             </span>
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Интерактивное перетаскивание строк, столбцов и показателей. Полная свобода многомерного анализа данных.
+            Интерактивный Drag-and-Drop конструктор. Мгновенный предпросмотр структуры и данных в реальном времени.
           </p>
         </div>
 
         {/* Date Pickers & Actions */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm">
             <Calendar className="w-4 h-4 text-gray-400" />
             <input 
@@ -531,19 +531,31 @@ export default function ReportConstructor() {
           <button
             onClick={() => runReport()}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+            title="Обновить расчет данных"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Сформировать</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Обновить</span>
+          </button>
+
+          {/* ПРЕДПРОСМОТР А4 (MODAL PREVIEW BUTTON) */}
+          <button
+            onClick={() => setShowPrintPreview(true)}
+            disabled={!reportData}
+            title="Открыть экранный предпросмотр бланка А4"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Eye className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Предпросмотр А4</span>
           </button>
 
           <button
             onClick={exportToExcel}
             disabled={!reportData}
             title="Выгрузить в Excel (.xlsx) с авто-шириной колонок"
-            className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>Excel (.xlsx)</span>
           </button>
 
@@ -551,10 +563,10 @@ export default function ReportConstructor() {
             onClick={handlePrint}
             disabled={!reportData}
             title="Печать официального бланка А4"
-            className="flex items-center gap-2 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-sm font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50"
           >
-            <Printer className="w-4 h-4" />
-            <span>Печать А4</span>
+            <Printer className="w-3.5 h-3.5" />
+            <span>Печать</span>
           </button>
         </div>
       </div>
@@ -769,7 +781,7 @@ export default function ReportConstructor() {
                     Строки (Иерархия уровней группировки)
                   </h3>
                   <p className="text-[11px] text-gray-500">
-                    Первый уровень группирует таблицу, второй создает вложенный список
+                    Первый уровень группирует таблицу, второй создает вложенный раскрывающийся список
                   </p>
                 </div>
               </div>
@@ -994,22 +1006,57 @@ export default function ReportConstructor() {
           </div>
         </div>
 
-        {/* SCREEN TABLE HEADER (NO-PRINT) */}
-        <div className="no-print p-4 bg-gray-50/70 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TableIcon className="w-4 h-4 text-gray-600" />
-            <h3 className="text-sm font-bold text-gray-900">
-              Результаты расчета 
-              {is2DMatrix ? ' (2D Кросс-матрица)' : ' (Иерархическая таблица)'}
-            </h3>
-            {reportData?.rows && (
-              <span className="text-xs text-gray-500 font-normal">
-                ({reportData.rows.length} основных строк)
-              </span>
-            )}
+        {/* SCREEN TABLE HEADER WITH VIEW MODE TABS (NO-PRINT) */}
+        <div className="no-print p-4 bg-gray-50/70 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <TableIcon className="w-4 h-4 text-gray-600" />
+              <h3 className="text-sm font-bold text-gray-900">
+                {is2DMatrix ? '2D Кросс-матрица' : 'Иерархический отчет'}
+              </h3>
+              {reportData?.rows && (
+                <span className="text-xs text-gray-500 font-normal">
+                  ({reportData.rows.length} основных строк)
+                </span>
+              )}
+            </div>
+
+            {/* TAB SWITCH: DATA vs STRUCTURE (SMARTUP PREVIEW) */}
+            <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg text-xs">
+              <button
+                onClick={() => setViewMode('data')}
+                className={`px-3 py-1 rounded-md font-medium transition-all ${
+                  viewMode === 'data'
+                    ? 'bg-white text-gray-900 shadow-xs font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Данные отчета
+              </button>
+              <button
+                onClick={() => setViewMode('structure')}
+                className={`px-3 py-1 rounded-md font-medium transition-all flex items-center gap-1.5 ${
+                  viewMode === 'structure'
+                    ? 'bg-white text-indigo-900 shadow-xs font-semibold'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Предпросмотр макета</span>
+              </button>
+            </div>
           </div>
-          <div className="text-xs text-gray-400">
-            Кликните по строке для детального списка накладных
+
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <button
+              onClick={() => setShowPrintPreview(true)}
+              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Предпросмотр А4</span>
+            </button>
+            <span>•</span>
+            <span>Клик по названию для накладных</span>
           </div>
         </div>
 
@@ -1019,6 +1066,167 @@ export default function ReportConstructor() {
             <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
             <div className="text-sm font-semibold text-gray-900">Выполняется OLAP-агрегация...</div>
             <div className="text-xs text-gray-400 mt-1">Обработка заказов, SKU и клиентской базы</div>
+          </div>
+        )}
+
+        {/* VIEW MODE: STRUCTURE PREVIEW (SMARTUP BLUEPRINT PREVIEW) */}
+        {viewMode === 'structure' && (
+          <div className="p-6 bg-slate-50 border-b border-gray-100">
+            <div className="max-w-4xl mx-auto bg-white rounded-xl border border-indigo-200 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase">
+                  <Eye className="w-4 h-4 text-indigo-600" />
+                  <span>Скелет макета таблицы (Smartup Blueprint Preview)</span>
+                </div>
+                <span className="text-[11px] text-gray-500">
+                  Строк: {selectedRows.length}, Колонок: {selectedColumns.length > 0 ? 1 : 0}, Показателей: {selectedValues.length}
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border border-gray-300">
+                  <thead>
+                    {selectedColumns.length > 0 ? (
+                      <>
+                        <tr className="bg-purple-100/70 border-b border-gray-300 font-bold text-purple-950">
+                          <th className="p-2 border border-gray-300">
+                            {selectedRows.map(r => meta.dimensions.find(d => d.code === r)?.name).join(' ➜ ')}
+                          </th>
+                          <th className="p-2 border border-gray-300 text-center" colSpan={2}>
+                            {meta.dimensions.find(d => d.code === selectedColumns[0])?.name} (Значение 1)
+                          </th>
+                          <th className="p-2 border border-gray-300 text-center" colSpan={2}>
+                            {meta.dimensions.find(d => d.code === selectedColumns[0])?.name} (Значение 2)
+                          </th>
+                          <th className="p-2 border border-gray-300 text-center bg-purple-200/80">. . .</th>
+                          <th className="p-2 border border-gray-300 text-center bg-blue-100 text-blue-900" colSpan={selectedValues.length}>
+                            ИТОГО ЗА ПЕРИОД
+                          </th>
+                        </tr>
+                        <tr className="bg-gray-100 border-b border-gray-300 text-gray-700">
+                          <th className="p-2 border border-gray-300">Группировка</th>
+                          {selectedValues.slice(0, 2).map(v => (
+                            <th key={`c1-${v}`} className="p-1.5 border border-gray-300 text-right">
+                              {meta.metrics.find(m => m.code === v)?.name}
+                            </th>
+                          ))}
+                          {selectedValues.slice(0, 2).map(v => (
+                            <th key={`c2-${v}`} className="p-1.5 border border-gray-300 text-right">
+                              {meta.metrics.find(m => m.code === v)?.name}
+                            </th>
+                          ))}
+                          <th className="p-1.5 border border-gray-300 text-center">. . .</th>
+                          {selectedValues.map(v => (
+                            <th key={`ct-${v}`} className="p-1.5 border border-gray-300 text-right font-bold text-blue-950 bg-blue-50">
+                              {meta.metrics.find(m => m.code === v)?.name}
+                            </th>
+                          ))}
+                        </tr>
+                      </>
+                    ) : (
+                      <tr className="bg-indigo-100/70 border-b border-gray-300 font-bold text-indigo-950">
+                        <th className="p-2.5 border border-gray-300">
+                          {selectedRows.map(r => meta.dimensions.find(d => d.code === r)?.name).join(' ➜ ')}
+                        </th>
+                        {selectedValues.map(v => (
+                          <th key={v} className="p-2.5 border border-gray-300 text-right">
+                            {meta.metrics.find(m => m.code === v)?.name}
+                          </th>
+                        ))}
+                      </tr>
+                    )}
+                  </thead>
+                  <tbody className="text-gray-600">
+                    <tr className="border-b border-gray-200 bg-white">
+                      <td className="p-2 border border-gray-300 font-semibold text-gray-900">
+                        {meta.dimensions.find(d => d.code === selectedRows[0])?.name} (Запись А)
+                      </td>
+                      {selectedColumns.length > 0 ? (
+                        <>
+                          <td className="p-2 border border-gray-300 text-right font-mono">1 450.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">12</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">3 200.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">25</td>
+                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
+                          <td className="p-2 border border-gray-300 text-right font-bold font-mono text-blue-900 bg-blue-50/50">4 650.00</td>
+                        </>
+                      ) : (
+                        selectedValues.map(v => (
+                          <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                            {v.includes('Amount') || v.includes('Profit') ? '12 450.00 TJS' : '15'}
+                          </td>
+                        ))
+                      )}
+                    </tr>
+                    {selectedRows.length > 1 && (
+                      <tr className="border-b border-gray-200 bg-gray-50/60 text-[11px]">
+                        <td className="p-2 pl-6 border border-gray-300 text-gray-500">
+                          ↳ {meta.dimensions.find(d => d.code === selectedRows[1])?.name} (Вложенный элемент)
+                        </td>
+                        {selectedColumns.length > 0 ? (
+                          <>
+                            <td className="p-2 border border-gray-300 text-right font-mono">600.00</td>
+                            <td className="p-2 border border-gray-300 text-right font-mono">5</td>
+                            <td className="p-2 border border-gray-300 text-right font-mono">1 100.00</td>
+                            <td className="p-2 border border-gray-300 text-right font-mono">8</td>
+                            <td className="p-2 border border-gray-300 text-center font-mono">...</td>
+                            <td className="p-2 border border-gray-300 text-right font-mono text-blue-900">1 700.00</td>
+                          </>
+                        ) : (
+                          selectedValues.map(v => (
+                            <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                              {v.includes('Amount') || v.includes('Profit') ? '1 700.00 TJS' : '3'}
+                            </td>
+                          ))
+                        )}
+                      </tr>
+                    )}
+                    <tr className="border-b border-gray-200 bg-white">
+                      <td className="p-2 border border-gray-300 font-semibold text-gray-900">
+                        {meta.dimensions.find(d => d.code === selectedRows[0])?.name} (Запись Б)
+                      </td>
+                      {selectedColumns.length > 0 ? (
+                        <>
+                          <td className="p-2 border border-gray-300 text-right font-mono">2 100.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">18</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">950.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">7</td>
+                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
+                          <td className="p-2 border border-gray-300 text-right font-bold font-mono text-blue-900 bg-blue-50/50">3 050.00</td>
+                        </>
+                      ) : (
+                        selectedValues.map(v => (
+                          <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                            {v.includes('Amount') || v.includes('Profit') ? '8 320.00 TJS' : '9'}
+                          </td>
+                        ))
+                      )}
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-gray-100 font-bold border-t-2 border-gray-400 text-gray-900">
+                      <td className="p-2.5 border border-gray-300 uppercase">ИТОГО ПО КОМПАНИИ</td>
+                      {selectedColumns.length > 0 ? (
+                        <>
+                          <td className="p-2 border border-gray-300 text-right font-mono">3 550.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">30</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">4 150.00</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono">32</td>
+                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
+                          <td className="p-2 border border-gray-300 text-right font-mono text-blue-800 bg-blue-100/60">7 700.00</td>
+                        </>
+                      ) : (
+                        selectedValues.map(v => (
+                          <td key={v} className="p-2.5 border border-gray-300 text-right font-mono text-blue-900">
+                            {v.includes('Amount') || v.includes('Profit') ? '20 770.00 TJS' : '24'}
+                          </td>
+                        ))
+                      )}
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1033,8 +1241,8 @@ export default function ReportConstructor() {
           </div>
         )}
 
-        {/* DATA TABLE RENDERING */}
-        {!loading && reportData && reportData.rows && reportData.rows.length > 0 && (
+        {/* DATA TABLE RENDERING (VIEW MODE: DATA) */}
+        {!loading && viewMode === 'data' && reportData && reportData.rows && reportData.rows.length > 0 && (
           <div className="overflow-x-auto">
             {is2DMatrix ? (
               /* ======================= 2D CROSS-TAB MATRIX ======================= */
@@ -1275,6 +1483,193 @@ export default function ReportConstructor() {
         </div>
 
       </div>
+
+      {/* FULL-SCREEN A4 PRINT PREVIEW MODAL (ПРЕДПРОСМОТР БЛАНКА А4) */}
+      {showPrintPreview && (
+        <div className="no-print fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col items-center p-4 md:p-6 overflow-y-auto">
+          {/* Top floating control bar */}
+          <div className="w-full max-w-4xl bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center justify-between mb-4 sticky top-2 z-20">
+            <div className="flex items-center gap-2">
+              <Eye className="w-4 h-4 text-indigo-400" />
+              <span className="text-sm font-bold">Предпросмотр печатной формы А4</span>
+              <span className="text-xs text-gray-400 hidden sm:inline">
+                (Точно так документ выйдет на бумаге)
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePrint}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition-all active:scale-95"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Отправить на печать</span>
+              </button>
+              <button
+                onClick={() => setShowPrintPreview(false)}
+                className="p-1.5 hover:bg-gray-800 text-gray-400 hover:text-white rounded-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Realistic white A4 Sheet simulation */}
+          <div className="w-full max-w-4xl bg-white text-black p-8 md:p-12 shadow-2xl rounded-sm border border-gray-300 min-h-[297mm] font-sans box-border">
+            {/* Header */}
+            <div className="border-b-2 border-black pb-4 mb-6">
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="text-base font-extrabold tracking-wide uppercase">
+                    ООО &quot;СОМОН САВДО&quot;
+                  </div>
+                  <div className="text-xs text-gray-600 mt-0.5">
+                    Дистрибьюторская сеть товаров народного потребления
+                  </div>
+                  <div className="text-lg font-bold mt-3 uppercase text-black">
+                    ОФИЦИАЛЬНЫЙ АНАЛИТИЧЕСКИЙ ОТЧЕТ MBI
+                  </div>
+                  <div className="text-xs text-gray-800 mt-1 font-medium">
+                    Период: с <span className="font-bold">{startDate}</span> по <span className="font-bold">{endDate}</span>
+                  </div>
+                  <div className="text-xs text-gray-700 mt-0.5">
+                    Группировки: {selectedRows.map(r => meta.dimensions.find(d => d.code === r)?.name).join(' ➜ ')}
+                    {is2DMatrix && ` × ${meta.dimensions.find(d => d.code === reportData?.columnDimension)?.name}`}
+                  </div>
+                </div>
+                <div className="text-right text-xs text-gray-600">
+                  <div>Форма: УО-2026-MBI</div>
+                  <div>Дата: {new Date().toLocaleDateString('ru-RU')}</div>
+                  <div>Время: {new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Document Table */}
+            {reportData && reportData.rows && reportData.rows.length > 0 ? (
+              <div className="overflow-x-auto">
+                {is2DMatrix ? (
+                  <table className="w-full text-left border-collapse text-[11px] border border-black">
+                    <thead>
+                      <tr className="bg-gray-100 font-bold border-b border-black">
+                        <th className="p-2 border border-black">
+                          {meta.dimensions.find(d => d.code === selectedRows[0])?.name} \ {meta.dimensions.find(d => d.code === reportData.columnDimension)?.name}
+                        </th>
+                        {reportData.columnKeys.map((cKey: string) => (
+                          <th key={cKey} className="p-2 border border-black text-right">
+                            {cKey}
+                          </th>
+                        ))}
+                        <th className="p-2 border border-black text-right bg-gray-200">ИТОГО</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.rows.map((row: any) => (
+                        <tr key={row.name} className="border-b border-gray-400">
+                          <td className="p-2 border border-black font-semibold">{row.name}</td>
+                          {reportData.columnKeys.map((cKey: string) => (
+                            <td key={cKey} className="p-2 border border-black text-right">
+                              {formatMetricValue(row.cells?.[cKey]?.[selectedValues[0]], meta.metrics.find(m => m.code === selectedValues[0])?.format || 'number')}
+                            </td>
+                          ))}
+                          <td className="p-2 border border-black text-right font-bold bg-gray-50">
+                            {formatMetricValue(row.metrics?.[selectedValues[0]], meta.metrics.find(m => m.code === selectedValues[0])?.format || 'number')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {reportData.totals && reportData.colTotals && (
+                      <tfoot>
+                        <tr className="bg-gray-200 font-bold border-t-2 border-black">
+                          <td className="p-2 border border-black uppercase">ИТОГО ПО КОМПАНИИ</td>
+                          {reportData.columnKeys.map((cKey: string) => (
+                            <td key={cKey} className="p-2 border border-black text-right">
+                              {formatMetricValue(reportData.colTotals?.[cKey]?.[selectedValues[0]], meta.metrics.find(m => m.code === selectedValues[0])?.format || 'number')}
+                            </td>
+                          ))}
+                          <td className="p-2 border border-black text-right bg-gray-300">
+                            {formatMetricValue(reportData.totals[selectedValues[0]], meta.metrics.find(m => m.code === selectedValues[0])?.format || 'number')}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                ) : (
+                  <table className="w-full text-left border-collapse text-[11px] border border-black">
+                    <thead>
+                      <tr className="bg-gray-100 font-bold border-b border-black">
+                        <th className="p-2 border border-black">
+                          {meta.dimensions.find(d => d.code === selectedRows[0])?.name || 'Группировка'}
+                        </th>
+                        {selectedValues.map(v => (
+                          <th key={v} className="p-2 border border-black text-right">
+                            {meta.metrics.find(m => m.code === v)?.name}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.rows.map((row: any) => (
+                        <React.Fragment key={row.name}>
+                          <tr className="border-b border-gray-400 font-semibold">
+                            <td className="p-2 border border-black">{row.name}</td>
+                            {selectedValues.map(v => (
+                              <td key={v} className="p-2 border border-black text-right">
+                                {formatMetricValue(row.metrics?.[v], meta.metrics.find(m => m.code === v)?.format || 'number')}
+                              </td>
+                            ))}
+                          </tr>
+                          {row.subItems && row.subItems.map((sub: any) => (
+                            <tr key={sub.name} className="border-b border-gray-300 text-[10px] text-gray-700">
+                              <td className="p-1.5 pl-6 border border-black">↳ {sub.name}</td>
+                              {selectedValues.map(v => (
+                                <td key={v} className="p-1.5 border border-black text-right">
+                                  {formatMetricValue(sub.metrics?.[v], meta.metrics.find(m => m.code === v)?.format || 'number')}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                    {reportData.totals && (
+                      <tfoot>
+                        <tr className="bg-gray-200 font-bold border-t-2 border-black">
+                          <td className="p-2 border border-black uppercase">ИТОГО ПО КОМПАНИИ</td>
+                          {selectedValues.map(v => (
+                            <td key={v} className="p-2 border border-black text-right">
+                              {formatMetricValue(reportData.totals[v], meta.metrics.find(m => m.code === v)?.format || 'number')}
+                            </td>
+                          ))}
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-gray-400">Нет данных для печати</div>
+            )}
+
+            {/* Official Signatures */}
+            <div className="mt-16 pt-6 border-t border-gray-500 text-xs">
+              <div className="grid grid-cols-2 gap-12">
+                <div>
+                  <div className="mb-8">
+                    Руководитель отдела продаж: __________________________ / ______________________
+                  </div>
+                  <div>
+                    Главный бухгалтер: __________________________ / ______________________
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="mb-8 font-bold">М.П.</div>
+                  <div>Дата: «______» ___________________ 2026 г.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DRILLDOWN MODAL DRAWER (NO-PRINT) */}
       {drilldown.open && (
