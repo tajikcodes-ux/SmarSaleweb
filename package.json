@@ -18,7 +18,8 @@
     "react-router-dom": "^6.18.0",
     "shaders": "^2.5.135",
     "socket.io-client": "^4.8.3",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",

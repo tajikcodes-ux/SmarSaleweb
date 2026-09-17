@@ -19,7 +19,7 @@ import {
   AlertCircle,
   Eye
 } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import api from '../services/api';
 
 interface MetricDef {
@@ -307,7 +307,7 @@ export default function ReportConstructor() {
     return val.toLocaleString('ru-RU');
   };
 
-  // EXCEL (.XLSX) EXPORT with auto-column widths and styled cells
+  // EXECUTIVE-STYLED EXCEL (.XLSX) EXPORT (Corporate Grade)
   const exportToExcel = () => {
     if (!reportData || !reportData.rows) return;
 
@@ -315,15 +315,35 @@ export default function ReportConstructor() {
     const rowsData: any[][] = [];
 
     const is2D = Boolean(reportData.columnDimension && reportData.columnKeys && reportData.columnKeys.length > 0);
-    const rowDimName = meta.dimensions.find(d => d.code === selectedRows[0])?.name || 'Строка';
+    const rowDimObj = meta.dimensions.find(d => d.code === selectedRows[0]);
+    const rowDimName = rowDimObj?.name || 'Группировка';
     const primaryMetric = selectedValues[0];
+    const metricMeta = meta.metrics.find(m => m.code === primaryMetric);
+    const isCurrency = metricMeta?.format === 'currency' || primaryMetric.includes('Amount') || primaryMetric.includes('Profit') || primaryMetric.includes('Check');
+    const numFormat = isCurrency ? '#,##0.00 "TJS"' : '#,##0';
 
+    // 1. CORPORATE DOCUMENT HEADER BLOCK
+    rowsData.push(['ООО "СОМОН САВДО" — ДИСТРИБЬЮТОРСКАЯ СЕТЬ']);
+    rowsData.push([`ОФИЦИАЛЬНЫЙ АНАЛИТИЧЕСКИЙ ОТЧЕТ MBI: ${rowDimName.toUpperCase()}`]);
+    rowsData.push([
+      `Период: с ${startDate} по ${endDate}  |  Сформировано: ${new Date().toLocaleDateString('ru-RU')} ${new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}  |  SmartSale OLAP 2.0`
+    ]);
+    rowsData.push([]); // Blank separator row
+
+    // Track row indices for styling
+    const tableHeaderRowIdx = rowsData.length; // Row index 4 (0-based)
+
+    // 2. TABLE HEADERS & ROWS DATA
+    let colKeys: string[] = [];
     if (is2D) {
-      const colDimName = meta.dimensions.find(d => d.code === reportData.columnDimension)?.name || 'Столбец';
-      
+      colKeys = reportData.columnKeys;
+      const colDimObj = meta.dimensions.find(d => d.code === reportData.columnDimension);
+      const colDimName = colDimObj?.name || 'Столбец';
+
+      // Clean, elegant 2D header
       const header = [
         `${rowDimName} \ ${colDimName}`,
-        ...reportData.columnKeys,
+        ...colKeys,
         'ИТОГО ЗА ПЕРИОД',
       ];
       rowsData.push(header);
@@ -331,7 +351,7 @@ export default function ReportConstructor() {
       reportData.rows.forEach((r: any) => {
         const rowVals = [
           r.name,
-          ...reportData.columnKeys.map((cKey: string) => r.cells?.[cKey]?.[primaryMetric] ?? 0),
+          ...colKeys.map((cKey: string) => r.cells?.[cKey]?.[primaryMetric] ?? 0),
           r.metrics?.[primaryMetric] ?? 0,
         ];
         rowsData.push(rowVals);
@@ -339,8 +359,8 @@ export default function ReportConstructor() {
         if (r.subItems) {
           r.subItems.forEach((sub: any) => {
             const subVals = [
-              `   ↳ ${sub.name}`,
-              ...reportData.columnKeys.map((cKey: string) => sub.cells?.[cKey]?.[primaryMetric] ?? 0),
+              `    ↳ ${sub.name}`,
+              ...colKeys.map((cKey: string) => sub.cells?.[cKey]?.[primaryMetric] ?? 0),
               sub.metrics?.[primaryMetric] ?? 0,
             ];
             rowsData.push(subVals);
@@ -351,7 +371,7 @@ export default function ReportConstructor() {
       if (reportData.colTotals && reportData.totals) {
         const totalRow = [
           'ИТОГО ПО КОМПАНИИ',
-          ...reportData.columnKeys.map((cKey: string) => reportData.colTotals?.[cKey]?.[primaryMetric] ?? 0),
+          ...colKeys.map((cKey: string) => reportData.colTotals?.[cKey]?.[primaryMetric] ?? 0),
           reportData.totals?.[primaryMetric] ?? 0,
         ];
         rowsData.push(totalRow);
@@ -373,7 +393,7 @@ export default function ReportConstructor() {
         if (r.subItems) {
           r.subItems.forEach((sub: any) => {
             const subVals = [
-              `   ↳ ${sub.name}`,
+              `    ↳ ${sub.name}`,
               ...selectedValues.map(v => sub.metrics?.[v] ?? 0),
             ];
             rowsData.push(subVals);
@@ -390,18 +410,162 @@ export default function ReportConstructor() {
       }
     }
 
+    const tableEndRowIdx = rowsData.length - 1;
+
+    // 3. SIGNATURE BLOCK AT THE BOTTOM
+    rowsData.push([]);
+    rowsData.push(['Руководитель отдела продаж: __________________________ / ______________________']);
+    rowsData.push(['Главный бухгалтер:          __________________________ / ______________________']);
+    rowsData.push([`М.П.                                                   Дата: «_____» ______________ ${new Date().getFullYear()} г.`]);
+
+    // Build worksheet
     const ws = XLSX.utils.aoa_to_sheet(rowsData);
 
-    const colWidths = rowsData[0].map((_, colIndex) => {
-      let maxLen = 12;
-      for (let r = 0; r < rowsData.length; r++) {
+    // 4. APPLY RICH CELL STYLES
+    // Title A1
+    if (ws['A1']) {
+      ws['A1'].s = {
+        font: { name: 'Calibri', sz: 14, bold: true, color: { rgb: '1E3A8A' } },
+        alignment: { vertical: 'center' },
+      };
+    }
+    // Subtitle A2
+    if (ws['A2']) {
+      ws['A2'].s = {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: '1F2937' } },
+        alignment: { vertical: 'center' },
+      };
+    }
+    // Meta A3
+    if (ws['A3']) {
+      ws['A3'].s = {
+        font: { name: 'Calibri', sz: 9, italic: true, color: { rgb: '64748B' } },
+        alignment: { vertical: 'center' },
+      };
+    }
+
+    const totalCols = rowsData[tableHeaderRowIdx].length;
+
+    // Style Table Header (tableHeaderRowIdx)
+    for (let c = 0; c < totalCols; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r: tableHeaderRowIdx, c });
+      if (ws[cellRef]) {
+        const isTotalCol = c === totalCols - 1 && is2D;
+        ws[cellRef].s = {
+          fill: { fgColor: { rgb: isTotalCol ? '1D4ED8' : '1E3A8A' } },
+          font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: 'FFFFFF' } },
+          alignment: { 
+            vertical: 'center', 
+            horizontal: c === 0 ? 'left' : (is2D ? 'center' : 'right'),
+            wrapText: true 
+          },
+          border: {
+            top: { style: 'thin', color: { rgb: '1E3A8A' } },
+            bottom: { style: 'medium', color: { rgb: '172554' } },
+            left: { style: 'thin', color: { rgb: '2563EB' } },
+            right: { style: 'thin', color: { rgb: '2563EB' } }
+          }
+        };
+      }
+    }
+
+    // Style Data Rows & Grand Total
+    for (let r = tableHeaderRowIdx + 1; r <= tableEndRowIdx; r++) {
+      const isGrandTotal = r === tableEndRowIdx;
+      const firstCellVal = String(rowsData[r][0] || '');
+      const isSubRow = firstCellVal.trim().startsWith('↳');
+
+      for (let c = 0; c < totalCols; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) continue;
+
+        if (isGrandTotal) {
+          // TOTAL ROW
+          ws[cellRef].s = {
+            fill: { fgColor: { rgb: 'DBEAFE' } },
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '1E3A8A' } },
+            alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'right' },
+            border: {
+              top: { style: 'thin', color: { rgb: '3B82F6' } },
+              bottom: { style: 'double', color: { rgb: '1E3A8A' } },
+              left: { style: 'thin', color: { rgb: 'BFDBFE' } },
+              right: { style: 'thin', color: { rgb: 'BFDBFE' } },
+            }
+          };
+          if (c > 0) {
+            ws[cellRef].z = numFormat;
+          }
+        } else if (isSubRow) {
+          // CHILD SUB-ROW
+          ws[cellRef].s = {
+            fill: { fgColor: { rgb: 'FFFFFF' } },
+            font: { name: 'Calibri', sz: 9.5, color: { rgb: '475569' } },
+            alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'right' },
+            border: {
+              bottom: { style: 'hair', color: { rgb: 'F1F5F9' } },
+              left: { style: 'thin', color: { rgb: 'F1F5F9' } },
+              right: { style: 'thin', color: { rgb: 'F1F5F9' } },
+            }
+          };
+          if (c > 0) {
+            ws[cellRef].z = numFormat;
+          }
+        } else {
+          // PARENT ROW
+          ws[cellRef].s = {
+            fill: { fgColor: { rgb: 'F8FAFC' } },
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: '0F172A' } },
+            alignment: { vertical: 'center', horizontal: c === 0 ? 'left' : 'right' },
+            border: {
+              top: { style: 'thin', color: { rgb: 'E2E8F0' } },
+              bottom: { style: 'thin', color: { rgb: 'E2E8F0' } },
+              left: { style: 'thin', color: { rgb: 'E2E8F0' } },
+              right: { style: 'thin', color: { rgb: 'E2E8F0' } },
+            }
+          };
+          if (c > 0) {
+            ws[cellRef].z = numFormat;
+          }
+        }
+      }
+    }
+
+    // Style Signature block
+    const sigStart = tableEndRowIdx + 2;
+    for (let r = sigStart; r < rowsData.length; r++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c: 0 });
+      if (ws[cellRef]) {
+        ws[cellRef].s = {
+          font: { name: 'Calibri', sz: 9, color: { rgb: '475569' }, italic: r === rowsData.length - 1 },
+          alignment: { vertical: 'center' }
+        };
+      }
+    }
+
+    // 5. CALCULATE SMART AUTO COLUMN WIDTHS
+    const colWidths = rowsData[tableHeaderRowIdx].map((_, colIndex) => {
+      let maxLen = 14;
+      for (let r = tableHeaderRowIdx; r <= tableEndRowIdx; r++) {
         const val = rowsData[r][colIndex];
         const strLen = val ? String(val).length : 0;
         if (strLen > maxLen) maxLen = strLen;
       }
-      return { wch: Math.min(Math.max(maxLen + 4, 15), 45) };
+      return { wch: Math.min(Math.max(maxLen + 5, 18), 50) };
     });
     ws['!cols'] = colWidths;
+
+    // Set row heights
+    const rowHeights = rowsData.map((_, r) => {
+      if (r === 0) return { hpt: 26 };
+      if (r === 1) return { hpt: 20 };
+      if (r === 2) return { hpt: 18 };
+      if (r === 3) return { hpt: 10 };
+      if (r === tableHeaderRowIdx) return { hpt: 28 };
+      if (r === tableEndRowIdx) return { hpt: 24 };
+      if (r > tableEndRowIdx) return { hpt: 20 };
+      return { hpt: 21 };
+    });
+    ws['!rows'] = rowHeights;
 
     XLSX.utils.book_append_sheet(wb, ws, 'Отчет MBI');
     XLSX.writeFile(wb, `smartsale_mbi_report_${new Date().toISOString().slice(0, 10)}.xlsx`);
