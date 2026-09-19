@@ -20,6 +20,7 @@ import FeedbackPanel from './pages/FeedbackPanel';
 import AuditLogs from './pages/AuditLogs';
 import SuperAdmin from './pages/SuperAdmin';
 import ReportConstructor from './pages/ReportConstructor';
+import PhotoReports from './pages/PhotoReports';
 import Landing from './pages/Landing';
 import Layout from './components/Layout';
 
@@ -84,6 +85,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <RoutesMap />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/photo-reports"
+          element={
+            <PrivateRoute>
+              <PhotoReports />
             </PrivateRoute>
           }
         />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import {
@@ -692,10 +693,16 @@ export default function Dashboard() {
         {/* Right Column: Activity Feed & Photo reports */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm">
-            <h3 className="text-sm font-bold text-[#1d1d1f] mb-5 flex items-center gap-1.5">
-              <Clock className="w-4.5 h-4.5 text-[#5f6368]" />
-              Лента событий
-            </h3>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-bold text-[#1d1d1f] flex items-center gap-1.5">
+                <Clock className="w-4.5 h-4.5 text-[#5f6368]" />
+                <span>Лента событий</span>
+              </h3>
+              <Link to="/photo-reports" className="text-[11px] font-semibold text-[#0b57d0] hover:underline flex items-center gap-1">
+                <span>Фотоконтроль</span>
+                <span>→</span>
+              </Link>
+            </div>
             
             <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
               {recentOrders.length === 0 && photoReports.length === 0 ? (

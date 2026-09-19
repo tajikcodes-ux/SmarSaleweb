@@ -28,6 +28,7 @@ import {
   MessageSquare,
   Sun,
   Moon,
+  Camera,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -155,6 +156,7 @@ export default function Layout({ children }: LayoutProps) {
       items: [
         { path: '/agents', label: 'Агенты', icon: Users },
         { path: '/map', label: 'Карта и GPS', icon: MapPin },
+        { path: '/photo-reports', label: 'Фотоконтроль', icon: Camera },
         { path: '/tasks', label: 'Задачи', icon: CheckSquare },
         { path: '/salary', label: 'Зарплаты', icon: Coins },
       ]
@@ -195,11 +197,12 @@ export default function Layout({ children }: LayoutProps) {
         if (role === 'OWNER') return true;
 
         if (permissions && Object.keys(permissions).length > 0) {
-          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/reports' || item.path === '/feedbacks') return true;
+          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/reports' || item.path === '/photo-reports' || item.path === '/feedbacks') return true;
 
           const resourceMap: Record<string, string> = {
             '/agents': 'agents',
             '/map': 'map',
+            '/photo-reports': 'map',
             '/clients': 'clients',
             '/catalog': 'catalog',
             '/warehouse': 'warehouse',
@@ -225,7 +228,7 @@ export default function Layout({ children }: LayoutProps) {
           return true;
         }
         if (role === 'SUPERVISOR') {
-          return ['/', '/agents', '/map', '/clients', '/orders', '/returns', '/payments', '/tasks', '/ai-assistant'].includes(item.path);
+          return ['/', '/agents', '/map', '/photo-reports', '/clients', '/orders', '/returns', '/payments', '/tasks', '/ai-assistant'].includes(item.path);
         }
         if (role === 'WAREHOUSE_MAN') {
           return ['/catalog', '/warehouse', '/orders'].includes(item.path);
