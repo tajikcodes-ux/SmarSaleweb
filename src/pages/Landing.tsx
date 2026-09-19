@@ -293,59 +293,36 @@ export default function Landing() {
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.15]">
-                Полный порядок в оптовых продажах за 24 часа. Без программистов и без потери базы.
+                Полный порядок в оптовых продажах и доставке
               </h1>
 
-              <p className="mt-4 text-sm sm:text-base text-slate-600 leading-relaxed">
-                Знайте, где прямо сейчас каждый торговый представитель, заблокируйте отгрузку магазинам с долгами и перестаньте вручную перебивать накладные по ночам.
+              <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl">
+                Единая система для дистрибьюторов: приложение агента, склад, честный GPS-контроль и быстрая связка с 1С без программистов.
               </p>
 
-              {/* 4 Concrete Real-World Business Truths */}
-              <div className="mt-6 space-y-3 text-xs sm:text-sm text-slate-700">
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded bg-rose-100 text-rose-700 flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-xs">
-                    ✕
-                  </div>
-                  <div>
-                    <strong>Агент не сможет оформить визит из дома или авто:</strong> кнопка «Отправить заказ» активна строго в радиусе 25 метров от магазина.
-                  </div>
+              {/* 3 Clean Highlight Cards */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
+                  <div className="text-[10px] font-bold text-[#0b57d0] uppercase tracking-wider">GPS-контроль</div>
+                  <div className="text-xs font-bold text-slate-900 mt-0.5">Радиус визита 25м</div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded bg-rose-100 text-rose-700 flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-xs">
-                    ✕
-                  </div>
-                  <div>
-                    <strong>Водитель не отгрузит товар в долг знакомым:</strong> система физически блокирует накладную магазину, если есть просрочка хотя бы на 1 день.
-                  </div>
+                <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
+                  <div className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Стоп-лист</div>
+                  <div className="text-xs font-bold text-slate-900 mt-0.5">Защита от должников</div>
                 </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-xs">
-                    ✓
-                  </div>
-                  <div>
-                    <strong>Операторы больше не сидят до 23:00:</strong> заказ из смартфона агента падает на склад за 1 секунду.
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold flex-shrink-0 mt-0.5 text-xs">
-                    ✓
-                  </div>
-                  <div>
-                    <strong>Любой срез продаж в Excel за 30 секунд:</strong> встроенный MBI Конструктор отчетов без ожидания программистов 1С.
-                  </div>
+                <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
+                  <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Связка с 1С</div>
+                  <div className="text-xs font-bold text-slate-900 mt-0.5">Подключение за 15 мин</div>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="mt-7 flex flex-col sm:flex-row items-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#0b57d0] hover:bg-[#0848b0] text-white text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2"
                 >
-                  <span>Запросить бесплатный тест-драйв на 14 дней</span>
+                  <span>Попробовать 14 дней бесплатно</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -359,12 +336,12 @@ export default function Landing() {
                 </a>
               </div>
 
-              <div className="mt-4 text-[11px] text-slate-500 flex items-center gap-3">
-                <span>⚡ Запуск базы за 1 день</span>
+              <div className="mt-4 text-[11px] text-slate-500 flex flex-wrap items-center gap-2 sm:gap-3">
+                <span>⚡ Запуск за 24 часа</span>
                 <span>•</span>
-                <span>📱 Работает офлайн без интернета</span>
+                <span>📱 100% офлайн без интернета</span>
                 <span>•</span>
-                <span>💼 Честная цена в сомони</span>
+                <span>💼 Честные тарифы в сомони</span>
               </div>
             </div>
 
@@ -383,23 +360,6 @@ export default function Landing() {
                   loading="eager"
                 />
               </div>
-
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-slate-500 font-medium">
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Реальный интерфейс SmartSale
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Без долгого внедрения
-                </span>
-                <span>•</span>
-                <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  Обучение агентов за 20 минут
-                </span>
-              </div>
             </div>
 
           </div>
@@ -407,34 +367,34 @@ export default function Landing() {
       </section>
 
       {/* SECTION: DEDICATED 1C INTEGRATION BLOCK (SAVES 90% WORRIES) */}
-      <section id="integration-1c" className="py-16 bg-slate-900 text-white border-b border-slate-800">
+      <section id="integration-1c" className="py-14 bg-slate-900 text-white border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-950 text-blue-300 text-xs font-bold mb-3 border border-blue-800">
                 <Database className="w-4 h-4 text-blue-400" />
-                <span>Самый частый вопрос директора и бухгалтера</span>
+                <span>Интеграция с учетной системой</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                «А как это свяжется с нашей 1С?» — Ответ: легко и за 15 минут
+                «А как это свяжется с 1С?» — Легко и за 15 минут
               </h2>
-              <p className="mt-3 text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Вам <strong>НЕ нужно нанимать программиста 1С</strong> и переписывать конфигурацию. SmartSale подключается через внешнюю стандартную обработку и работает с любой версией (1С:УТ 10.3 / 11, 1С:Бухгалтерия или МойСклад).
+              <p className="mt-2 text-slate-300 text-xs sm:text-sm leading-relaxed">
+                Без риска для базы и без переписывания конфигураций. Подключение через стандартную внешнюю обработку (1С:УТ, 1С:Бухгалтерия или МойСклад).
               </p>
 
-              <div className="mt-6 space-y-3 text-xs sm:text-sm">
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <span><strong>Ваша 1С остается нетронутой:</strong> никаких рисков повредить учет или потерять проводки.</span>
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
+                  <div className="font-bold text-emerald-400 text-sm">🛡️ База нетронута</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Никаких правок в конфигурации. Проводки в полной безопасности.</div>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <span><strong>Накладные загружаются за 1 клик:</strong> оператор нажимает кнопку, и 100 заказов от агентов создаются документами в 1С без ручного ввода.</span>
+                <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
+                  <div className="font-bold text-emerald-400 text-sm">⚡ 1 клик — накладные</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Сотни заказов агентов создаются документами в 1С без ручного ввода.</div>
                 </div>
-                <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <span><strong>Остатки и долги улетают агентам:</strong> при изменении цены или приходе денег накладные сразу обновляются на телефонах в полях.</span>
+                <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
+                  <div className="font-bold text-emerald-400 text-sm">🔄 Авто-обмен</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Цены, остатки и стоп-листы сразу у агентов на смартфонах.</div>
                 </div>
               </div>
             </div>
@@ -555,25 +515,25 @@ export default function Landing() {
           {activeTab === 'sfa' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
-                  Мобильное приложение: агент оформляет заказ за 30 секунд
+                <span className="text-[11px] font-bold text-[#0b57d0] uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                  Приложение агента (Android / iOS)
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Заказ за 30 секунд прямо в торговой точке
                 </h3>
                 <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                  Простой интерфейс, в котором разберется любой сотрудник за 15 минут. Агент открывает точку на маршруте, видит остатки склада, цену с учетом скидок и нажимает «Оформить».
+                  Понятный интерфейс без лишних кнопок. Агент сразу видит долг магазина, актуальные остатки склада и персональные цены со скидками.
                 </p>
-                <div className="mt-4 space-y-2 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>100% офлайн</strong>: работает в подвалах и на рынках без интернета.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>MML-матрица</strong>: напоминает предложить акционные товары.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                    <span><strong>Печать накладной на месте</strong>: карманный Bluetooth-термопринтер.</span>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    ⚡ 100% офлайн без связи
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📦 Актуальный склад
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    🖨️ Чек на термопринтере
+                  </span>
                 </div>
               </div>
               <div className="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm text-xs font-sans">
@@ -691,21 +651,25 @@ export default function Landing() {
           {activeTab === 'mbi' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
-                  Конструктор MBI: любые отчеты в красивый Excel за 30 секунд
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                  Аналитика и MBI Конструктор
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Любые отчеты в красивый Excel за 30 секунд
                 </h3>
                 <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                  Не нужно нанимать программиста 1С и платить за каждую доработку. Вы сами выбираете нужные строки и колонки (например: Агенты × Бренды) и нажимаете кнопку «Экспорт в Excel».
+                  Стройте любые срезы (Агенты × Бренды × Дни) в один клик без ожидания и без оплаты программистов 1С.
                 </p>
-                <div className="mt-4 space-y-2 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                    <span><strong>2D Матрицы (Pivot)</strong>: срез продаж по дням, брендам, категориям.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                    <span><strong>Дизайнерский Excel</strong>: таблицы с форматированием валюты и итогами.</span>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📊 2D Матрицы (Pivot)
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📥 Готовый дизайнерский Excel
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    ⚡ Без программистов
+                  </span>
                 </div>
               </div>
               <div className="bg-white p-3 rounded-xl border border-slate-300 shadow-sm text-xs font-sans overflow-x-auto">
@@ -749,31 +713,27 @@ export default function Landing() {
 
           {activeTab === 'gps' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                 <div className="lg:col-span-7">
-                  <h3 className="text-xl font-black text-slate-900">
-                    Честный GPS-контроль: видите точный маршрут на карте
+                  <span className="text-[11px] font-bold text-[#0b57d0] uppercase tracking-wider bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                    GPS-контроль и трекинг
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                    Полная прозрачность маршрутов в реальном времени
                   </h3>
                   <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                    Супервайзер в любой момент видит, где находится агент, сколько минут он провел в точке и сколько магазинов осталось до конца рабочего дня.
+                    Супервайзер видит точный трек движения, фиксацию времени в каждой точке и остаток запланированных визитов.
                   </p>
-                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm text-slate-700">
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span><strong>Радиус 25 метров</strong>: заказ не оформить из дома или авто.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span><strong>Тайминг стоянок</strong>: фиксация времени в точках (P 19м, P 23м).</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span><strong>Плеер трека дня</strong>: перемотка, скорость и заряд батареи.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span><strong>Оптимизация маршрута</strong>: авто-расчет кратчайшего объезда.</span>
-                    </div>
+                  <div className="mt-3.5 flex flex-wrap gap-2 text-xs">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                      📍 Заказ строго в радиусе 25м
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                      ⏱️ Учет времени стоянок (P 19м)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                      ▶️ Плеер трека дня со скоростью
+                    </span>
                   </div>
                 </div>
 
@@ -853,21 +813,22 @@ export default function Landing() {
           {activeTab === 'wms' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
-                  Склад и WMS: мгновенный резерв товара без пересортицы
+                <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
+                  Складской учет и WMS
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Мгновенный резерв товара без пересортицы
                 </h3>
                 <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                  Как только агент нажимает кнопку «Отправить заказ», товар автоматически бронируется на складе. Агент никогда не продаст позицию, которой физически нет в наличии.
+                  Товар бронируется в момент отправки заказа. Агенты видят только фактические свободные остатки.
                 </p>
-                <div className="mt-4 space-y-2 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span><strong>FEFO учет сроков годности</strong>: в накладную идут партии с более ранним сроком.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span><strong>Учет возвратов и брака</strong>: фиксация причин возврата товара.</span>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📦 FEFO партионный учет
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    ⚠️ Контроль критических остатков
+                  </span>
                 </div>
               </div>
               <div className="bg-slate-50/80 p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm text-xs font-sans">
@@ -949,21 +910,22 @@ export default function Landing() {
           {activeTab === 'finance' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
-                  Кредитный стоп-лист: защищает оборотные средства компании
+                <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">
+                  Кредитный контроль и дебиторка
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Защита оборотных средств от безнадежных долгов
                 </h3>
                 <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                  Установите максимальный лимит долга и срок отсрочки для каждого магазина. Если срок истек, программа не даст выписать накладную, пока точка не погасит задолженность.
+                  Автоматическая блокировка отгрузки при превышении лимита или срока отсрочки платежа.
                 </p>
-                <div className="mt-4 space-y-2 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                    <span><strong>Автоматическая блокировка</strong>: исключает сговоры агента с точкой.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-rose-600 flex-shrink-0" />
-                    <span><strong>Акт сверки день в день</strong>: агент видит все оплаты и сдает кассу по акту.</span>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    ⛔ Блокировка должников
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📋 Сверка и касса день в день
+                  </span>
                 </div>
               </div>
               <div className="bg-rose-50 border border-rose-200 p-5 rounded-xl text-rose-950 text-xs">
@@ -980,21 +942,22 @@ export default function Landing() {
           {activeTab === 'telegram' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
-                  B2B Telegram Бот: магазины сами делают дозаказы 24/7
+                <span className="text-[11px] font-bold text-sky-700 uppercase tracking-wider bg-sky-50 px-2.5 py-1 rounded-md border border-sky-200">
+                  B2B Канал продаж 24/7
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                  Круглосуточный бот для заказов магазинов
                 </h3>
                 <p className="text-slate-600 mt-2 text-xs sm:text-sm leading-relaxed">
-                  В выходные или вечером, когда агент уже закончил маршрут, владелец магазина открывает каталог в Telegram и отправляет дозаказ. Утром машина уже загружена.
+                  Торговые точки сами оформляют дозаказы вечером и в выходные, а директор получает сводку выручки в 21:00.
                 </p>
-                <div className="mt-4 space-y-2 text-xs sm:text-sm text-slate-700">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                    <span><strong>Вечерняя сводка директору</strong>: в 21:00 бот присылает дневную выручку.</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-sky-600 flex-shrink-0" />
-                    <span><strong>Статус доставки</strong>: магазин видит, когда водитель выехал к нему.</span>
-                  </div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    🤖 Заказы магазинов 24/7
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
+                    📊 Сводка директору в 21:00
+                  </span>
                 </div>
               </div>
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
