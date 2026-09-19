@@ -20,6 +20,7 @@ import FeedbackPanel from './pages/FeedbackPanel';
 import AuditLogs from './pages/AuditLogs';
 import SuperAdmin from './pages/SuperAdmin';
 import ReportConstructor from './pages/ReportConstructor';
+import Landing from './pages/Landing';
 import Layout from './components/Layout';
 
 // Guard for authenticated pages
@@ -28,7 +29,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return token ? <Layout>{children}</Layout> : <Navigate to="/login" replace />;
 }
 
-// Redirect home page based on user role
+// Redirect home page based on user role or landing domain
 function HomeRedirect() {
   try {
     const userStr = localStorage.getItem('user');
@@ -42,19 +43,33 @@ function HomeRedirect() {
   return <Dashboard />;
 }
 
+function RootRoute() {
+  const isLandingHost = window.location.hostname.includes('landing') || 
+                        window.location.hostname.includes('promo') ||
+                        window.location.search.includes('landing=true');
+  const token = localStorage.getItem('access_token');
+  
+  if (isLandingHost && !token) {
+    return <Landing />;
+  }
+  
+  return (
+    <PrivateRoute>
+      <HomeRedirect />
+    </PrivateRoute>
+  );
+}
+
 export default function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/landing" element={<Landing />} />
         
         <Route
           path="/"
-          element={
-            <PrivateRoute>
-              <HomeRedirect />
-            </PrivateRoute>
-          }
+          element={<RootRoute />}
         />
         <Route
           path="/agents"

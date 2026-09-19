@@ -133,7 +133,17 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-8 text-center text-[9px] text-[#86868b] font-bold tracking-wider">
+        <div className="mt-5 text-center">
+          <button
+            type="button"
+            onClick={() => navigate('/landing')}
+            className="text-xs font-semibold text-[#0b57d0] hover:text-[#0848b0] hover:underline transition-colors"
+          >
+            О возможностях SmartSale 2.0 и тарифы →
+          </button>
+        </div>
+
+        <div className="mt-6 text-center text-[9px] text-[#86868b] font-bold tracking-wider">
           <span>РАЗРАБОТКА SAVDO TECH • 2026</span>
         </div>
       </div>

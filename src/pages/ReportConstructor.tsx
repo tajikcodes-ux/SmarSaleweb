@@ -74,7 +74,7 @@ export default function ReportConstructor() {
     ],
   });
 
-  // Presets matching Smartup & Best Practices
+  // Presets matching Best Practices
   const presets: Preset[] = [
     {
       id: 'daily-rop',
@@ -279,7 +279,7 @@ export default function ReportConstructor() {
     }));
   };
 
-  // View Mode: 'data' (Live Data) vs 'structure' (Smartup Layout Skeleton Preview)
+  // View Mode: 'data' (Live Data) vs 'structure' (Layout Skeleton Preview)
   const [viewMode, setViewMode] = useState<'data' | 'structure'>('data');
 
   // Modal: A4 Print Preview
@@ -1483,7 +1483,7 @@ export default function ReportConstructor() {
               )}
             </div>
 
-            {/* TAB SWITCH: DATA vs STRUCTURE (SMARTUP PREVIEW) */}
+            {/* TAB SWITCH: DATA vs STRUCTURE (BLUEPRINT PREVIEW) */}
             <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg text-xs">
               <button
                 onClick={() => setViewMode('data')}
@@ -1531,14 +1531,14 @@ export default function ReportConstructor() {
           </div>
         )}
 
-        {/* VIEW MODE: STRUCTURE PREVIEW (SMARTUP BLUEPRINT PREVIEW) */}
+        {/* VIEW MODE: STRUCTURE PREVIEW (BLUEPRINT PREVIEW) */}
         {viewMode === 'structure' && (
           <div className="p-6 bg-slate-50 border-b border-gray-100">
             <div className="max-w-4xl mx-auto bg-white rounded-xl border border-indigo-200 p-5 shadow-xs">
               <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase">
                   <Eye className="w-4 h-4 text-indigo-600" />
-                  <span>Скелет макета таблицы (Smartup Blueprint Preview)</span>
+                  <span>Скелет макета таблицы (Blueprint Preview)</span>
                 </div>
                 <span className="text-[11px] text-gray-500">
                   Строк: {selectedRows.length}, Колонок: {selectedColumns.length > 0 ? 1 : 0}, Показателей: {selectedValues.length}

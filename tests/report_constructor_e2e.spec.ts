@@ -85,7 +85,7 @@ test.describe('MBI Report Constructor Frontend E2E Tests', () => {
     console.log('Test 3 PASSED: Preset switching (2D Matrix and 1D Table) verified.');
   });
 
-  test('4. View Mode: Switch to Smartup Blueprint Structure Preview', async ({ page }) => {
+  test('4. View Mode: Switch to Blueprint Structure Preview', async ({ page }) => {
     await page.goto(`${BASE_URL}/reports`);
     await page.waitForLoadState('networkidle');
 
@@ -95,11 +95,11 @@ test.describe('MBI Report Constructor Frontend E2E Tests', () => {
     await blueprintTab.click();
 
     // Verify blueprint skeleton table
-    await expect(page.locator('text=Скелет макета таблицы (Smartup Blueprint Preview)')).toBeVisible();
+    await expect(page.locator('text=Скелет макета таблицы (Blueprint Preview)')).toBeVisible();
 
     // Switch back to Data view
     await page.locator('button:has-text("Данные отчета")').click();
-    await expect(page.locator('text=Скелет макета таблицы (Smartup Blueprint Preview)')).not.toBeVisible();
+    await expect(page.locator('text=Скелет макета таблицы (Blueprint Preview)')).not.toBeVisible();
     console.log('Test 4 PASSED: View mode toggling (Data vs Blueprint Preview) verified.');
   });
 
