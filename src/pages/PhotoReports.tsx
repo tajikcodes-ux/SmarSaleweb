@@ -35,138 +35,7 @@ interface PhotoItem {
   distanceMeters?: number;
 }
 
-// Curated high quality FMCG retail shelf photos as fallback/demo sample data
-const DEMO_PHOTOS: PhotoItem[] = [
-  {
-    id: 'demo-1',
-    photoUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    latitude: 38.5782,
-    longitude: 68.7841,
-    clientName: 'Супермаркет "Пайкар-2"',
-    clientAddress: 'пр. Рудаки, 127, Душанбе',
-    agentName: 'Рустам Каримов',
-    agentId: 'agent-1',
-    category: 'Витрина напитков',
-    status: 'pending',
-    orderInfo: 'Заказ #1492 • 2 450 TJS',
-    distanceMeters: 8,
-  },
-  {
-    id: 'demo-2',
-    photoUrl: 'https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    latitude: 38.5670,
-    longitude: 68.7990,
-    clientName: 'Минимаркет "Ёвар - Центр"',
-    clientAddress: 'ул. Айни, 48, Душанбе',
-    agentName: 'Алишер Назаров',
-    agentId: 'agent-2',
-    category: 'Кондитерская полка',
-    status: 'approved',
-    orderInfo: 'Заказ #1488 • 890 TJS',
-    distanceMeters: 14,
-  },
-  {
-    id: 'demo-3',
-    photoUrl: 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    latitude: 38.5412,
-    longitude: 68.7510,
-    clientName: 'Магазин "Садбарг-Плюс"',
-    clientAddress: 'ул. Карабаева, 12, Душанбе',
-    agentName: 'Фарход Саидов',
-    agentId: 'agent-3',
-    category: 'Брендированный холодильник',
-    status: 'warning',
-    comment: 'В холодильник поставили чужую продукцию! Попросить продавца убрать.',
-    orderInfo: 'Заказ #1472 • 1 200 TJS',
-    distanceMeters: 18,
-  },
-  {
-    id: 'demo-4',
-    photoUrl: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    latitude: 38.5830,
-    longitude: 68.7712,
-    clientName: 'Гастроном "Шоми Душанбе"',
-    clientAddress: 'ул. Сомони, 88, Душанбе',
-    agentName: 'Рустам Каримов',
-    agentId: 'agent-1',
-    category: 'Золотая полка FMCG',
-    status: 'approved',
-    orderInfo: 'Заказ #1461 • 3 100 TJS',
-    distanceMeters: 5,
-  },
-  {
-    id: 'demo-5',
-    photoUrl: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    latitude: 38.5521,
-    longitude: 68.7619,
-    clientName: 'Маркет "Ситора"',
-    clientAddress: 'ул. Борбад, 32, Душанбе',
-    agentName: 'Шерзод Бобоев',
-    agentId: 'agent-4',
-    category: 'Выкладка снеков',
-    status: 'pending',
-    orderInfo: 'Заказ #1450 • 650 TJS',
-    distanceMeters: 11,
-  },
-  {
-    id: 'demo-6',
-    photoUrl: 'https://images.unsplash.com/photo-1580913428023-02c695666d61?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-    latitude: 38.5300,
-    longitude: 68.7200,
-    clientName: 'Торговый дом "Фаровон"',
-    clientAddress: 'Гиссарское шоссе, 15',
-    agentName: 'Алишер Назаров',
-    agentId: 'agent-2',
-    category: 'Торцевая промо-стойка',
-    status: 'approved',
-    orderInfo: 'Заказ #1442 • 4 800 TJS',
-    distanceMeters: 7,
-  },
-  {
-    id: 'demo-7',
-    photoUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    latitude: 38.5390,
-    longitude: 68.7550,
-    clientName: 'Минимаркет "Осиё"',
-    clientAddress: 'ул. Негмата Карабаева, 84',
-    agentName: 'Фарход Саидов',
-    agentId: 'agent-3',
-    category: 'Фасад и вывеска',
-    status: 'pending',
-    orderInfo: 'Заказ #1435 • 920 TJS',
-    distanceMeters: 4,
-  },
-  {
-    id: 'demo-8',
-    photoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1000&auto=format&fit=crop&q=80',
-    takenAt: new Date(Date.now() - 7 * 3600 * 1000).toISOString(),
-    createdAt: new Date(Date.now() - 7 * 3600 * 1000).toISOString(),
-    latitude: 38.5690,
-    longitude: 68.7910,
-    clientName: 'Супермаркет "Амид"',
-    clientAddress: 'ул. Валаматзаде, 9, Душанбе',
-    agentName: 'Рустам Каримов',
-    agentId: 'agent-1',
-    category: 'Основная бакалейная витрина',
-    status: 'approved',
-    orderInfo: 'Заказ #1420 • 5 400 TJS',
-    distanceMeters: 12,
-  }
-];
+
 
 export default function PhotoReports() {
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
@@ -208,10 +77,15 @@ export default function PhotoReports() {
       if (apiData.length > 0) {
         const mapped: PhotoItem[] = apiData.map((item: any) => {
           const mod = moderationStore[item.id] || {};
-          const photoUrl = item.photoUrl?.replace('https://savdo.tech', window.location.origin);
+          let photoUrl = item.photoUrl || '';
+          if (photoUrl.startsWith('/')) {
+            photoUrl = `${window.location.origin}${photoUrl}`;
+          } else if (photoUrl.includes('savdo.tech')) {
+            photoUrl = photoUrl.replace('https://savdo.tech', window.location.origin);
+          }
           return {
             id: item.id,
-            photoUrl: photoUrl || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800',
+            photoUrl: photoUrl,
             takenAt: item.takenAt || item.createdAt || new Date().toISOString(),
             createdAt: item.createdAt || new Date().toISOString(),
             latitude: item.latitude ? Number(item.latitude) : undefined,
@@ -227,31 +101,21 @@ export default function PhotoReports() {
             distanceMeters: Math.floor(Math.random() * 15) + 5,
           };
         });
-        const combined = [...mapped, ...DEMO_PHOTOS.filter(d => !mapped.some(m => m.id === d.id))];
-        setPhotos(combined);
+        setPhotos(mapped);
+
+        // Check if there are any photos taken today
         const todayStr = new Date().toISOString().split('T')[0];
-        const hasToday = combined.some(p => (p.takenAt || p.createdAt).startsWith(todayStr));
+        const hasToday = mapped.some(p => (p.takenAt || p.createdAt).startsWith(todayStr));
         if (!hasToday) {
+          // If no photos today, default to 'all' so supervisor sees real existing photos
           setActiveDateFilter('all');
         }
       } else {
-        // Use demo items enriched with stored moderation
-        const enriched = DEMO_PHOTOS.map(p => {
-          const mod = moderationStore[p.id];
-          return mod ? { ...p, status: mod.status, comment: mod.comment } : p;
-        });
-        setPhotos(enriched);
-        setActiveDateFilter('all');
+        setPhotos([]);
       }
     } catch (err) {
-      console.warn('Could not fetch photo reports from backend, loading fallback demo:', err);
-      const moderationStore = getModerationStore();
-      const enriched = DEMO_PHOTOS.map(p => {
-        const mod = moderationStore[p.id];
-        return mod ? { ...p, status: mod.status, comment: mod.comment } : p;
-      });
-      setPhotos(enriched);
-      setActiveDateFilter('all');
+      console.error('Error loading photo reports from backend:', err);
+      setPhotos([]);
     } finally {
       setLoading(false);
     }
