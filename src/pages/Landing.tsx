@@ -26,7 +26,7 @@ import {
   Bot
 } from 'lucide-react';
 import heroDevicesMockup from '../assets/hero_devices_mockup.png';
-import appIcon from '../assets/app_icon.png';
+import logoClean from '../assets/logo_clean.png';
 import gpsTrackingMap from '../assets/gps_tracking_map.png';
 
 export default function Landing() {
@@ -173,9 +173,9 @@ export default function Landing() {
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
             <img
-              src={appIcon}
-              alt="SmartSale Icon"
-              className="w-8 h-8 rounded-xl object-contain shadow-sm ring-1 ring-slate-900/5 group-hover:scale-105 transition-transform"
+              src={logoClean}
+              alt="SmartSale Logo"
+              className="w-9 h-9 object-contain select-none group-hover:scale-105 transition-transform"
             />
             <div className="flex items-center gap-1.5">
               <span className="font-black text-xl tracking-tight text-slate-900">
@@ -1630,10 +1630,12 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded bg-[#0b57d0] flex items-center justify-center font-bold text-white text-sm">
-                  S
-                </div>
+              <div className="flex items-center gap-2.5 mb-2">
+                <img
+                  src={logoClean}
+                  alt="SmartSale Logo"
+                  className="w-7 h-7 object-contain select-none"
+                />
                 <span className="font-bold text-base text-white">SmartSale ERP</span>
               </div>
               <p className="text-slate-500 text-[11px] leading-relaxed">

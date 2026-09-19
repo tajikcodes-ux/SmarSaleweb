@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import logoClean from '../assets/logo_clean.png';
 import { Lock, User, AlertCircle, Sparkles } from 'lucide-react';
 
 export default function Login() {
@@ -63,9 +64,11 @@ export default function Login() {
         
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0b57d0] to-[#1a73e8] flex items-center justify-center font-bold text-white text-2xl shadow-lg shadow-[#0b57d0]/20 mb-4 select-none hover:rotate-6 hover:scale-110 transition-transform duration-300">
-            S
-          </div>
+          <img
+            src={logoClean}
+            alt="SmartSale Logo"
+            className="w-16 h-16 object-contain mb-4 select-none drop-shadow-md hover:scale-105 transition-transform duration-300"
+          />
           <h2 className="text-xl font-bold tracking-tight text-[#1d1d1f]">
             SmartSale ERP
           </h2>

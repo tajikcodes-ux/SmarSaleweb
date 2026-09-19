@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
+import logoClean from '../assets/logo_clean.png';
 import {
   LayoutDashboard,
   BarChart3,
@@ -277,9 +278,11 @@ export default function Layout({ children }: LayoutProps) {
               className="flex items-center gap-3 cursor-pointer select-none"
               onClick={() => navigate('/')}
             >
-              <div className="w-9 h-9 rounded-xl bg-[#0b57d0] flex items-center justify-center font-bold text-white text-lg shadow-md shadow-[#0b57d0]/20 flex-shrink-0">
-                S
-              </div>
+              <img
+                src={logoClean}
+                alt="SmartSale Logo"
+                className="w-9 h-9 object-contain flex-shrink-0 select-none drop-shadow-xs"
+              />
               {(!isCollapsed || isMobileMenuOpen) && (
                 <div className={`animate-fadeIn ${isCollapsed ? 'lg:hidden block' : 'block'}`}>
                   <h1 className="font-bold text-base tracking-tight text-[#1d1d1f]">
