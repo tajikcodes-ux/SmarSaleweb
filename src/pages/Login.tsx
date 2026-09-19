@@ -73,7 +73,7 @@ export default function Login() {
             SmartSale ERP
           </h2>
           <p className="text-[9px] text-[#86868b] font-bold uppercase tracking-widest mt-1">
-            Savdo Tech Distribution
+            B2B Distribution & SFA System
           </p>
         </div>
 
@@ -147,7 +147,18 @@ export default function Login() {
         </div>
 
         <div className="mt-6 text-center text-[9px] text-[#86868b] font-bold tracking-wider">
-          <span>РАЗРАБОТКА SAVDO TECH • 2026</span>
+          <span>
+            РАЗРАБОТКА{' '}
+            <a
+              href="https://taj.codes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#0b57d0] transition-colors underline decoration-slate-300 underline-offset-2"
+            >
+              TAJCODES (taj.codes)
+            </a>{' '}
+            • 2026
+          </span>
         </div>
       </div>
 

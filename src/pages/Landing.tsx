@@ -1689,7 +1689,18 @@ export default function Landing() {
           </div>
 
           <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
-            <div>© 2026 Savdo Tech. Все права защищены. SmartSale ERP 2.0</div>
+            <div>
+              © 2026 Разработано компанией{' '}
+              <a
+                href="https://taj.codes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-emerald-400 font-medium transition-colors underline decoration-slate-700 underline-offset-2"
+              >
+                tajcodes (taj.codes)
+              </a>
+              . Все права защищены. SmartSale ERP 2.0
+            </div>
             <div className="flex items-center gap-3">
               <button onClick={() => navigate('/login')} className="hover:text-white">Вход для клиентов</button>
               <span>•</span>

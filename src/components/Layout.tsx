@@ -288,9 +288,15 @@ export default function Layout({ children }: LayoutProps) {
                   <h1 className="font-bold text-base tracking-tight text-[#1d1d1f]">
                     SmartSale
                   </h1>
-                  <span className="text-[9px] text-[#86868b] font-bold tracking-widest uppercase block -mt-1">
-                    Savdo Tech
-                  </span>
+                  <a
+                    href="https://taj.codes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[9px] text-[#86868b] hover:text-[#0b57d0] font-bold tracking-widest uppercase block -mt-1 transition-colors"
+                  >
+                    by tajcodes
+                  </a>
                 </div>
               )}
             </div>
