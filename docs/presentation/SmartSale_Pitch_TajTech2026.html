@@ -7,21 +7,19 @@
   <link rel="icon" type="image/png" href="../../public/favicon.png">
   <style>
     :root {
-      --bg-dark: #06080E;
-      --bg-surface: #0D1321;
-      --bg-card: rgba(16, 23, 38, 0.82);
-      --bg-card-hover: rgba(24, 34, 56, 0.95);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-accent: rgba(16, 185, 129, 0.38);
+      --bg-dark: #07090E;
+      --bg-card: rgba(16, 23, 38, 0.85);
+      --bg-card-hover: rgba(26, 37, 60, 0.95);
+      --border: rgba(255, 255, 255, 0.1);
+      --border-accent: rgba(16, 185, 129, 0.45);
       --primary: #10B981;
-      --primary-glow: rgba(16, 185, 129, 0.3);
+      --primary-glow: rgba(16, 185, 129, 0.35);
       --secondary: #06B6D4;
       --accent: #6366F1;
       --gold: #F59E0B;
       --danger: #EF4444;
-      --text-main: #F3F4F6;
-      --text-muted: #9CA3AF;
-      --text-faint: #4B5563;
+      --text-main: #FFFFFF;
+      --text-muted: #A1A1AA;
       --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
     }
 
@@ -51,8 +49,8 @@
       left: -10%;
       width: 140vw;
       height: 140vh;
-      background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.16) 0%, transparent 40%),
-                  radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.14) 0%, transparent 45%);
+      background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.16) 0%, transparent 45%);
       pointer-events: none;
       z-index: 0;
       filter: blur(80px);
@@ -65,14 +63,14 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 64px;
+      height: 68px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 36px;
+      padding: 0 40px;
       z-index: 50;
       border-bottom: 1px solid var(--border);
-      background: rgba(6, 8, 14, 0.78);
+      background: rgba(7, 9, 14, 0.82);
       backdrop-filter: blur(20px);
     }
 
@@ -86,16 +84,16 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 800;
-      font-size: 19px;
+      font-weight: 900;
+      font-size: 22px;
       letter-spacing: -0.5px;
       color: #fff;
     }
 
     .logo-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       background: linear-gradient(135deg, #10B981, #06B6D4);
       display: flex;
       align-items: center;
@@ -104,23 +102,23 @@
     }
 
     .logo-icon svg {
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       fill: #052e16;
     }
 
     .brand-sub {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
+      gap: 8px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      letter-spacing: 0.8px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
       color: var(--primary);
     }
 
@@ -131,23 +129,23 @@
     }
 
     .btn-icon {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 7px 13px;
-      border-radius: 8px;
+      color: #fff;
+      padding: 8px 15px;
+      border-radius: 9px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      font-size: 12px;
-      font-weight: 600;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
       transition: all 0.2s ease;
     }
 
     .btn-icon:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
       transform: translateY(-1px);
     }
 
@@ -155,15 +153,14 @@
       background: var(--primary);
       border-color: var(--primary);
       color: #042f1a;
-      box-shadow: 0 0 14px var(--primary-glow);
+      box-shadow: 0 0 16px var(--primary-glow);
       text-decoration: none;
     }
 
     .btn-primary-action:hover {
       background: #34D399;
-      border-color: #34D399;
       color: #042f1a;
-      box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+      box-shadow: 0 0 22px rgba(52, 211, 153, 0.5);
     }
 
     /* Deck Container */
@@ -171,9 +168,9 @@
       flex: 1;
       position: relative;
       width: 100vw;
-      height: calc(100vh - 128px);
-      margin-top: 64px;
-      margin-bottom: 64px;
+      height: calc(100vh - 136px);
+      margin-top: 68px;
+      margin-bottom: 68px;
       overflow: hidden;
       z-index: 10;
     }
@@ -181,15 +178,15 @@
     .slide {
       position: absolute;
       inset: 0;
-      padding: 22px 60px;
+      padding: 24px 64px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       opacity: 0;
       pointer-events: none;
       transform: scale(0.96) translateY(24px);
-      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
       box-sizing: border-box;
     }
 
@@ -206,10 +203,10 @@
     }
 
     /* Morphing Elements Stagger Animation */
-    .slide.active .morph-1 { animation: morphIn 0.5s 0.06s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .slide.active .morph-2 { animation: morphIn 0.5s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .slide.active .morph-3 { animation: morphIn 0.5s 0.18s cubic-bezier(0.16, 1, 0.3, 1) both; }
-    .slide.active .morph-4 { animation: morphIn 0.5s 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-1 { animation: morphIn 0.45s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-2 { animation: morphIn 0.45s 0.10s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-3 { animation: morphIn 0.45s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-4 { animation: morphIn 0.45s 0.20s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
     @keyframes morphIn {
       from {
@@ -224,26 +221,26 @@
       }
     }
 
-    /* Typography */
+    /* Big Bold Typography */
     .slide-tagline {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 11.5px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 1.4px;
+      letter-spacing: 1.5px;
       color: var(--primary);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .slide-title {
-      font-size: 32px;
-      font-weight: 800;
-      line-height: 1.18;
-      letter-spacing: -0.8px;
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -1.2px;
       color: #FFFFFF;
-      max-width: 980px;
+      max-width: 1000px;
     }
 
     .slide-title span.highlight {
@@ -259,18 +256,19 @@
     }
 
     .slide-subtitle {
-      font-size: 15px;
+      font-size: 19px;
       color: var(--text-muted);
-      margin-top: 6px;
-      line-height: 1.45;
-      max-width: 920px;
+      margin-top: 8px;
+      line-height: 1.4;
+      max-width: 950px;
+      font-weight: 500;
     }
 
     /* Grids */
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 26px;
+      gap: 32px;
       align-items: center;
       margin: auto 0;
     }
@@ -278,23 +276,23 @@
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
+      gap: 22px;
       margin: auto 0;
     }
 
     .grid-4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
+      gap: 18px;
       margin: auto 0;
     }
 
     /* Cards */
     .feature-card {
-      background: rgba(255, 255, 255, 0.035);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px 20px;
+      border-radius: 18px;
+      padding: 24px;
       position: relative;
       overflow: hidden;
       transition: all 0.3s ease;
@@ -303,107 +301,90 @@
     .feature-card:hover {
       background: var(--bg-card-hover);
       border-color: var(--border-accent);
-      transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45);
-    }
-
-    .feature-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      margin-bottom: 10px;
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
     }
 
     .feature-card h3 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .feature-card p {
-      font-size: 12.8px;
-      color: var(--text-muted);
-      line-height: 1.45;
-    }
-
-    /* Target Box for 4-audience matrix */
-    .target-card {
-      background: rgba(13, 19, 33, 0.9);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 100%;
-      position: relative;
-      transition: all 0.25s ease;
-    }
-
-    .target-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 28px rgba(0,0,0,0.45);
-    }
-
-    .target-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 10.5px;
+      font-size: 21px;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 3px 9px;
-      border-radius: 7px;
-      margin-bottom: 10px;
-      width: fit-content;
-    }
-
-    .target-title {
-      font-size: 15px;
-      font-weight: 700;
       color: #fff;
       margin-bottom: 8px;
     }
 
-    .target-list {
+    .feature-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Big Punch Card */
+    .punch-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
+      transition: all 0.25s ease;
+    }
+
+    .punch-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+    }
+
+    .punch-badge {
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      width: fit-content;
+      margin-bottom: 12px;
+    }
+
+    .punch-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .punch-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      font-size: 12px;
-      color: var(--text-muted);
+      gap: 9px;
     }
 
-    .target-list li {
+    .punch-list li {
+      font-size: 14px;
+      color: var(--text-main);
       display: flex;
       align-items: flex-start;
-      gap: 7px;
-      line-height: 1.4;
+      gap: 9px;
+      line-height: 1.35;
     }
 
-    .target-list li svg {
-      width: 14px;
-      height: 14px;
+    .punch-list li svg {
+      width: 16px;
+      height: 16px;
       flex-shrink: 0;
       margin-top: 2px;
     }
 
-    /* Metrics */
+    /* Giant Metrics */
     .metric-hero {
-      font-size: 42px;
+      font-size: 54px;
       font-weight: 900;
       letter-spacing: -2px;
       line-height: 1;
-      margin-bottom: 5px;
-      background: linear-gradient(135deg, #FFFFFF 30%, #9CA3AF 100%);
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #FFFFFF 40%, #9CA3AF 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -414,84 +395,75 @@
       -webkit-text-fill-color: transparent;
     }
 
+    .metric-hero.gold {
+      background: linear-gradient(135deg, #F59E0B, #FBBF24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .metric-label {
-      font-size: 11.5px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       color: var(--text-muted);
     }
 
-    /* Comparison Box */
-    .comparison-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 22px;
-      margin: auto 0;
-    }
-
+    /* Big Compare Boxes */
     .comp-box {
-      border-radius: 16px;
-      padding: 18px;
+      border-radius: 18px;
+      padding: 24px;
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
     }
 
     .comp-box.negative {
-      border-color: rgba(239, 68, 68, 0.28);
-      background: linear-gradient(180deg, rgba(239, 68, 68, 0.06) 0%, rgba(6, 8, 14, 0.45) 100%);
+      border-color: rgba(239, 68, 68, 0.35);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(7, 9, 14, 0.5) 100%);
     }
 
     .comp-box.positive {
-      border-color: rgba(16, 185, 129, 0.38);
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.07) 0%, rgba(6, 8, 14, 0.45) 100%);
-    }
-
-    .comp-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.09) 0%, rgba(7, 9, 14, 0.5) 100%);
     }
 
     .comp-title {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
     .comp-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
 
     .comp-list li {
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text-main);
       display: flex;
-      gap: 9px;
-      line-height: 1.42;
+      gap: 12px;
+      line-height: 1.4;
     }
 
     .comp-list li svg {
-      width: 17px;
-      height: 17px;
+      width: 20px;
+      height: 20px;
       flex-shrink: 0;
       margin-top: 2px;
     }
 
-    /* Screen Showcase */
+    /* Big Screen Showcase */
     .screen-tabs {
       display: flex;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.04);
-      padding: 5px;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px;
       border-radius: 12px;
       border: 1px solid var(--border);
       flex-wrap: wrap;
@@ -501,35 +473,35 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 6px 12px;
-      border-radius: 7px;
-      font-size: 11.5px;
-      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
     }
 
     .screen-tab-btn.active {
       background: var(--primary);
       color: #042f1a;
-      box-shadow: 0 0 12px var(--primary-glow);
+      box-shadow: 0 0 14px var(--primary-glow);
     }
 
     .screen-display-area {
       position: relative;
-      border-radius: 16px;
+      border-radius: 18px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65);
-      background: #020408;
-      height: 380px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.7);
+      background: #000;
+      height: 420px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
     .screen-img {
@@ -547,29 +519,29 @@
 
     .screen-caption-badge {
       position: absolute;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      background: rgba(6, 8, 14, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      backdrop-filter: blur(12px);
-      padding: 8px 14px;
-      border-radius: 9px;
-      font-size: 12.5px;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      background: rgba(7, 9, 14, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(14px);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      gap: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.6);
     }
 
     .live-dot {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
       background: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 0 10px var(--primary);
       animation: pulse 1.8s infinite;
       flex-shrink: 0;
     }
@@ -579,25 +551,25 @@
       50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    /* Calculator Styles */
+    /* Giant Calculator */
     .calc-box {
-      background: rgba(13, 19, 33, 0.95);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: 18px;
-      padding: 22px;
+      background: rgba(14, 20, 35, 0.96);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      border-radius: 20px;
+      padding: 26px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      gap: 16px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
     }
 
     .model-switcher {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 4px;
-      border-radius: 10px;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 5px;
+      border-radius: 12px;
       border: 1px solid var(--border);
     }
 
@@ -605,10 +577,10 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 7px 9px;
-      border-radius: 7px;
-      font-size: 11.5px;
-      font-weight: 700;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 800;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -616,52 +588,53 @@
     .model-btn.active {
       background: var(--primary);
       color: #042f1a;
-      box-shadow: 0 0 10px var(--primary-glow);
+      box-shadow: 0 0 12px var(--primary-glow);
     }
 
     .slider-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
 
     .slider-header {
       display: flex;
       justify-content: space-between;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-main);
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
     }
 
     .slider-header .val {
       color: var(--primary);
-      font-weight: 800;
+      font-size: 16px;
+      font-weight: 900;
     }
 
     input[type=range] {
       -webkit-appearance: none;
       width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 3px;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
       outline: none;
     }
 
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 17px;
-      height: 17px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: var(--primary);
       cursor: pointer;
-      box-shadow: 0 0 10px var(--primary-glow);
+      box-shadow: 0 0 12px var(--primary-glow);
     }
 
     .calc-results-3col {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 12px;
-      padding-top: 14px;
+      gap: 14px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
     }
 
@@ -671,33 +644,33 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: 64px;
+      height: 68px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 36px;
+      padding: 0 40px;
       z-index: 50;
       border-top: 1px solid var(--border);
-      background: rgba(6, 8, 14, 0.78);
+      background: rgba(7, 9, 14, 0.82);
       backdrop-filter: blur(20px);
     }
 
     .footer-left {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 24px;
     }
 
     .pitch-timer {
       display: flex;
       align-items: center;
-      gap: 7px;
-      padding: 6px 12px;
+      gap: 8px;
+      padding: 7px 14px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 800;
       color: var(--text-muted);
       cursor: pointer;
     }
@@ -715,48 +688,48 @@
 
     .dots-indicator {
       display: flex;
-      gap: 8px;
+      gap: 9px;
     }
 
     .dot {
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.25);
       cursor: pointer;
       transition: all 0.25s ease;
     }
 
     .dot:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.6);
       transform: scale(1.2);
     }
 
     .dot.active {
-      width: 22px;
-      border-radius: 10px;
+      width: 26px;
+      border-radius: 12px;
       background: var(--primary);
-      box-shadow: 0 0 10px var(--primary-glow);
+      box-shadow: 0 0 12px var(--primary-glow);
     }
 
     .footer-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .counter-pill {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 800;
       color: var(--text-muted);
-      padding: 4px 10px;
+      padding: 4px 12px;
     }
 
     /* Grid Matrix Modal */
     .grid-modal {
       position: fixed;
       inset: 0;
-      background: rgba(6, 8, 14, 0.96);
+      background: rgba(7, 9, 14, 0.96);
       backdrop-filter: blur(25px);
       z-index: 100;
       display: none;
@@ -779,28 +752,28 @@
     }
 
     .grid-modal-title {
-      font-size: 22px;
-      font-weight: 800;
+      font-size: 24px;
+      font-weight: 900;
       color: #fff;
     }
 
     .slide-matrix {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 18px;
     }
 
     .matrix-card {
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 15px;
+      padding: 16px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      height: 125px;
+      height: 130px;
     }
 
     .matrix-card:hover {
@@ -811,36 +784,36 @@
 
     .matrix-card.current {
       border-color: var(--primary);
-      background: rgba(16, 185, 129, 0.1);
-      box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.12);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
     }
 
     .matrix-num {
-      font-size: 11px;
-      font-weight: 800;
+      font-size: 12px;
+      font-weight: 900;
       color: var(--primary);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .matrix-card-title {
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 800;
       color: #fff;
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     /* Speaker Notes Drawer */
     .notes-drawer {
       position: fixed;
-      bottom: 64px;
-      right: 36px;
-      width: 460px;
-      background: rgba(13, 19, 33, 0.96);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
+      bottom: 68px;
+      right: 40px;
+      width: 480px;
+      background: rgba(14, 20, 35, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 18px;
       backdrop-filter: blur(20px);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.9);
       z-index: 80;
       display: none;
       flex-direction: column;
@@ -852,22 +825,22 @@
     }
 
     .notes-header {
-      padding: 12px 18px;
+      padding: 14px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 13px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 800;
       color: var(--primary);
     }
 
     .notes-content {
-      padding: 16px;
-      font-size: 13.5px;
+      padding: 18px 20px;
+      font-size: 14.5px;
       line-height: 1.5;
-      color: var(--text-main);
-      max-height: 230px;
+      color: #fff;
+      max-height: 240px;
       overflow-y: auto;
     }
 
@@ -881,7 +854,7 @@
       body {
         overflow: visible !important;
         height: auto !important;
-        background: #06080E !important;
+        background: #07090E !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -961,7 +934,7 @@
   <main class="deck-container">
 
     <!-- SLIDE 1: Vision / Cover with Real Mockup -->
-    <section class="slide active" data-index="0" data-notes="Приветствие: Здравствуйте! Меня зовут Абдуллозода Иззатуллохон, команда tajcodes (Душанбе). Сегодня мы представляем SmartSale — первую отечественную B2B TradeTech & Финтех платформу для автоматизации розничной торговли и дистрибуции Таджикистана. Наше главное отличие — мы заменяем дорогой зарубежный софт, за который наши компании отдают миллионы сомони валюты за рубеж. Мы подключаем таджикские банки и предлагаем революционную модель: бесплатный софт для дистрибьюторов за счет раздела эквайринга с банками 50/50.">
+    <section class="slide active" data-index="0" data-notes="Приветствие: Здравствуйте! Меня зовут Абдуллозода Иззатуллохон, команда tajcodes. Мы создали SmartSale — отечественную B2B экосистему для торговли и складов Таджикистана. Наш главный козырь: мы заменяем зарубежный софт, за который наши компании каждый месяц отдают миллионы валюты за рубеж. Мы подключаем таджикские банки и отдаем софт дистрибьюторам БЕСПЛАТНО за счет раздела эквайринга с банками 50/50.">
       <div class="grid-2" style="margin: 0; align-items: center; gap: 36px; height: 100%;">
         <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
           <div>
@@ -969,40 +942,40 @@
               <span class="live-dot"></span>
               ОТЕЧЕСТВЕННАЯ РАЗРАБОТКА • TAJ-TECH 2026 • ДУШАНБЕ
             </div>
-            <h1 class="slide-title morph-2" style="font-size: 34px;">
-              SmartSale: Отечественная B2B TradeTech <br>
-              <span class="highlight">& Финтех экосистема Таджикистана</span>
+            <h1 class="slide-title morph-2" style="font-size: 38px;">
+              SmartSale: Свой софт для розницы <br>
+              <span class="highlight">& финтех-альянс с банками РТ</span>
             </h1>
             <p class="slide-subtitle morph-3">
-              Полное импортозамещение зарубежного софта в ритейле. Бесплатная платформа для дистрибьюторов за счет финтех-альянса с банками РТ (50/50 эквайринга), ИИ-советник закупок и тотальный GPS-контроль полевых агентов.
+              Полное импортозамещение зарубежных систем: <strong>бесплатная подписка для дистрибьюторов</strong>, прибыль <strong>50/50 с банками</strong>, встроенный ИИ-советник закупок и 100% честный GPS-контроль.
             </p>
           </div>
 
-          <div class="grid-2 morph-4" style="gap: 14px; margin: 16px 0;">
-            <div class="feature-card" style="padding: 14px 16px; border-left: 3px solid var(--primary);">
-              <div class="metric-hero accent" style="font-size: 32px;">100% РТ</div>
+          <div class="grid-2 morph-4" style="gap: 16px; margin: 20px 0;">
+            <div class="feature-card" style="padding: 18px 20px; border-left: 4px solid var(--primary);">
+              <div class="metric-hero accent" style="font-size: 38px;">100% РТ</div>
               <div class="metric-label">Собственный код tajcodes</div>
-              <p style="font-size: 11.5px; margin-top: 3px;">Сервера, налоги и разработка в Душанбе. Без валютных платежей за рубеж.</p>
+              <p style="font-size: 13px; margin-top: 4px;">Сервера и налоги в Душанбе. Ноль оттока валюты из страны.</p>
             </div>
-            <div class="feature-card" style="padding: 14px 16px; border-left: 3px solid var(--secondary);">
-              <div class="metric-hero" style="font-size: 32px;">0 TJS</div>
-              <div class="metric-label">Бесплатная подписка</div>
-              <p style="font-size: 11.5px; margin-top: 3px;">Для компаний при переходе на безналичный расчет с банками-партнерами.</p>
+            <div class="feature-card" style="padding: 18px 20px; border-left: 4px solid var(--secondary);">
+              <div class="metric-hero" style="font-size: 38px; color: var(--secondary);">0 TJS</div>
+              <div class="metric-label">Бесплатный софт бизнесу</div>
+              <p style="font-size: 13px; margin-top: 4px;">Финансируется банками из эквайринговой комиссии по Указу №586.</p>
             </div>
           </div>
 
-          <div style="padding-top: 10px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--text-muted); display: flex; justify-content: space-between;">
+          <div style="padding-top: 14px; border-top: 1px solid var(--border); font-size: 13.5px; color: var(--text-muted); display: flex; justify-content: space-between;">
             <span>Основатель: <strong>Абдуллозода Иззатуллохон (tajcodes)</strong></span>
-            <span>Миссия: <strong>Суверенитет IT & Указ Президента №586</strong></span>
+            <span>Статус: <strong>Боевой MVP готов к пилоту за 48 часов</strong></span>
           </div>
         </div>
 
         <!-- Real Product Hero Mockup -->
         <div class="morph-3" style="position: relative; display: flex; align-items: center; justify-content: center;">
           <div style="position: absolute; inset: -10px; background: radial-gradient(circle, rgba(16,185,129,0.22) 0%, transparent 65%); filter: blur(30px); z-index: 0;"></div>
-          <div style="position: relative; z-index: 1; border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
-            <img src="pitch_assets/hero_devices.png" alt="SmartSale Devices" style="width: 100%; max-width: 540px; display: block;">
-            <div style="position: absolute; top: 12px; right: 12px; background: rgba(6,8,14,0.88); border: 1px solid rgba(16,185,129,0.3); padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+          <div style="position: relative; z-index: 1; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 25px 50px rgba(0,0,0,0.85);">
+            <img src="pitch_assets/hero_devices.png" alt="SmartSale Devices" style="width: 100%; max-width: 550px; display: block;">
+            <div style="position: absolute; top: 14px; right: 14px; background: rgba(7,9,14,0.9); border: 1px solid rgba(16,185,129,0.4); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 7px;">
               <span class="live-dot"></span> Реальный боевой MVP
             </div>
           </div>
@@ -1014,71 +987,65 @@
     <section class="slide" data-index="1" data-notes="Проблема рынка: В Таджикистане оборот FMCG превышает $1.8 млрд в год. 35 000 дуконов. Но парадокс: крупные дистрибьюторы вынуждены ежемесячно платить огромные суммы в валюте зарубежным сервисам за каждого агента. Эти деньги уходят из экономики страны. При этом зарубежный софт не интегрирован с таджикскими банками и нашими платежками, не знает местной специфики и не решает проблему кассовых разрывов.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Боль рынка: Дорогая зависимость от зарубежного софта
         </div>
         <h2 class="slide-title morph-2">
           Миллионы сомони утекают за рубеж <br>
-          за софт, <span class="highlight" style="background: linear-gradient(135deg, #EF4444, #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">не умеющий работать с банками Таджикистана</span>
+          <span class="highlight" style="background: linear-gradient(135deg, #EF4444, #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">за софт без таджикских банков и платежек</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Дистрибьюторы Таджикистана платят немалые суммы в валюте за зарубежные системы на каждого торгового агента, оставаясь без интеграции с национальной платежной экосистемой.
+          Компании Таджикистана отдают валюту за зарубежные лицензии на каждого торгового агента, продолжая возить мешки наличных денег.
         </p>
       </div>
 
       <div class="comparison-container morph-4">
         <div class="comp-box negative">
-          <div class="comp-header">
-            <div class="comp-title" style="color: #F87171;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              Зарубежный монопольный софт
-            </div>
-            <span style="font-size: 11px; font-weight: 700; color: #EF4444; background: rgba(239, 68, 68, 0.1); padding: 3px 8px; border-radius: 6px;">Отток валюты из РТ</span>
+          <div class="comp-title" style="color: #F87171;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Зарубежный софт: Дорого и слепо
           </div>
           <ul class="comp-list">
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-              <span><strong>Высокая абонплата в валюте:</strong> Компании платят немалые суммы за каждого агента каждый месяц за рубеж. Налоги и рабочие места уходят из страны.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Огромная абонплата в валюте:</strong> Каждый месяц немалые суммы с каждого агента уходят из страны разработчикам за границу.</span>
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-              <span><strong>Нет таджикских платежек:</strong> Нельзя принять оплату через Dushanbe City, Alif, Freedom или Корти Милли. Водители по-прежнему возят мешки с наличными.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Ноль таджикских платежек:</strong> Нет интеграции с Dushanbe City, Alif, Freedom. Экспедиторы собирают мешки налички.</span>
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
-              <span><strong>Нет ИИ-аналитики:</strong> Дистрибьютор закупает наугад, склад забит неликвидом, а ходовые позиции заканчиваются в разгар сезона.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Закупки наугад:</strong> Нет ИИ-аналитики — склад забит неликвидом, а ходовые товары внезапно заканчиваются.</span>
             </li>
           </ul>
         </div>
 
         <div class="comp-box positive">
-          <div class="comp-header">
-            <div class="comp-title" style="color: #34D399;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              Отечественный SmartSale (tajcodes)
-            </div>
-            <span style="font-size: 11px; font-weight: 700; color: #10B981; background: rgba(16, 185, 129, 0.1); padding: 3px 8px; border-radius: 6px;">Национальный суверенитет</span>
+          <div class="comp-title" style="color: #34D399;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            SmartSale (Отечественный ответ)
           </div>
           <ul class="comp-list">
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span><strong>Бесплатный софт (0 TJS):</strong> Дистрибьютор экономит бюджет — платформа финансируется банками за счет раздела эквайринговой комиссии 50/50.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>0 TJS (Бесплатный софт):</strong> Дистрибьютор экономит бюджет — платформа финансируется из банковского эквайринга.</span>
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span><strong>Все таджикские платежки:</strong> Динамический QR прямо на смартфоне агента/водителя по Указу Президента №586. Деньги сразу на расчетном счете.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Все таджикские платежки:</strong> Динамический QR прямо в приложении агента. Деньги мгновенно на расчетном счете.</span>
             </li>
             <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              <span><strong>Встроенный ИИ-советник:</strong> Система сама рассчитывает оптимальный объем закупок у заводов и предупреждает о дефиците SKU.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Встроенный ИИ-советник:</strong> Система сама рассчитывает объем закупок у заводов, спасая миллионы от заморозки.</span>
             </li>
           </ul>
         </div>
       </div>
 
-      <div style="font-size: 12.5px; color: var(--text-faint); display: flex; justify-content: space-between;">
-        <span>35 000+ розничных торговых точек (дуконов) в РТ ждут отечественной цифровизации</span>
-        <span>Разработано tajcodes в Душанбе • Поддержка на родном языке 24/7</span>
+      <div style="font-size: 14px; color: var(--text-faint); display: flex; justify-content: space-between;">
+        <span>35 000+ розничных торговых точек (дуконов) в Республике Таджикистан</span>
+        <span>Разработка tajcodes • Душанбе • Локальная поддержка 24/7</span>
       </div>
     </section>
 
@@ -1086,134 +1053,134 @@
     <section class="slide" data-index="2" data-notes="Удар по всем точкам: Наш проект бьет точно во все 4 цели форума TajTech. Дистрибьюторам мы даем БЕСПЛАТНУЮ отечественную систему вместо зарубежной абонплаты. Банкам отдаем 50% прибыли от безналичного торгового оборота (миллиарды сомони). Государству даем исполнение Указа №586 и мониторинг продовольствия. Инвестору — железный локальный ров и супер-LTV.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Ценностная матрица для форума TAJ-TECH 2026
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Ценностная матрица для участников форума
         </div>
-        <h2 class="slide-title morph-2" style="font-size: 30px;">
-          Точный выстрел по всем ключевым <span class="highlight">потребностям рынка РТ</span>
+        <h2 class="slide-title morph-2">
+          Точный выстрел в цели <span class="highlight">всех 4 участников рынка</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Почему модель SmartSale объединяет в один мощный альянс бизнес, банкиров, государство и инвесторов.
+          Почему модель SmartSale объединяет в один мощный союз бизнес, банкиров, государство и инвесторов.
         </p>
       </div>
 
-      <div class="grid-4 morph-4" style="margin: auto 0; gap: 14px;">
+      <div class="grid-4 morph-4" style="margin: auto 0; gap: 16px;">
         <!-- 1. Дистрибьюторы -->
-        <div class="target-card" style="border-top: 3px solid var(--primary);">
+        <div class="punch-card" style="border-top: 4px solid var(--primary);">
           <div>
-            <div class="target-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--primary);">
-              FMCG-Дистрибьюторы
+            <div class="punch-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--primary);">
+              Дистрибьюторы
             </div>
-            <div class="target-title">0 TJS Подписка & Контроль</div>
-            <ul class="target-list">
+            <div class="punch-title">0 TJS & Контроль</div>
+            <ul class="punch-list">
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Бесплатный софт:</strong> Экономия до 300 000 TJS в год на оплате зарубежных лицензий.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Бесплатный софт:</strong> Экономия до 300 000 TJS в год на абонплате.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Тотальный контроль:</strong> 0% фиктивных визитов, чекин в радиусе 25м от дукона.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>0% фейковых визитов:</strong> Чекин строго в радиусе 25м от дукона.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Склад без просрочки:</strong> Авто-отбор партий по алгоритму FEFO (First Expire).</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>ИИ-закупки:</strong> Никакой просрочки и заморозки денег на складе.</span>
               </li>
             </ul>
           </div>
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--primary); font-weight: 700;">
-            Отказ от зарубежных счетов в валюте
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--primary); font-weight: 800;">
+            Отказ от зарубежных платежей
           </div>
         </div>
 
         <!-- 2. Банки РТ -->
-        <div class="target-card" style="border-top: 3px solid var(--secondary);">
+        <div class="punch-card" style="border-top: 4px solid var(--secondary);">
           <div>
-            <div class="target-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--secondary);">
+            <div class="punch-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--secondary);">
               Банки Таджикистана
             </div>
-            <div class="target-title">Прибыль 50/50 & B2B Поток</div>
-            <ul class="target-list">
+            <div class="punch-title">Прибыль 50 / 50</div>
+            <ul class="punch-list">
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>50% комиссии банку:</strong> Из 1% эквайринга банк получает 0.5% чистой прибыли без затрат на продажи.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>50% комиссии банку:</strong> Из 1% эквайринга банк берет 0.5% чистой прибыли.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Миллиардный B2B оборот:</strong> Вывод сотен миллионов наличных денег в безналичный оборот банка.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Миллиардный B2B оборот:</strong> Вывод сотен миллионов наличных денег в безнал.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Кредитование розницы:</strong> Готовый скоринг дуконов на базе их реальных закупок.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Кредитный скоринг:</strong> Готовые данные по оборотам 35 000 магазинов.</span>
               </li>
             </ul>
           </div>
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--secondary); font-weight: 700;">
-            Dushanbe City, Alif, Freedom, Эсхата
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--secondary); font-weight: 800;">
+            Dushanbe City, Alif, Freedom
           </div>
         </div>
 
         <!-- 3. Государство -->
-        <div class="target-card" style="border-top: 3px solid var(--accent);">
+        <div class="punch-card" style="border-top: 4px solid var(--accent);">
           <div>
-            <div class="target-badge" style="background: rgba(99, 102, 241, 0.15); color: var(--accent);">
+            <div class="punch-badge" style="background: rgba(99, 102, 241, 0.15); color: var(--accent);">
               Государство (B2G)
             </div>
-            <div class="target-title">Указ №586 & IT-Суверенитет</div>
-            <ul class="target-list">
+            <div class="punch-title">Указ №586</div>
+            <ul class="punch-list">
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Исполнение Указа №586:</strong> Практический инструмент безналичных оплат в рознице и опте.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Указ Президента №586:</strong> Реальный безналичный оборот в опте и рознице.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Госмониторинг запасов:</strong> Онлайн-данные по остаткам муки, сахара, масла по всей стране.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Продовольственный учет:</strong> Остатки муки, сахара, масла онлайн.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Национальный IT-продукт:</strong> 100% код в РТ, налоги и рабочие места программистов в Душанбе.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>IT-Суверенитет:</strong> Деньги и сервера остаются в Республике.</span>
               </li>
             </ul>
           </div>
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--accent); font-weight: 700;">
-            Резидентство IT Park Таджикистана
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--accent); font-weight: 800;">
+            Резидентство IT Park РТ
           </div>
         </div>
 
         <!-- 4. Инвесторы -->
-        <div class="target-card" style="border-top: 3px solid var(--gold);">
+        <div class="punch-card" style="border-top: 4px solid var(--gold);">
           <div>
-            <div class="target-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">
-              Инвесторы (Pre-Seed)
+            <div class="punch-badge" style="background: rgba(245, 158, 11, 0.15); color: var(--gold);">
+              Инвесторы
             </div>
-            <div class="target-title">Супер-LTV & Монополия</div>
-            <ul class="target-list">
+            <div class="punch-title">5x LTV & Ров</div>
+            <ul class="punch-list">
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>5x рост доходности:</strong> 0.5% от безнала приносит ~1 000–1 500 TJS с агента вместо 300 TJS подписки.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>5x выше LTV:</strong> 0.5% от безнала дает 1 500 TJS с агента вместо 300 TJS SaaS.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Непреодолимый ров:</strong> Зарубежные сервисы не могут предложить 0 TJS подписку без таджикского финтеха.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Защита рынка:</strong> Зарубежные сервисы не могут дать софт за 0 TJS без банков РТ.</span>
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span><strong>Экспансия в регион:</strong> Масштабирование модели на Ферганскую долину, Самарканд и Ош.</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><strong>Выход в регион:</strong> Масштабирование в Самарканд и Фергану.</span>
               </li>
             </ul>
           </div>
-          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--gold); font-weight: 700;">
-            Pre-Seed ангельский чек: $30k – $60k
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--gold); font-weight: 800;">
+            Pre-Seed раунд: $30k – $60k
           </div>
         </div>
       </div>
 
-      <div style="font-size: 12px; color: var(--text-faint); display: flex; justify-content: space-between;">
+      <div style="font-size: 13px; color: var(--text-faint); display: flex; justify-content: space-between;">
         <span>SmartSale — единственный отечественный участник, объединяющий интересы всех 4 сторон</span>
         <span>Форум TAJ-TECH 2026 • tajtech.tj</span>
       </div>
     </section>
 
-    <!-- SLIDE 4: Interactive Real Screens Showcase (THE PROOF - 6 TABS) -->
+    <!-- SLIDE 4: Real Screens Showcase (THE PROOF - 6 TABS) -->
     <section class="slide" data-index="3" data-notes="Демо продукта: Мы пришли на форум не со слайдами из Figma, а с работающей боевой платформой. Посмотрите на реальные экраны. На Дашборде видны выручка в сомони, АКБ/ОКБ и ИИ-рекомендации закупок. В мобильном приложении агент оформляет заказ за 30 секунд без интернета. На карте — реальный GPS-трек и геофенсинг. В фотоотчете — реальная выкладка полок в Пайкаре.">
       <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
@@ -1221,35 +1188,35 @@
             <span class="live-dot"></span>
             БОЕВОЙ MVP • 6 РЕАЛЬНЫХ ЭКРАНОВ СИСТЕМЫ
           </div>
-          <h2 class="slide-title morph-2" style="font-size: 30px;">
-            Интерфейсы работающей платформы <span class="highlight">SmartSale</span>
+          <h2 class="slide-title morph-2" style="font-size: 36px;">
+            Интерфейсы боевой системы <span class="highlight">SmartSale</span>
           </h2>
         </div>
 
-        <!-- Interactive Screen Switcher Tabs (6 TABS) -->
+        <!-- 6 Screen Switcher Tabs -->
         <div class="screen-tabs morph-3">
           <button class="screen-tab-btn active" onclick="switchLiveScreen('screen-dashboard', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             Веб-Дашборд (ИИ)
           </button>
           <button class="screen-tab-btn" onclick="switchLiveScreen('screen-mobile', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
             Приложение агента
           </button>
           <button class="screen-tab-btn" onclick="switchLiveScreen('screen-orders', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Заказы & Накладные
           </button>
           <button class="screen-tab-btn" onclick="switchLiveScreen('screen-gps', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             GPS-Контроль (25м)
           </button>
           <button class="screen-tab-btn" onclick="switchLiveScreen('screen-photo', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
             Полка "Пайкар"
           </button>
           <button class="screen-tab-btn" onclick="switchLiveScreen('screen-photos-live', this)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Модерация фото
           </button>
         </div>
@@ -1257,29 +1224,23 @@
 
       <!-- Screen Display Frame -->
       <div class="screen-display-area morph-4">
-        <!-- 1. Dashboard -->
         <img src="pitch_assets/dashboard_live.png" id="screen-dashboard" class="screen-img active" alt="Web Dashboard">
-        <!-- 2. Mobile App -->
         <img src="pitch_assets/mobile_order.png" id="screen-mobile" class="screen-img" alt="Mobile App Agent" style="object-fit: contain; background: #0B1120;">
-        <!-- 3. Orders Registry -->
         <img src="pitch_assets/orders_live.png" id="screen-orders" class="screen-img" alt="Orders Live Registry">
-        <!-- 4. GPS Map -->
         <img src="pitch_assets/gps_map.png" id="screen-gps" class="screen-img" alt="GPS Route Tracking">
-        <!-- 5. Photo Report Paykar -->
         <img src="pitch_assets/paykar_shelf.png" id="screen-photo" class="screen-img" alt="Photo Audit Paykar">
-        <!-- 6. Photos Live Feed -->
         <img src="pitch_assets/photos_live.png" id="screen-photos-live" class="screen-img" alt="Photos Live Moderation">
 
         <div class="screen-caption-badge" id="screenCaption">
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
             <span class="live-dot"></span>
-            <span id="screenCaptionText" style="font-weight: 600;">Аналитический веб-центр руководителя: динамика выручки в TJS, покрытие АКБ/ОКБ и ИИ-рекомендации закупок</span>
+            <span id="screenCaptionText" style="font-weight: 700;">Аналитический веб-центр руководителя: динамика выручки в TJS, покрытие АКБ/ОКБ и ИИ-рекомендации закупок</span>
           </div>
-          <span style="font-size: 11px; color: var(--primary); font-weight: 700; background: rgba(16,185,129,0.15); padding: 3px 8px; border-radius: 6px;">Реальный UI системы</span>
+          <span style="font-size: 12px; color: var(--primary); font-weight: 800; background: rgba(16,185,129,0.18); padding: 4px 10px; border-radius: 6px;">Реальный снимок UI</span>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-faint);">
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-faint);">
         <span>Кликайте по вкладкам выше для переключения реальных снимков экранов</span>
         <span>Стек: Flutter 60 FPS (Android) + React 18 SPA + NestJS + PostgreSQL</span>
       </div>
@@ -1289,53 +1250,47 @@
     <section class="slide" data-index="4" data-notes="Тотальный контроль полевых агентов: Руководители дистрибуции знают главную проблему: торговые представители делают 'липовые визиты' — сидят дома или в кафе и набивают заказы по телефону. SmartSale делает обман физически невозможным. Приложение проверяет геопозицию: если агент дальше 25 метров от дукона — заказ заблокирован. Мы фиксируем точное время пребывания в магазине, трек поездки по минутам, скорость и заряд батареи. Фотографии витрин проверяются на подлинность.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
           Дисциплина и прозрачность торговой команды
         </div>
         <h2 class="slide-title morph-2">
-          Тотальный контроль полевых сотрудников: <br>
+          Тотальный контроль полевых агентов: <br>
           <span class="highlight">0% фальшивых визитов и махинаций</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          SmartSale исключает человеческий фактор: агент обязан физически присутствовать в магазине, провести качественную выкладку и зафиксировать факт визита.
+          SmartSale исключает человеческий фактор: агент обязан физически находиться в дуконе и провести выкладку товара.
         </p>
       </div>
 
       <div class="grid-3 morph-4">
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          </div>
-          <h3>GPS-Геофенсинг (Радиус 25м)</h3>
-          <p>Нельзя открыть карточку заказа, пока GPS координаты агента не совпадут с геометкой дукона с точностью до 25 метров. Сдать заказ из дома или чайханы технически невозможно.</p>
+          <div class="metric-hero accent" style="font-size: 44px; margin-bottom: 8px;">25 МЕТРОВ</div>
+          <h3>GPS-Геофенсинг чекина</h3>
+          <p>Заказ технически заблокирован, пока координаты смартфона не совпадут с геометкой магазина с точностью до 25 метров. Сдать заказ из дома невозможно.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(6, 182, 212, 0.12); border-color: rgba(6, 182, 212, 0.25); color: var(--secondary);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <h3>Тайминг визита & Стоянки</h3>
-          <p>Фиксация времени чекина и чекаута. Руководитель видит: пробыл ли агент у клиента положенные 15 минут, сколько времени провел в пути и где совершал незапланированные остановки.</p>
+          <div class="metric-hero" style="font-size: 44px; color: var(--secondary); margin-bottom: 8px;">15 МИНУТ</div>
+          <h3>Хронометраж и стоянки</h3>
+          <p>Фиксация времени чекина и чекаута. Руководитель видит: пробыл ли агент в точке положенное время, где совершал незапланированные остановки и где отклонился от маршрута.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: var(--accent);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          </div>
-          <h3>Защищенный фотоконтроль полок</h3>
-          <p>Фотосъемка полок блокирует загрузку старых снимков из галереи. Фото отправляется только «с камеры вживую» с вшитыми координатами и датой. Супервайзер сразу видит качество выкладки.</p>
+          <div class="metric-hero gold" style="font-size: 44px; margin-bottom: 8px;">LIVE ФОТО</div>
+          <h3>Защита от подделок из галереи</h3>
+          <p>Фотоотчет полок блокирует выбор файлов из памяти телефона. Снимок отправляется только «вживую с камеры» с вшитыми координатами и датой.</p>
         </div>
       </div>
 
-      <div class="feature-card" style="padding: 14px 20px; background: linear-gradient(90deg, rgba(16,185,129,0.08), rgba(6,182,212,0.08)); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="font-size: 22px;">📍</div>
+      <div class="feature-card" style="padding: 16px 24px; background: linear-gradient(90deg, rgba(16,185,129,0.08), rgba(6,182,212,0.08)); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">📍</div>
           <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13.5px;">Живая карта смен и трекер батареи: контроль всей команды на одном экране</div>
-            <div style="font-size: 11.5px; color: var(--text-muted);">Супервайзер видит заряд телефона агента, онлайн/офлайн статус и текущую скорость движения.</div>
+            <div style="font-weight: 800; color: #fff; font-size: 16px;">Живой радар смен: скорость, заряд батареи и факт посещения на карте Leaflet</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Супервайзер видит всю карту города онлайн: кто на маршруте, а кто отстает от плана.</div>
           </div>
         </div>
-        <div style="padding: 4px 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--border-accent); border-radius: 8px; font-weight: 700; color: var(--primary); font-size: 12px;">
+        <div style="padding: 6px 14px; background: rgba(16, 185, 129, 0.2); border: 1px solid var(--border-accent); border-radius: 8px; font-weight: 800; color: var(--primary); font-size: 13px;">
           100% честность
         </div>
       </div>
@@ -1345,53 +1300,47 @@
     <section class="slide" data-index="5" data-notes="ИИ-платформа закупок: Вторая ключевая проблема дистрибуции — закупки 'на глаз'. Дистрибьютор замораживает миллионы сомони в товаре, который стоит на складе полгода, при этом самый ходовой товар внезапно заканчивается. Наш модуль ИИ анализирует реальную скорость продаж каждого дукона, остатки на складах и сезонность, и выдает директору четкую рекомендацию: что, у какого завода и в каком объеме закупать прямо сейчас.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10h-10V2z"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10h-10V2z"/></svg>
           Интеллектуальная оптимизация оборотного капитала
         </div>
         <h2 class="slide-title morph-2">
-          Встроенный ИИ-советник: <br>
-          <span class="highlight">точные закупки вместо заморозки миллионов в неликвиде</span>
+          Встроенный ИИ-советник закупок: <br>
+          <span class="highlight">точные закупки вместо заморозки миллионов сомони</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Искусственный интеллект SmartSale непрерывно анализирует динамику 35 000 дуконов и подсказывает руководителю, какие позиции пора заказывать на заводах.
+          Искусственный интеллект SmartSale непрерывно считает темп продаж 35 000 точек и формирует оптимальные заявки на заводы.
         </p>
       </div>
 
       <div class="grid-3 morph-4">
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          </div>
-          <h3>Прогноз дефицита (Out-of-Stock)</h3>
-          <p>ИИ рассчитывает скорость расхода каждой позиции (Run-rate) с учетом времени доставки от производителя. Система заранее предупреждает: «Запас масла иссякнет через 4 дня — пора формировать заказ на завод».</p>
+          <div class="metric-hero accent" style="font-size: 44px; margin-bottom: 8px;">ЗА 5 ДНЕЙ</div>
+          <h3>Прогноз дефицита товаров</h3>
+          <p>ИИ рассчитывает скорость расхода каждой позиции (Run-rate). Система заранее предупреждает директора: «Запас масла иссякнет через 5 дней — сформирован проект заказа поставщику».</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.25); color: var(--gold);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h3>Выявление засыпающих дуконов</h3>
-          <p>Алгоритм сравнивает частоту заказов торговой точки. Если магазин заказывал воду каждые 5 дней, а сейчас молчит 12 дней — ИИ ставит задачу супервайзеру проверить причину (уход к конкуренту или конфликт с агентом).</p>
+          <div class="metric-hero gold" style="font-size: 44px; margin-bottom: 8px;">-40% СКЛАДА</div>
+          <h3>Ликвидация мертвого неликвида</h3>
+          <p>Исключение закупок «на глаз». Система останавливает закупку позиций, которые зависнут на полгода, высвобождая миллионы сомони живых денег для дистрибьютора.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: var(--accent);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          </div>
-          <h3>Освобождение оборотного капитала</h3>
-          <p>Исключение закупок «мертвого» товара. Сокращение складских запасов неликвида на 30–40% высвобождает миллионы сомони живых денег для дистрибьютора.</p>
+          <div class="metric-hero" style="font-size: 44px; color: var(--accent); margin-bottom: 8px;">АНАЛИЗ ТТ</div>
+          <h3>Детекция засыпающих дуконов</h3>
+          <p>Если магазин брал соки каждые 4 дня, а сейчас молчит 10 дней — ИИ автоматически ставит задачу супервайзеру проверить причину до потери клиента.</p>
         </div>
       </div>
 
-      <div class="feature-card" style="padding: 14px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="font-size: 22px;">🧠</div>
+      <div class="feature-card" style="padding: 16px 24px; background: rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">🧠</div>
           <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13.5px;">Авто-генерация спецификаций поставщикам в 1 клик</div>
-            <div style="font-size: 11.5px; color: var(--text-muted);">ИИ формирует готовый проект заявки поставщику (SKU, количество, рекомендованная цена) на основе реального спроса.</div>
+            <div style="font-weight: 800; color: #fff; font-size: 16px;">Генерация спецификаций на заводы в 1 клик</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">ИИ готовит проект заявки (SKU, количество, цена) на основе точного математического прогноза.</div>
           </div>
         </div>
-        <div style="padding: 4px 12px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; font-weight: 700; color: var(--accent); font-size: 12px;">
+        <div style="padding: 6px 14px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 8px; font-weight: 800; color: var(--accent); font-size: 13px;">
           Smart AI Core
         </div>
       </div>
@@ -1401,53 +1350,47 @@
     <section class="slide" data-index="6" data-notes="Инженерное превосходство и WMS: Мы не используем тяжелые и неповоротливые зарубежные надстройки. Наше мобильное приложение написано на Flutter — оно летает со скоростью 60 FPS на смартфонах за 500 сомони даже в горных кишлаках без связи благодаря локальной SQLite базе. А на складе внедрен строгий алгоритм FEFO (First Expire, First Out) — система автоматически отгружает сначала партии с меньшим сроком годности, ликвидируя списания просрочки.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-          Инженерная база: скорость, офлайн и складской контроль
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          Инженерная основа: скорость, офлайн и складской учет
         </div>
         <h2 class="slide-title morph-2">
           Быстрый стек + склад FEFO: <br>
           <span class="highlight">60 FPS в офлайне и нулевая просрочка на складе</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Почему тяжелый зарубежный софт прошлых поколений уступает легкой отечественной архитектуре SmartSale.
+          Почему тяжелый зарубежный монопольный софт уступает легкой отечественной архитектуре SmartSale.
         </p>
       </div>
 
       <div class="grid-3 morph-4">
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(16, 185, 129, 0.12); color: var(--primary);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          </div>
-          <h3>100% Offline-First (Flutter)</h3>
-          <p>Локальная SQLite база на смартфоне. Приложение запускается за 0.3 секунды и мгновенно ищет по 10 000+ SKU даже в высокогорных кишлаках и подвалах без интернета.</p>
+          <div class="metric-hero accent" style="font-size: 44px; margin-bottom: 8px;">60 FPS</div>
+          <h3>100% Offline (Flutter)</h3>
+          <p>Локальная SQLite база на смартфоне. Приложение запускается за 0.3 секунды и мгновенно ищет по 10 000+ SKU даже в горных кишлаках без связи.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(6, 182, 212, 0.12); border-color: rgba(6, 182, 212, 0.25); color: var(--secondary);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-          </div>
-          <h3>Складской алгоритм FEFO</h3>
-          <p>First Expire, First Out: система автоматически резервирует партии с ближайшим сроком годности. Свежая партия не отгрузится, пока не реализована более ранняя. Списания падают на 85%.</p>
+          <div class="metric-hero" style="font-size: 44px; color: var(--secondary); margin-bottom: 8px;">-85% ПОТЕРЬ</div>
+          <h3>Складской учет FEFO</h3>
+          <p>First Expire, First Out: система резервирует партии с ближайшим сроком годности. Свежая партия не отгрузится, пока не продана более ранняя. Просрочка исключена.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: var(--accent);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <h3>Синхронизация с 1С за 1 сек</h3>
-          <p>Двусторонний обмен через REST API / Webhooks: автоматическое создание документов реализации, накладных ТОРГ-12 и передача остатков на склад без участия операторов.</p>
+          <div class="metric-hero" style="font-size: 44px; color: var(--accent); margin-bottom: 8px;">1 СЕКУНДА</div>
+          <h3>Синхронизация с 1С</h3>
+          <p>Двусторонний обмен через REST API: автоматическое создание документов реализации, накладных ТОРГ-12 и передача остатков на склад без операторов.</p>
         </div>
       </div>
 
-      <div class="feature-card" style="padding: 14px 20px; background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="font-size: 22px;">⚡</div>
+      <div class="feature-card" style="padding: 16px 24px; background: rgba(255,255,255,0.03); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="font-size: 26px;">⚡</div>
           <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13.5px;">Работает на бюджетных смартфонах за 500 сомони (Android 8+)</div>
-            <div style="font-size: 11.5px; color: var(--text-muted);">Дистрибьютору не нужно покупать дорогие планшеты: торговая команда использует свои простые смартфоны.</div>
+            <div style="font-weight: 800; color: #fff; font-size: 16px;">Работает на бюджетных смартфонах за 500 сомони (Android 8+)</div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">Дистрибьютору не нужно покупать дорогие планшеты: торговая команда использует свои простые телефоны.</div>
           </div>
         </div>
-        <div style="padding: 4px 12px; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 8px; font-weight: 700; color: var(--secondary); font-size: 12px;">
+        <div style="padding: 6px 14px; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.35); border-radius: 8px; font-weight: 800; color: var(--secondary); font-size: 13px;">
           В 4 раза ниже TCO
         </div>
       </div>
@@ -1457,15 +1400,15 @@
     <section class="slide" data-index="7" data-notes="Финтех-альянс 50/50 с банками: Вот наше главное предложение банкам Таджикистана на форуме. Банки за безналичный эквайринг берут стандартную комиссию 1%. Мы предлагаем разделить эту комиссию пополам: 0.5% банку и 0.5% нам! При этом дистрибьютор получает софт БЕСПЛАТНО (0 сомони подписки). Банк получает сотни миллионов нового B2B-оборота, который раньше ходил в наличке. Дистрибьютор уходит от зарубежного платного софта. Интерактивный калькулятор наглядно показывает прибыль всех сторон.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           Финтех-революция: Предложение таджикским банкам на форуме TAJ-TECH
         </div>
         <h2 class="slide-title morph-2">
-          Прибыль 50/50 от эквайринга: <br>
-          <span class="highlight">бесплатный софт бизнесу и миллиарды сомони банкам</span>
+          Прибыль 50 / 50 от эквайринга: <br>
+          <span class="highlight">0 TJS софт бизнесу и миллиарды сомони банкам</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Банки берут 1% за онлайн-оплаты по Указу №586. Мы делим эту комиссию 50/50: банк и SmartSale зарабатывают, а дистрибьютор получает платформу за 0 TJS.
+          Банки берут 1% за онлайн-оплаты по Указу №586. Мы делим эту прибыль 50/50: банк и SmartSale зарабатывают, а дистрибьютор получает софт БЕСПЛАТНО.
         </p>
       </div>
 
@@ -1473,13 +1416,13 @@
         <!-- Interactive Calculator with Switcher -->
         <div class="calc-box">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 13.5px; color: #fff;">Модель партнерства на форуме:</span>
-            <span style="font-size: 10.5px; color: var(--primary); background: rgba(16,185,129,0.12); padding: 3px 8px; border-radius: 6px;">Интерактивный расчет 50/50</span>
+            <span style="font-weight: 800; font-size: 15px; color: #fff;">Модель партнерства на форуме:</span>
+            <span style="font-size: 11px; color: var(--primary); background: rgba(16,185,129,0.15); padding: 3px 8px; border-radius: 6px; font-weight: 800;">Интерактивный расчет 50/50</span>
           </div>
 
           <!-- Switcher -->
           <div class="model-switcher">
-            <button class="model-btn active" id="btnModelFintech" onclick="setModel('fintech')">Финтех 50/50 с банками (0 TJS софт)</button>
+            <button class="model-btn active" id="btnModelFintech" onclick="setModel('fintech')">Финтех 50/50 (0 TJS софт)</button>
             <button class="model-btn" id="btnModelSaas" onclick="setModel('saas')">SaaS (300 сомони / агент / мес)</button>
           </div>
 
@@ -1501,53 +1444,53 @@
 
           <div class="calc-results-3col">
             <div>
-              <div class="metric-label">Прибыль Банка (50%):</div>
-              <div class="metric-hero accent" style="font-size: 26px;" id="resBankVal">31 500 TJS</div>
-              <div style="font-size: 10px; color: var(--secondary);">Чистый доход банка/мес</div>
+              <div class="metric-label">Банку (50%):</div>
+              <div class="metric-hero accent" style="font-size: 32px;" id="resBankVal">31 500 TJS</div>
+              <div style="font-size: 11px; color: var(--secondary); font-weight: 700;">Чистая прибыль банка/мес</div>
             </div>
             <div>
               <div class="metric-label">SmartSale (50%):</div>
-              <div class="metric-hero" style="font-size: 26px;" id="resSmartSaleVal">31 500 TJS</div>
-              <div style="font-size: 10px; color: var(--primary);">Выручка стартапа/мес</div>
+              <div class="metric-hero" style="font-size: 32px;" id="resSmartSaleVal">31 500 TJS</div>
+              <div style="font-size: 11px; color: var(--primary); font-weight: 700;">Выручка стартапа/мес</div>
             </div>
             <div>
-              <div class="metric-label">Для Дистрибьютора:</div>
-              <div class="metric-hero accent" style="font-size: 26px; color: #10B981;" id="resClientCost">0 TJS</div>
-              <div style="font-size: 10px; color: var(--gold);">Бесплатная подписка</div>
+              <div class="metric-label">Дистрибьютору:</div>
+              <div class="metric-hero accent" style="font-size: 32px; color: #10B981;" id="resClientCost">0 TJS</div>
+              <div style="font-size: 11px; color: var(--gold); font-weight: 800;">Бесплатный софт</div>
             </div>
           </div>
         </div>
 
         <!-- Strategic Breakdown -->
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="feature-card" style="border-left: 3px solid var(--secondary); padding: 14px 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-              <span style="font-weight: 700; color: #fff; font-size: 14px;">Банкам: колоссальный новый B2B-рынок</span>
-              <span style="font-size: 11px; font-weight: 700; color: var(--secondary);">Без затрат на продажи</span>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="punch-card" style="border-left: 4px solid var(--secondary); padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-weight: 800; color: #fff; font-size: 16px;">Банкам: миллиардный B2B рынок</span>
+              <span style="font-size: 12px; font-weight: 800; color: var(--secondary);">0 расходов на продажи</span>
             </div>
-            <p style="font-size: 12px;">Банк получает готовый поток QR-платежей на сотни миллионов сомони от 35 000 дуконов. SmartSale сам подключает и обучает компании.</p>
+            <p style="font-size: 13.5px; color: var(--text-muted);">Банк получает готовый поток QR-платежей на сотни миллионов сомони от 35 000 дуконов. SmartSale сам подключает и обучает компании.</p>
           </div>
 
-          <div class="feature-card" style="border-left: 3px solid var(--primary); padding: 14px 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-              <span style="font-weight: 700; color: #fff; font-size: 14px;">Бизнесу: бесплатная замена зарубежного софта</span>
-              <span style="font-size: 11px; font-weight: 700; color: var(--primary);">0 TJS подписка</span>
+          <div class="punch-card" style="border-left: 4px solid var(--primary); padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-weight: 800; color: #fff; font-size: 16px;">Бизнесу: бесплатный софт (0 TJS)</span>
+              <span style="font-size: 12px; font-weight: 800; color: var(--primary);">Колоссальная экономия</span>
             </div>
-            <p style="font-size: 12px;">Дистрибьютор экономит сотни тысяч сомони, уходя от зарубежных платных сервисов. Все платежи идут прозрачно через национальные банки.</p>
+            <p style="font-size: 13.5px; color: var(--text-muted);">Дистрибьютор экономит сотни тысяч сомони, уходя от зарубежного платного софта. Все платежи идут прозрачно через национальные банки.</p>
           </div>
 
-          <div class="feature-card" style="border-left: 3px solid var(--gold); padding: 14px 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-              <span style="font-weight: 700; color: #fff; font-size: 14px;">Инвесторам: LTV выше в 4–8 раз</span>
-              <span style="font-size: 11px; font-weight: 700; color: var(--gold);">Масштабируемость</span>
+          <div class="punch-card" style="border-left: 4px solid var(--gold); padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-weight: 800; color: #fff; font-size: 16px;">Инвесторам: LTV выше в 5 раз</span>
+              <span style="font-size: 12px; font-weight: 800; color: var(--gold);">Супер-маржинальность</span>
             </div>
-            <p style="font-size: 12px;">Оборот 1 агента: ~525 000 TJS/мес. При 40% безнала 0.5% дает **1 050 TJS с агента в месяц** вместо фиксированных 300 TJS подписки.</p>
+            <p style="font-size: 13.5px; color: var(--text-muted);">Оборот 1 агента: ~525 000 TJS/мес. При 40% безнала 0.5% дает **1 050 TJS с агента в месяц** вместо фиксированных 300 TJS подписки.</p>
           </div>
         </div>
       </div>
 
-      <div style="font-size: 12px; color: var(--text-faint);">
-        Расчет: средний чек 1 500 TJS, 350 результативных заказов в месяц на 1 агента (~525 000 TJS GMV).
+      <div style="font-size: 13px; color: var(--text-faint);">
+        Расчет: средний чек 1 500 TJS, 350 заказов в месяц на 1 агента (~525 000 TJS торгового оборота).
       </div>
     </section>
 
@@ -1555,52 +1498,52 @@
     <section class="slide" data-index="8" data-notes="Рынок и Дорожная карта: Мы движемся поэтапно. Фаза 1 — закрыть 3-5 пилотов в Душанбе и подписать первый банк на 50/50 эквайринга. Фаза 2 — подключить 300+ агентов и стать стандартом дистрибуции столицы. Фаза 3 — выйти в Худжанд, Согд и экспортировать модель в Самарканд и Ферганскую долину.">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           Размер рынка & Стратегия масштабирования
         </div>
         <h2 class="slide-title morph-2">
           Реалистичная дорожная карта: <br>
-          <span class="highlight">от первых пилотов к национальному лидерству</span>
+          <span class="highlight">от первых пилотов к лидерству в регионе</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Как команда tajcodes вытеснит зарубежные монополии и станет главным технологическим оператором торговли Таджикистана.
+          Как команда tajcodes вытеснит зарубежные монополии и станет главным технологическим оператором торговли РТ.
         </p>
       </div>
 
       <div class="grid-3 morph-4">
         <div class="feature-card" style="border-top: 4px solid var(--primary);">
           <div class="metric-label" style="color: var(--primary);">Фаза 1 (Q4 2026)</div>
-          <div class="metric-hero accent" style="font-size: 34px; margin-top: 5px;">3–5 Пилотов</div>
-          <p style="margin-top: 6px;">Внедрение у первых FMCG-дистрибьюторов Душанбе. Подписание первого меморандума с банком на 50/50 эквайринга.</p>
+          <div class="metric-hero accent" style="font-size: 40px; margin-top: 6px;">3–5 Пилотов</div>
+          <p style="margin-top: 8px;">Внедрение у первых FMCG-дистрибьюторов Душанбе. Подписание первого соглашения с банком на 50/50 эквайринга.</p>
         </div>
 
         <div class="feature-card" style="border-top: 4px solid var(--secondary);">
           <div class="metric-label" style="color: var(--secondary);">Фаза 2 (Q1–Q2 2027)</div>
-          <div class="metric-hero" style="font-size: 34px; margin-top: 5px;">300+ Агентов</div>
-          <p style="margin-top: 6px;">Подключение 20–25 средних компаний Душанбе и Хатлона. Массовый запуск QR-эквайринга в приложении.</p>
+          <div class="metric-hero" style="font-size: 40px; margin-top: 6px;">300+ Агентов</div>
+          <p style="margin-top: 8px;">Подключение 20–25 средних компаний Душанбе и Хатлона. Массовый запуск QR-эквайринга в дуконах.</p>
         </div>
 
         <div class="feature-card" style="border-top: 4px solid var(--accent);">
           <div class="metric-label" style="color: var(--accent);">Фаза 3 (2027–2028)</div>
-          <div class="metric-hero accent" style="font-size: 34px; margin-top: 5px;">Согд & Экспорт</div>
-          <p style="margin-top: 6px;">Экспансия в Худжанд и выход на рынок Ферганской долины (Самарканд, Ош) с проверенной отечественной моделью.</p>
+          <div class="metric-hero accent" style="font-size: 40px; margin-top: 6px;">Согд & Экспорт</div>
+          <p style="margin-top: 8px;">Экспансия в Худжанд и выход на рынок Ферганской долины (Самарканд, Ош) с проверенной моделью.</p>
         </div>
       </div>
 
-      <div class="grid-2" style="margin: 0; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 14px 20px;">
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <div style="font-size: 24px;">🎯</div>
+      <div class="grid-2" style="margin: 0; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px; padding: 18px 24px;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="font-size: 28px;">🎯</div>
           <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13.5px;">SAM (Рынок Таджикистана): $18M / год</div>
-            <div style="font-size: 11.5px; color: var(--text-muted);">450+ оптовых дистрибьюторов и 35 000 активных торговых точек.</div>
+            <div style="font-weight: 800; color: #fff; font-size: 15px;">SAM (Рынок Таджикистана): $18M / год</div>
+            <div style="font-size: 13px; color: var(--text-muted);">450+ оптовых дистрибьюторов и 35 000 активных торговых точек.</div>
           </div>
         </div>
 
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <div style="font-size: 24px;">🚀</div>
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="font-size: 28px;">🚀</div>
           <div>
-            <div style="font-weight: 700; color: #fff; font-size: 13.5px;">SOM (Цель за 24 месяца): 50 компаний</div>
-            <div style="font-size: 11.5px; color: var(--text-muted);">1 200 активных агентов, выход на стабильный MRR в 350 000+ сомони.</div>
+            <div style="font-weight: 800; color: #fff; font-size: 15px;">SOM (Цель за 24 месяца): 50 компаний</div>
+            <div style="font-size: 13px; color: var(--text-muted);">1 200 активных агентов, выход на стабильный MRR в 350 000+ сомони.</div>
           </div>
         </div>
       </div>
@@ -1610,7 +1553,7 @@
     <section class="slide" data-index="9" data-notes="Финал и Оффер форуму: Наш четкий оффер на форуме TajTech: 1) Банкам: давайте заключим соглашение на 50/50 эквайринга — мы приведем к вам миллионы сомони безналичного оборота. 2) Дистрибьюторам: даем бесплатное пилотное внедрение за 48 часов с полным отказом от зарубежной абонплаты. 3) Инвесторам: открыт pre-seed раунд на $30k–$60k для быстрого захвата рынка Душанбе. Основатель Абдуллозода Иззатуллохон, команда tajcodes. Мы в зале — готовы показать живое демо прямо сейчас. Спасибо!">
       <div>
         <div class="slide-tagline morph-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
           Pre-Seed Раунд & Пилотные партнерства
         </div>
         <h2 class="slide-title morph-2">
@@ -1618,56 +1561,56 @@
           <span class="highlight">предлагает на форуме TAJ-TECH 2026</span>
         </h2>
         <p class="slide-subtitle morph-3">
-          Мы открыты к прямому диалогу с дистрибьюторами, банками Таджикистана и ангельскими инвесторами.
+          Мы открыты к прямому диалогу с дистрибьюторами, банками Таджикистана и ангельскими инвесторами прямо сейчас.
         </p>
       </div>
 
       <div class="grid-2 morph-4">
         <!-- What we offer & seek -->
-        <div class="feature-card" style="padding: 22px;">
-          <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--primary);">Наши предложения участникам форума:</h3>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px; color: var(--text-main);">
-            <li style="display: flex; gap: 10px; align-items: flex-start;">
-              <span style="color: var(--secondary); font-weight: 800; font-size: 15px;">1.</span>
-              <span><strong>Банкам Таджикистана (Dushanbe City, Alif, Freedom, Эсхата):</strong> Запуск пилотного эквайринга по схеме <strong>50/50 комиссии</strong>. Мы генерируем безналичный оборот в рознице по Указу №586.</span>
+        <div class="feature-card" style="padding: 26px;">
+          <h3 style="font-size: 20px; margin-bottom: 14px; color: var(--primary);">Наши предложения участникам форума:</h3>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 14.5px; color: var(--text-main);">
+            <li style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--secondary); font-weight: 900; font-size: 18px;">1.</span>
+              <span><strong>Банкам Таджикистана (Dushanbe City, Alif, Freedom, Эсхата):</strong> Пилотный запуск эквайринга <strong>50/50 комиссии</strong>. Мы приводим безналичный оборот сотен дуконов по Указу №586.</span>
             </li>
-            <li style="display: flex; gap: 10px; align-items: flex-start;">
-              <span style="color: var(--primary); font-weight: 800; font-size: 15px;">2.</span>
-              <span><strong>Дистрибьюторам (Design Partners):</strong> <strong>Бесплатный пилотный переход</strong> с зарубежного софта за 48 часов. Персональная интеграция с вашим 1С и складом.</span>
+            <li style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--primary); font-weight: 900; font-size: 18px;">2.</span>
+              <span><strong>Дистрибьюторам (Design Partners):</strong> <strong>Бесплатный переход за 48 часов</strong> с зарубежного софта. Подключение 1С и склада под ключ.</span>
             </li>
-            <li style="display: flex; gap: 10px; align-items: flex-start;">
-              <span style="color: var(--gold); font-weight: 800; font-size: 15px;">3.</span>
-              <span><strong>Pre-Seed инвесторам ($30k – $60k):</strong> Доукомплектование полевой команды развертывания и подключение первых 500 торговых точек в столице.</span>
+            <li style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--gold); font-weight: 900; font-size: 18px;">3.</span>
+              <span><strong>Pre-Seed инвесторам ($30k – $60k):</strong> Для доукомплектования полевой команды и подключения первых 500 торговых точек в столице.</span>
             </li>
           </ul>
         </div>
 
         <!-- Founder & Contacts -->
-        <div class="feature-card" style="padding: 22px; background: rgba(16, 185, 129, 0.05); border-color: var(--border-accent);">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div class="feature-card" style="padding: 26px; background: rgba(16, 185, 129, 0.05); border-color: var(--border-accent);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
             <div>
-              <div style="font-size: 18px; font-weight: 800; color: #fff;">Команда разработки tajcodes</div>
-              <div style="font-size: 12px; color: var(--primary); margin-top: 2px;">Отечественная инженерная студия в Душанбе</div>
+              <div style="font-size: 21px; font-weight: 900; color: #fff;">Команда tajcodes</div>
+              <div style="font-size: 13px; color: var(--primary); margin-top: 2px;">Отечественная инженерная студия в Душанбе</div>
             </div>
-            <div style="padding: 3px 9px; background: rgba(255,255,255,0.06); border-radius: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted);">
+            <div style="padding: 4px 10px; background: rgba(255,255,255,0.06); border-radius: 8px; font-size: 12px; font-weight: 800; color: var(--text-muted);">
               taj.codes
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 7px; font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 9px; font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
             <div>👤 <strong>Основатель и техлид:</strong> Абдуллозода Иззатуллохон</div>
-            <div>🤝 <strong>Формат на TAJ-TECH:</strong> Нетворкинг, пилотные соглашения и живое демо</div>
+            <div>🤝 <strong>Формат на TAJ-TECH:</strong> Партнерские соглашения и живое демо в кулуарах</div>
             <div>📱 <strong>Живое демо:</strong> Покажем работу приложения за 60 секунд прямо на телефоне</div>
-            <div>🌐 <strong>Сайт:</strong> <a href="https://taj.codes" target="_blank" style="color: var(--primary); text-decoration: none;">taj.codes</a> • 📧 info@taj.codes</div>
+            <div>🌐 <strong>Сайт:</strong> <a href="https://taj.codes" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 700;">taj.codes</a> • 📧 info@taj.codes</div>
           </div>
 
-          <button class="btn-icon btn-primary-action" style="width: 100%; justify-content: center; padding: 11px; font-size: 13px;" onclick="alert('Команда tajcodes открыта к переговорам на полях Taj-Tech! Контакт основателя: Абдуллозода Иззатуллохон (tajcodes)');">
+          <button class="btn-icon btn-primary-action" style="width: 100%; justify-content: center; padding: 13px; font-size: 14.5px;" onclick="alert('Команда tajcodes открыта к переговорам на полях Taj-Tech! Контакт основателя: Абдуллозода Иззатуллохон (tajcodes)');">
             Посмотреть живое демо на телефоне
           </button>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-faint);">
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--text-faint);">
         <span>SmartSale Startup • Разработка tajcodes • Душанбе, Таджикистан</span>
         <span>Навигация: [Пробел] / стрелки • Сетка слайдов: [G] • Заметки спикера: [N] • Печать: [P]</span>
       </div>
@@ -1679,9 +1622,9 @@
   <footer>
     <div class="footer-left">
       <div class="pitch-timer" id="timerBox" title="Кликните для сброса или выбора лимита (3 / 5 мин)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span id="pitchTimer">00:00</span>
-        <span id="timerLimitBadge" style="font-size: 10px; opacity: 0.6;">(лимит 5 мин)</span>
+        <span id="timerLimitBadge" style="font-size: 11px; opacity: 0.7;">(лимит 5 мин)</span>
       </div>
 
       <div class="dots-indicator" id="dotsContainer">
@@ -1691,7 +1634,7 @@
 
     <div class="footer-right">
       <button class="btn-icon" id="btnPrev">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         <span>Назад</span>
       </button>
 
@@ -1699,9 +1642,9 @@
         1 / 10
       </div>
 
-      <button class="btn-icon" id="btnNext" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: var(--primary);">
+      <button class="btn-icon" id="btnNext" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: var(--primary);">
         <span>Далее</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
       </button>
     </div>
   </footer>
@@ -1712,7 +1655,7 @@
       <div class="grid-modal-title">Сетка слайдов питча (10 слайдов)</div>
       <button class="btn-icon" id="btnCloseMatrix">
         <span>Закрыть (Esc)</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="slide-matrix" id="slideMatrixGrid"></div>
@@ -1739,16 +1682,16 @@
 
     // Ambient glow colors per slide
     const glowPalettes = [
-      'radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%)',
-      'radial-gradient(circle at 70% 30%, rgba(239, 68, 68, 0.18) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.14) 0%, transparent 45%)',
-      'radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.20) 0%, transparent 45%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.16) 0%, transparent 45%)',
-      'radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.22) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.18) 0%, transparent 45%)',
-      'radial-gradient(circle at 60% 30%, rgba(16, 185, 129, 0.22) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.14) 0%, transparent 45%)',
-      'radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.22) 0%, transparent 45%), radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.14) 0%, transparent 45%)',
-      'radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.24) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(16, 185, 129, 0.12) 0%, transparent 45%)',
-      'radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.22) 0%, transparent 40%), radial-gradient(circle at 30% 80%, rgba(16, 185, 129, 0.18) 0%, transparent 45%)',
-      'radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.20) 0%, transparent 40%), radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.14) 0%, transparent 45%)',
-      'radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.24) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(6, 182, 212, 0.20) 0%, transparent 45%)'
+      'radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.20) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.14) 0%, transparent 45%)',
+      'radial-gradient(circle at 70% 30%, rgba(239, 68, 68, 0.20) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.15) 0%, transparent 45%)',
+      'radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.22) 0%, transparent 45%), radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.18) 0%, transparent 45%)',
+      'radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.24) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.20) 0%, transparent 45%)',
+      'radial-gradient(circle at 60% 30%, rgba(16, 185, 129, 0.22) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.16) 0%, transparent 45%)',
+      'radial-gradient(circle at 40% 40%, rgba(99, 102, 241, 0.24) 0%, transparent 45%), radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.16) 0%, transparent 45%)',
+      'radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.26) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(16, 185, 129, 0.14) 0%, transparent 45%)',
+      'radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.22) 0%, transparent 40%), radial-gradient(circle at 30% 80%, rgba(99, 102, 241, 0.18) 0%, transparent 45%)',
+      'radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.22) 0%, transparent 40%), radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.16) 0%, transparent 45%)',
+      'radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.26) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(6, 182, 212, 0.22) 0%, transparent 45%)'
     ];
 
     // Elements
@@ -1788,8 +1731,8 @@
       
       card.innerHTML = `
         <div class="matrix-num">СЛАЙД ${idx + 1}</div>
-        <div class="matrix-card-title">${titleText.slice(0, 48)}...</div>
-        <div style="font-size: 11px; color: var(--text-muted);">Перейти к слайду →</div>
+        <div class="matrix-card-title">${titleText.slice(0, 44)}...</div>
+        <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">Перейти →</div>
       `;
       card.addEventListener('click', () => {
         goToSlide(idx);
@@ -1810,7 +1753,7 @@
 
       setTimeout(() => {
         prevSlide.classList.remove('prev');
-      }, 500);
+      }, 450);
 
       nextSlide.classList.add('active');
       ambientGlow.style.background = glowPalettes[newIdx] || glowPalettes[0];
@@ -1920,7 +1863,7 @@
 
     // Slide 4: Live Screen Switcher Logic (6 Screens)
     const screenCaptions = {
-      'screen-dashboard': 'Аналитический веб-центр руководителя: динамика выручки в TJS, покрытие АКБ/ОКБ, график выполнения плана и ИИ-рекомендации закупок',
+      'screen-dashboard': 'Аналитический веб-центр руководителя: динамика выручки в TJS, покрытие АКБ/ОКБ и ИИ-рекомендации закупок',
       'screen-mobile': 'Мобильное приложение агента (Flutter): оформление заказа за 30 сек в ТТ "Ситора", оффлайн-каталог, персональные цены и скидки',
       'screen-orders': 'Реестр заказов и накладные: складские статусы сборки, дебиторка клиентов, печать ТОРГ-12 и экспорт в Excel/1С',
       'screen-gps': 'Живая карта и GPS-трекинг: воспроизведение маршрута агента по точкам визитов в городе, радиус чекина 25м, детекция остановок',
