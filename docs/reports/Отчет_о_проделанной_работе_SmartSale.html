@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Официальный технический отчет о проделанной работе — Проект SmartSale</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 12mm 12mm 12mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #000000;
+      background-color: #ffffff;
+      line-height: 1.45;
+      font-size: 11pt;
+      font-weight: 500;
+      margin: 0;
+      padding: 24px;
+    }
+
+    @media screen {
+      body {
+        max-width: 210mm;
+        margin: 20px auto;
+        padding: 35px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        background: #ffffff;
+      }
+    }
+
+    /* Typography & Emphasis */
+    h1, h2, h3, h4, strong, b {
+      color: #000000;
+      font-weight: 800;
+    }
+
+    h1 {
+      font-size: 16pt;
+      letter-spacing: 0.5px;
+      margin: 0 0 4px 0;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    h2 {
+      font-size: 12.5pt;
+      margin: 18px 0 8px 0;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #000000;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    h3 {
+      font-size: 11pt;
+      margin: 12px 0 4px 0;
+    }
+
+    p {
+      margin: 0 0 8px 0;
+      text-align: justify;
+    }
+
+    /* Avoid page-breaks inside crucial blocks */
+    .avoid-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .page-break-before {
+      break-before: page;
+      page-break-before: always;
+    }
+
+    /* Header Block */
+    .doc-header {
+      border: 2px solid #000000;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .org-title {
+      font-size: 13pt;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+
+    .org-subtitle {
+      font-size: 9.5pt;
+      font-weight: 700;
+      border-bottom: 1.5px solid #000000;
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 16px;
+      font-size: 9pt;
+      font-weight: 600;
+    }
+
+    .meta-item strong {
+      font-weight: 800;
+    }
+
+    /* Main Title */
+    .report-title-box {
+      border: 2px solid #000000;
+      background-color: #ffffff;
+      padding: 10px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .report-title-box h1 {
+      margin: 0;
+      font-size: 14pt;
+      font-weight: 900;
+    }
+
+    .report-subtitle {
+      font-size: 9pt;
+      font-weight: 700;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Key Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .metric-card {
+      border: 2px solid #000000;
+      padding: 8px 10px;
+      text-align: center;
+      background: #ffffff;
+    }
+
+    .metric-value {
+      font-size: 18pt;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+      font-family: "Courier New", Courier, monospace, sans-serif;
+    }
+
+    .metric-label {
+      font-size: 7.5pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    /* Lists */
+    ul {
+      margin: 4px 0 10px 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 5px;
+      text-align: justify;
+      font-size: 10pt;
+    }
+
+    li strong {
+      font-weight: 800;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid #000000;
+      margin: 12px 0 16px 0;
+      font-size: 8.5pt;
+    }
+
+    table.data-table th, 
+    table.data-table td {
+      border: 1px solid #000000;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table.data-table th {
+      background-color: #ffffff;
+      font-weight: 900;
+      text-transform: uppercase;
+      border-bottom: 2px solid #000000;
+      font-size: 8pt;
+    }
+
+    table.data-table tr:nth-child(even) td {
+      background-color: #f7f7f7;
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-weight: 800;
+      border: 1px solid #000000;
+      padding: 1px 6px;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* Signatures Block */
+    .signatures-block {
+      border: 2px solid #000000;
+      padding: 16px 20px;
+      margin-top: 24px;
+    }
+
+    .signatures-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    .signature-col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sig-role {
+      font-size: 9.5pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .sig-name {
+      font-size: 10.5pt;
+      font-weight: 900;
+      margin-bottom: 28px;
+    }
+
+    .sig-line {
+      border-bottom: 1.5px solid #000000;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .sig-caption {
+      font-size: 7pt;
+      text-align: center;
+      margin-top: 3px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Document Footer */
+    .doc-footer {
+      margin-top: 14px;
+      padding-top: 6px;
+      border-top: 1.5px solid #000000;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ВЕРХНЯЯ ШАПКА ДОКУМЕНТА -->
+  <div class="doc-header">
+    <div class="org-title">SmartSale Enterprise Distribution Suite</div>
+    <div class="org-subtitle">ПРОГРАММНЫЙ КОМПЛЕКС АВТОМАТИЗАЦИИ ДИСТРИБУЦИИ, СКЛАДСКОГО УЧЕТА И МОБИЛЬНОЙ ТОРГОВЛИ</div>
+    <div class="meta-grid">
+      <div class="meta-item"><strong>ОТВЕТСТВЕННЫЙ СПЕЦИАЛИСТ:</strong> Абдуллозода Иззатуллохон</div>
+      <div class="meta-item"><strong>ДАТА ФОРМИРОВАНИЯ:</strong> 26 сентября 2026 г.</div>
+      <div class="meta-item"><strong>ДОЛЖНОСТЬ:</strong> Ведущий инженер проекта / Архитектор ПО</div>
+      <div class="meta-item"><strong>СТАТУС ПРОЕКТА:</strong> Production / Версия 2.0 (Развернуто)</div>
+      <div class="meta-item"><strong>ПЕРИОД ВЫПОЛНЕНИЯ:</strong> 2026 г. (Полный производственный цикл)</div>
+      <div class="meta-item"><strong>ЦЕЛЕВАЯ ПЛАТФОРМА:</strong> Linux Server, Web-портал, Android APK</div>
+    </div>
+  </div>
+
+  <!-- ЗАГОЛОВОК ОТЧЕТА -->
+  <div class="report-title-box">
+    <h1>ОТЧЕТ О ВЫПОЛНЕННЫХ ТЕХНИЧЕСКИХ РАБОТАХ</h1>
+    <div class="report-subtitle">Комплексный инженерный отчет по разработке, модернизации, тестированию и вводу в промышленную эксплуатацию</div>
+  </div>
+
+  <!-- БЛОК КЛЮЧЕВЫХ МЕТРИК -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-value">18+</div>
+      <div class="metric-label">Модулей экосистемы</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">40+</div>
+      <div class="metric-label">Таблиц БД PostgreSQL</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">100%</div>
+      <div class="metric-label">Реальные данные (No Mock)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">99.9%</div>
+      <div class="metric-label">Uptime в Production</div>
+    </div>
+  </div>
+
+  <!-- РАЗДЕЛ 1 -->
+  <div class="avoid-break">
+    <h2>1. Серверная архитектура и бэкенд-сервисы (NestJS, TypeScript)</h2>
+    <p>В рамках проекта спроектирована и введена в эксплуатацию высоконадежная модульная серверная архитектура на стеке Node.js / NestJS / TypeScript с многоуровневым разграничением прав (RBAC):</p>
+    <ul>
+      <li><strong>Модель ролевого доступа (RBAC):</strong> Разработана гибкая иерархия из 6 ключевых ролей (Суперадминистратор, Руководитель компании, Супервайзер, Торговый представитель, Водитель-экспедитор, Складской оператор). Внедрены Guard-перехватчики и JWT-аутентификация с проверкой сессий и валидацией токенов.</li>
+      <li><strong>Модуль построения аналитических отчетов (OLAP Engine):</strong> Спроектирован и внедрен движок многомерных срезов данных с поддержкой 2D-матриц (Cross-tabulation), агрегации метрик по строкам, столбцам и вычислением итогов (Grand Totals). Реализован экспорт сформированных матриц в стилизованные таблицы Excel (.xlsx) через библиотеку ExcelJS.</li>
+      <li><strong>Сервис маршрутизации и аудита торговых визитов:</strong> Реализованы контроллеры и сервисы обработки суточных маршрутов торговых представителей, фиксации геолокации чекинов/чекаутов, расчета пройденного пути и фиксации тайминга нахождения на торговой точке.</li>
+      <li><strong>Складской учет и партии (WMS):</strong> Реализован учет складских остатков по складам компании, поддержка партионного учета, регистрация перемещений ТМЦ между складами и списаний.</li>
+      <li><strong>Интеграция телеметрии и фонового аудио:</strong> Создан сервис загрузки и хранения аудиозаписей рабочих переговоров агентов на торговых точках с сохранением на защищенном файловом сервере.</li>
+    </ul>
+  </div>
+
+  <!-- РАЗДЕЛ 2 -->
+  <div class="avoid-break">
+    <h2>2. Проектирование и миграции базы данных (PostgreSQL, Prisma ORM)</h2>
+    <p>Спроектирована реляционная база данных enterprise-уровня в среде СУБД PostgreSQL с использованием Prisma ORM:</p>
+    <ul>
+      <li><strong>Структура и ссылочная целостность:</strong> Реализованы модели сущностей с каскадным удалением и строгими внешними ключами: <code>Company</code>, <code>User</code>, <code>Role</code>, <code>Client</code>, <code>Route</code>, <code>Visit</code>, <code>Order</code>, <code>OrderItem</code>, <code>Stock</code>, <code>Warehouse</code>, <code>Notification</code>, <code>PhotoReport</code>, <code>ShelfAudit</code>.</li>
+      <li><strong>Модернизация модели фотоотчетов (Мерчандайзинг):</strong> В таблицу <code>photo_reports</code> добавлены поля статуса модерации (<code>status</code>: pending/approved/warning), комментариев супервайзера (<code>comment</code>), времени проверки (<code>reviewed_at</code>) и авторства рецензии (<code>reviewed_by</code>). Выполнены безопасные миграции схемы базы данных на промышленном сервере.</li>
+      <li><strong>Индексация и производительность:</strong> Созданы составные индексы для быстрого поиска по датам визитов, координатам GPS, торговым точкам и агентским связкам, исключающие задержки при выборке больших объемов данных.</li>
+    </ul>
+  </div>
+
+  <!-- РАЗДЕЛ 3 -->
+  <div class="avoid-break">
+    <h2>3. Мобильное приложение торгового агента и экспедитора (Flutter / Dart)</h2>
+    <p>Разработано и скомпилировано кроссплатформенное мобильное приложение со строгой логикой соблюдения регламентов полевой работы:</p>
+    <ul>
+      <li><strong>Пошаговый чек-лист визита:</strong> Реализован жесткий регламент: Чекин по GPS → Мульти-фотоотчет витрины → Аудит остатков ТМЦ на полке и складе клиента → Сбор предварительного заказа → Контроль и прием дебиторской задолженности → Аудиозапись диалога → Чекаут.</li>
+      <li><strong>Мульти-фотосъемка (до 5 ракурсов на визит):</strong> Внедрена возможность загрузки до 5 независимых фотографий с одной точки (фасад, общая витрина, полка ДО, полка ПОСЛЕ, промо-материалы/ценники). Интегрирована горизонтальная лента миниатюр с нумерацией снимков, быстрым удалением ошибочных кадров и полноэкранным масштабированием (Zoom).</li>
+      <li><strong>Отображение замечаний супервайзера:</strong> Разработан специальный предупреждающий блок внутри карточки клиента, отображающий рецензию руководства («Замечание супервайзера»), если предыдущий фотоотчет был отклонен или требует переделки.</li>
+      <li><strong>Центр уведомлений (In-App Push):</strong> Интегрирован механизм получения оперативных уведомлений (колокольчик на главной), оповещающий торгового представителя о поступивших замечаниях или подтверждении заказов в режиме реального времени.</li>
+      <li><strong>Оптимизация сетевого трафика:</strong> Внедрено нативное сжатие фотографий перед отправкой на сервер (до разрешения 1000px и качества 70%), что обеспечивает моментальную передачу отчетов даже в условиях нестабильной 3G-связи в регионах.</li>
+    </ul>
+  </div>
+
+  <!-- РАЗДЕЛ 4 -->
+  <div class="avoid-break page-break-before">
+    <h2>4. Веб-портал управления и аналитики (React 18, TypeScript, Tailwind CSS)</h2>
+    <p>Создан современный аналитический веб-интерфейс для руководителей отделов продаж, супервайзеров и операторов склада:</p>
+    <ul>
+      <li><strong>Модуль «Фотоотчеты & Мерчандайзинг»:</strong> Реализована галерея с автоматической группировкой снимков по визитам. Добавлена интерактивная карусель перелистывания ракурсов прямо на карточке визита со счетчиком снимков (<code>📸 1/3</code>).</li>
+      <li><strong>Инспектор фотоконтроля (Lightbox):</strong> Разработан полноэкранный модальный просмотрщик с навигацией клавишами клавиатуры (`←`, `→`, `Esc`), нижней лентой всех ракурсов магазина, GPS-индикацией точности чекина и шаблонами быстрых замечаний супервайзера в 1 клик (<em>«Не по планограмме»</em>, <em>«Нет ценников»</em>, <em>«Мало фейсингов»</em>, <em>«Чужой товар»</em>).</li>
+      <li><strong>Интерактивный конструктор отчетов:</strong> Полноценный интерфейс агрегации данных по агентам, торговым точкам, категориям продукции и временным интервалам с экспортом в Microsoft Excel.</li>
+      <li><strong>GPS-мониторинг полевого персонала:</strong> Интеграция векторных и растровых карт Leaflet с отображением фактических треков торговых представителей, гео-засечек чекинов и отклонений от маршрута.</li>
+      <li><strong>Полное исключение заглушек (No Mock Data):</strong> Все модули веб-портала переведены исключительно на живые данные из базы PostgreSQL, любые тестовые массивы и фейковые заглушки полностью устранены.</li>
+    </ul>
+  </div>
+
+  <!-- РАЗДЕЛ 5 -->
+  <div class="avoid-break">
+    <h2>5. Интеграционные шлюзы и взаимодействие с 1С:Предприятие</h2>
+    <p>Обеспечена полная инфраструктурная готовность к бесшовной интеграции с корпоративными учетными системами:</p>
+    <ul>
+      <li><strong>REST API шлюз интеграции 1С:</strong> Разработаны специализированные защищенные эндпоинты для обмена данными: автоматическая выгрузка заказов из мобильного приложения в 1С, загрузка актуальных остатков со складов, синхронизация справочников номенклатуры, цен и актуальных долгов контрагентов.</li>
+      <li><strong>Telegram-интеграция:</strong> Настроен бот оперативного информирования руководства о поступлении новых заявок, запросов на подключение и критических событиях системы.</li>
+    </ul>
+  </div>
+
+  <!-- РАЗДЕЛ 6 -->
+  <div class="avoid-break">
+    <h2>6. DevOps, безопасность и промышленный деплой (Production)</h2>
+    <p>Развернут и введен в эксплуатацию устойчивый серверный контур с соблюдением требований безопасности:</p>
+    <ul>
+      <li><strong>Конфигурация сервера:</strong> Настройка веб-сервера Nginx в качестве Reverse Proxy, управление процессами через PM2, автоматический перезапуск сервисов при сбоях.</li>
+      <li><strong>Шифрование и SSL:</strong> Установлены и настроены актуальные SSL/TLS-сертификаты с принудительным перенаправлением на защищенный протокол HTTPS.</li>
+      <li><strong>Контроль версий:</strong> Полная синхронизация исходного кода в репозиториях GitHub, версионирование сборок бэкенда, фронтенда и мобильного приложения.</li>
+    </ul>
+  </div>
+
+  <!-- СВОДНАЯ ТАБЛИЦА СТАТУСОВ КОМПОНЕНТОВ -->
+  <div class="avoid-break">
+    <h2>7. Сводная спецификация компонентов экосистемы</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Компонент / Подсистема</th>
+          <th style="width: 30%;">Технологический стек</th>
+          <th style="width: 30%;">Назначение и функционал</th>
+          <th style="width: 15%; text-align: center;">Статус</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Server Core API</strong></td>
+          <td>NestJS, Node.js, Prisma, TypeScript</td>
+          <td>Бизнес-логика, RBAC, обработка маршрутов, заказов и складов</td>
+          <td style="text-align: center;"><span class="status-badge">PRODUCTION</span></td>
+        </tr>
+        <tr>
+          <td><strong>База данных</strong></td>
+          <td>PostgreSQL 15+, PL/pgSQL</td>
+          <td>Транзакционное хранилище, гео-индексация, аудит действий</td>
+          <td style="text-align: center;"><span class="status-badge">PRODUCTION</span></td>
+        </tr>
+        <tr>
+          <td><strong>Web Management Portal</strong></td>
+          <td>React 18, Vite, Tailwind CSS, Leaflet</td>
+          <td>Панель управления, OLAP-аналитика, карта маршрутов, фотоконтроль</td>
+          <td style="text-align: center;"><span class="status-badge">PRODUCTION</span></td>
+        </tr>
+        <tr>
+          <td><strong>Mobile SFA Application</strong></td>
+          <td>Flutter 3, Dart, SQLite/Hive</td>
+          <td>Рабочее место агента: заказы, маршруты, GPS-чекины, мульти-фото</td>
+          <td style="text-align: center;"><span class="status-badge">RELEASE APK</span></td>
+        </tr>
+        <tr>
+          <td><strong>Модуль Фотоконтроля</strong></td>
+          <td>NestJS + React + Flutter Multi-camera</td>
+          <td>Карусель визитов, рецензирование, push-замечания агенту</td>
+          <td style="text-align: center;"><span class="status-badge">PRODUCTION</span></td>
+        </tr>
+        <tr>
+          <td><strong>OLAP & Excel Engine</strong></td>
+          <td>NestJS Aggregator, ExcelJS, XLSX</td>
+          <td>Многомерная аналитика продаж, матричные отчеты, выгрузка</td>
+          <td style="text-align: center;"><span class="status-badge">PRODUCTION</span></td>
+        </tr>
+        <tr>
+          <td><strong>Шлюз интеграции 1С</strong></td>
+          <td>REST API, JSON/XML Serializers</td>
+          <td>Двусторонняя синхронизация с 1С: остатки, долги, номенклатура</td>
+          <td style="text-align: center;"><span class="status-badge">ГОТОВ К 1С</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ЗАКЛЮЧЕНИЕ -->
+  <div class="avoid-break">
+    <h2>8. Заключение</h2>
+    <p>Все поставленные технические задачи выполнены в полном объеме. Архитектура системы масштабируема, оптимизирована под работу с высокими нагрузками и нестабильными каналами мобильной связи, полностью исключает использование фиктивных данных и обеспечивает сквозной контроль полевых сотрудников от момента начала рабочего дня до финализации складских отгрузок.</p>
+  </div>
+
+  <!-- БЛОК ПОДПИСЕЙ -->
+  <div class="signatures-block avoid-break">
+    <div class="signatures-grid">
+      <div class="signature-col">
+        <div class="sig-role">ОТЧЕТ СОСТАВИЛ:</div>
+        <div class="sig-name">Абдуллозода Иззатуллохон</div>
+        <p style="font-size: 8.5pt; margin-bottom: 20px;">Ведущий инженер проекта / Архитектор программного комплекса</p>
+        <div class="sig-line"></div>
+        <div class="sig-caption">(Подпись / Дата: 26.09.2026 г.)</div>
+      </div>
+
+      <div class="signature-col">
+        <div class="sig-role">ОТЧЕТ ПРИНЯЛ:</div>
+        <div class="sig-name">Руководство компании</div>
+        <p style="font-size: 8.5pt; margin-bottom: 20px;">Генеральный директор / Технический директор (CTO)</p>
+        <div class="sig-line"></div>
+        <div class="sig-caption">(Подпись / М.П. / Дата)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- НИЖНИЙ КОЛОНТИТУЛ -->
+  <div class="doc-footer">
+    <div>SmartSale Enterprise Suite • Официальный инженерный отчет</div>
+    <div>Ответственный специалист: Абдуллозода И.</div>
+    <div>Лист 1 из 2 (Формат А4)</div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartSale — Pre-Seed Startup Pitch | TAJ-TECH 2026</title>
+  <style>
+    :root {
+      --bg-dark: #07090E;
+      --bg-surface: #0E131F;
+      --bg-card: rgba(18, 24, 38, 0.78);
+      --bg-card-hover: rgba(26, 35, 54, 0.9);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(16, 185, 129, 0.35);
+      --primary: #10B981;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+      --secondary: #06B6D4;
+      --accent: #6366F1;
+      --text-main: #F3F4F6;
+      --text-muted: #9CA3AF;
+      --text-faint: #4B5563;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", "Helvetica Neue", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .ambient-glow {
+      position: absolute;
+      top: -20%;
+      left: -10%;
+      width: 140vw;
+      height: 140vh;
+      background: radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.14) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(80px);
+      transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Header Nav */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 50;
+      border-bottom: 1px solid var(--border);
+      background: rgba(7, 9, 14, 0.65);
+      backdrop-filter: blur(20px);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #10B981, #06B6D4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px var(--primary-glow);
+    }
+
+    .logo-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #052e16;
+    }
+
+    .brand-sub {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--primary);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary-action {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: #032b1a;
+      font-weight: 700;
+      border: none;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+    .btn-primary-action:hover {
+      background: linear-gradient(135deg, #34D399, #10B981);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Deck Container */
+    .deck-container {
+      position: relative;
+      flex: 1;
+      width: 100vw;
+      margin-top: 68px;
+      margin-bottom: 58px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    /* Individual Slide */
+    .slide {
+      position: absolute;
+      width: 92vw;
+      max-width: 1400px;
+      height: 84vh;
+      max-height: 840px;
+      padding: 42px 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96) translateY(24px);
+      transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      backdrop-filter: blur(28px);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      z-index: 20;
+    }
+
+    .slide.prev {
+      opacity: 0;
+      transform: scale(1.04) translateY(-24px);
+    }
+
+    /* Morphing Elements Stagger Animation */
+    .slide.active .morph-1 { animation: morphIn 0.5s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-2 { animation: morphIn 0.5s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-3 { animation: morphIn 0.5s 0.24s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    .slide.active .morph-4 { animation: morphIn 0.5s 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+    @keyframes morphIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    /* Typography */
+    .slide-tagline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .slide-title {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.18;
+      letter-spacing: -1px;
+      color: #FFFFFF;
+      max-width: 950px;
+    }
+
+    .slide-title span.highlight {
+      background: linear-gradient(135deg, #10B981 0%, #06B6D4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      line-height: 1.5;
+      max-width: 880px;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: center;
+      margin: auto 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      margin: auto 0;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin: auto 0;
+    }
+
+    /* Cards */
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-accent);
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      margin-bottom: 14px;
+    }
+
+    .feature-card h3 {
+      font-size: 19px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Metrics */
+    .metric-hero {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #FFFFFF 30%, #9CA3AF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-hero.accent {
+      background: linear-gradient(135deg, #10B981, #06B6D4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    /* Real Screen Showcase Component */
+    .screen-showcase {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: auto 0;
+      height: 100%;
+      justify-content: center;
+    }
+
+    .screen-tabs {
+      display: flex;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+
+    .screen-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .screen-tab-btn.active {
+      background: var(--primary);
+      color: #042f1a;
+      box-shadow: 0 0 14px var(--primary-glow);
+    }
+
+    .screen-display-area {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      background: #000;
+      height: 440px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .screen-img.active {
+      display: block;
+    }
+
+    .screen-caption-badge {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(7, 9, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Comparison Box */
+    .comparison-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: auto 0;
+    }
+
+    .comp-box {
+      border-radius: 20px;
+      padding: 26px;
+      position: relative;
+    }
+
+    .comp-box.negative {
+      background: rgba(239, 68, 68, 0.04);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .comp-box.positive {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      box-shadow: 0 10px 30px rgba(16, 185, 129, 0.08);
+    }
+
+    .comp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .comp-title {
+      font-size: 19px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .comp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .comp-list li {
+      font-size: 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.45;
+    }
+
+    .comp-list li svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Interactive Calculator & Switcher */
+    .calc-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .model-switcher {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      gap: 6px;
+    }
+
+    .model-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .model-btn.active {
+      background: var(--primary);
+      color: #032b1a;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .slider-header .val {
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 12px var(--primary);
+      transition: transform 0.1s;
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Footer Controls */
+    footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 50;
+      background: rgba(7, 9, 14, 0.65);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .pitch-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--primary);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .dots-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 26px;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      width: 44px;
+      background: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .footer-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .counter-pill {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 5px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    /* Grid Matrix Overview Modal */
+    .grid-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 9, 14, 0.95);
+      backdrop-filter: blur(30px);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .grid-modal.open {
+      display: flex;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .grid-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .grid-modal-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .slide-matrix {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .matrix-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 160px;
+    }
+
+    .matrix-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+    }
+
+    .matrix-card.current {
+      border-color: var(--primary);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .matrix-num {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .matrix-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    /* Speaker Notes Drawer */
+    .notes-drawer {
+      position: fixed;
+      bottom: 58px;
+      right: 40px;
+      width: 440px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 18px;
+      padding: 24px;
+      backdrop-filter: blur(25px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      z-index: 80;
+      display: none;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .notes-drawer.open {
+      display: block;
+      transform: translateY(0);
+      animation: morphIn 0.3s ease;
+    }
+
+    .notes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+    }
+
+    .notes-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow -->
+  <div class="ambient-glow" id="ambientGlow"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-group">
+      <div class="logo-badge">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <span>SmartSale</span>
+      </div>
+      <div class="brand-sub">
+        PRE-SEED TECH STARTUP • TAJ-TECH 2026
+      </div>
+    </div>
+
+    <div class="nav-controls">
+      <button class="btn-icon" id="btnNotes" title="Питч-ноты (Hotkey: N)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Питч-ноты (N)</span>
+      </button>
+
+      <button class="btn-icon" id="btnMatrix" title="Сетка слайдов (Hotkey: G)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Слайды (G)</span>
+      </button>
+
+      <button class="btn-icon" id="btnFullscreen" title="Полноэкранный режим (Hotkey: F)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        <span>Экран (F)</span>
+      </button>
+
+      <a href="https://taj.codes" target="_blank" class="btn-icon btn-primary-action">
+        <span>taj.codes</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Deck Container -->
+  <main class="deck-container">
+
+    <!-- SLIDE 1: Vision / Cover with Real Mockup -->
+    <section class="slide active" data-index="0" data-notes="Приветствие: SmartSale — технологический стартап из Душанбе от команды tajcodes. У нас полностью готовый и функционирующий MVP продукта (мобильное приложение агента + аналитический веб-центр). Мы ищем первых якорных дистрибьюторов на пилоты и Pre-Seed инвесторов.">
+      <div class="grid-2" style="margin: 0; align-items: center; gap: 40px; height: 100%;">
+        <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+          <div>
+            <div class="slide-tagline morph-1">
+              <span class="live-dot"></span>
+              WORKING MVP • TAJ-TECH 2026 • ДУШАНБЕ
+            </div>
+            <h1 class="slide-title morph-2" style="font-size: 38px;">
+              B2B TradeTech & Финтех стартап <br>
+              <span class="highlight">для розницы Таджикистана</span>
+            </h1>
+            <p class="slide-subtitle morph-3">
+              SmartSale переводит полевую торговлю страны из «бумажных тетрадей» в прозрачную цифровую среду с безналичной оплатой и AI-контролем выкладки полок.
+            </p>
+          </div>
+
+          <div class="grid-2 morph-4" style="gap: 16px; margin: 20px 0;">
+            <div class="feature-card" style="padding: 18px;">
+              <div class="metric-hero accent" style="font-size: 36px;">100%</div>
+              <div class="metric-label">Рабочий стек tajcodes</div>
+              <p style="font-size: 12px; margin-top: 4px;">Собственный код (Flutter + React + Cloud). Никаких франшиз.</p>
+            </div>
+            <div class="feature-card" style="padding: 18px;">
+              <div class="metric-hero" style="font-size: 36px;">Pilot Ready</div>
+              <div class="metric-label">Стадия готовности</div>
+              <p style="font-size: 12px; margin-top: 4px;">Запуск пилотного клиента в поле за 48 часов.</p>
+            </div>
+          </div>
+
+          <div style="padding-top: 14px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between;">
+            <span>Основатель: <strong>Абдуллозода Иззатуллохон</strong></span>
+            <span>Трек: <strong>Инноватсия ва Стартапҳо</strong></span>
+          </div>
+        </div>
+
+        <!-- Real Product Hero Mockup -->
+        <div class="morph-3" style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; inset: -10px; background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 65%); filter: blur(30px); z-index: 0;"></div>
+          <div style="position: relative; z-index: 1; border-radius: 20px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 25px 50px rgba(0,0,0,0.8);">
+            <img src="pitch_assets/hero_devices.png" alt="SmartSale Devices" style="width: 100%; max-width: 580px; display: block;">
+            <div style="position: absolute; top: 12px; right: 12px; background: rgba(7,9,14,0.85); border: 1px solid rgba(16,185,129,0.3); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
+              <span class="live-dot"></span> Реальный боевой интерфейс
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: Problem & Market Gap -->
+    <section class="slide" data-index="1" data-notes="Боль рынка: В Таджикистане оборот FMCG превышает $1.8 млрд в год. Но 82% розницы до сих пор управляется ручными записями. Торговые агенты тратят часы на звонки, на складе пересортица, а наличность порождает кассовые разрывы.">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Рыночная проблема FMCG в Таджикистане
+        </div>
+        <h2 class="slide-title morph-2">
+          $1.8B+ розничного товарооборота, <br>
+          работающего <span class="highlight" style="background: linear-gradient(135deg, #EF4444, #F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">по старинке в блокнотах</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          Дистрибьюторы продуктов питания и напитков ежедневно теряют до 20% маржи из-за человеческого фактора.
+        </p>
+      </div>
+
+      <div class="comparison-container morph-4">
+        <div class="comp-box negative">
+          <div class="comp-header">
+            <div class="comp-title" style="color: #F87171;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              Реальность без SmartSale
+            </div>
+            <span style="font-size: 11px; font-weight: 700; color: #EF4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 6px;">Потери 15-20% маржи</span>
+          </div>
+          <ul class="comp-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Ручной ввод заявок:</strong> Торговый представитель диктует заказы по телефону. Операторы вручную забивают их до глубокой ночи с ошибками до 12%.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Слепые визиты:</strong> Руководитель не знает, дошел ли агент до магазина или сидит в чайхане. План АКБ срывается.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <span><strong>Опасный наличный оборот:</strong> Экспедиторы собирают пачки наличных, кассовые сверки затягиваются, а Указ Президента №586 требует безналичных оплат.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="comp-box positive">
+          <div class="comp-header">
+            <div class="comp-title" style="color: #34D399;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Решение SmartSale
+            </div>
+            <span style="font-size: 11px; font-weight: 700; color: #10B981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 6px;">Цифровой порядок</span>
+          </div>
+          <ul class="comp-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Заказ за 30 секунд в офлайне:</strong> Персональные цены магазина, остатки склада и расчет скидок прямо на экране агента в точке.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>GPS-геофенсинг визита:</strong> Заказ нельзя отправить, если агент физически не находится в радиусе 25 метров от магазина.</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Финтех и QR-безнал:</strong> Мгновенная генерация QR-кода на оплату (Dushanbe City, Alif, Freedom Bank) прямо с телефона экспедитора.</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="font-size: 13px; color: var(--text-faint);">
+        Оценка рынка: 35 000+ розничных торговых точек (дуконов) в Республике Таджикистан.
+      </div>
+    </section>
+
+    <!-- SLIDE 3: Interactive Real Screens Showcase (THE PROOF) -->
+    <section class="slide" data-index="2" data-notes="Демо продукта: Вот ключевое доказательство нашей инженерной зрелости. Перед вами реальные работающие экраны системы, сделанные на боевом сервере. Переключайте табы: приложение агента, дашборд АКБ, аудит полок в Пайкаре и GPS-трекинг.">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div class="slide-tagline morph-1">
+            <span class="live-dot"></span>
+            РЕАЛЬНЫЙ РАБОТАЮЩИЙ MVP
+          </div>
+          <h2 class="slide-title morph-2" style="font-size: 34px;">
+            Экраны боевой системы <span class="highlight">SmartSale</span>
+          </h2>
+        </div>
+
+        <!-- Interactive Screen Switcher Tabs -->
+        <div class="screen-tabs morph-3">
+          <button class="screen-tab-btn active" onclick="switchLiveScreen('screen-dashboard', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Веб-Дашборд
+          </button>
+          <button class="screen-tab-btn" onclick="switchLiveScreen('screen-mobile', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Приложение агента
+          </button>
+          <button class="screen-tab-btn" onclick="switchLiveScreen('screen-photo', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Фотоконтроль полок
+          </button>
+          <button class="screen-tab-btn" onclick="switchLiveScreen('screen-gps', this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            GPS-Трекинг
+          </button>
+        </div>
+      </div>
+
+      <!-- Screen Display Frame -->
+      <div class="screen-display-area morph-4">
+        <!-- 1. Dashboard -->
+        <img src="pitch_assets/dashboard_live.png" id="screen-dashboard" class="screen-img active" alt="Web Dashboard">
+        <!-- 2. Mobile App -->
+        <img src="pitch_assets/mobile_order.png" id="screen-mobile" class="screen-img" alt="Mobile App Agent" style="object-fit: contain; background: #0F172A;">
+        <!-- 3. Photo Report -->
+        <img src="pitch_assets/paykar_shelf.png" id="screen-photo" class="screen-img" alt="Photo Audit Paykar">
+        <!-- 4. GPS Map -->
+        <img src="pitch_assets/gps_map.png" id="screen-gps" class="screen-img" alt="GPS Route Tracking">
+
+        <div class="screen-caption-badge" id="screenCaption">
+          <span class="live-dot"></span>
+          <span id="screenCaptionText">Аналитический веб-центр руководителя: динамика выручки в TJS, покрытие АКБ/ОКБ и AI-рекомендации</span>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-faint);">
+        <span>Кликните по вкладкам выше, чтобы переключать реальные экраны боевого сервиса</span>
+        <span>Разработано tajcodes • Душанбе, Таджикистан</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: Tech Stack & Architecture (Why We Win) -->
+    <section class="slide" data-index="3" data-notes="Технологический стек: Мы не используем устаревшие надстройки над 1С. SmartSale написан на современном легком стеке (Flutter для агента, Node.js + PostgreSQL + React для облака). Мобильное приложение работает со скоростью 60 FPS даже на смартфонах за 500 сомони.">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          Инженерное превосходство стартапа
+        </div>
+        <h2 class="slide-title morph-2">
+          Легкий современный стек <br>
+          против <span class="highlight">громоздких монолитов прошлого</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          Почему устаревшие зарубежные решения (1С Мобильная торговля, AgentPlus) проигрывают SmartSale в поле.
+        </p>
+      </div>
+
+      <div class="grid-3 morph-4">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <h3>100% Offline-First (Flutter)</h3>
+          <p>Локальная SQLite-база на устройстве агента. Приложение открывается за 0.3 секунды и мгновенно ищет по 10 000+ SKU даже в горных кишлаках без интернета.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(6, 182, 212, 0.12); border-color: rgba(6, 182, 212, 0.25); color: var(--secondary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+          </div>
+          <h3>Запуск пилота за 48 часов</h3>
+          <p>Внедрение классического тяжелого софта длится от 3 до 6 месяцев. Архитектура SmartSale позволяет загрузить каталог товаров и клиентов из Excel/1С за 1 день.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: var(--accent);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>В 4 раза ниже TCO для бизнеса</h3>
+          <p>Никаких платных серверных лицензий Microsoft SQL или 1С:Предприятие. Чистая облачная микросервисная архитектура с минимальной себестоимостью.</p>
+        </div>
+      </div>
+
+      <!-- Real Order Screen Strip -->
+      <div class="feature-card" style="padding: 18px 24px; background: linear-gradient(90deg, rgba(16,185,129,0.06), rgba(6,182,212,0.06)); display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="font-size: 26px;">⚡</div>
+          <div>
+            <div style="font-weight: 700; color: #fff; font-size: 15px;">Бесшовная интеграция с 1С и кассовым ПО</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Заказы агента улетают на склад в виде готовых документов реализации и накладных ТОРГ-12.</div>
+          </div>
+        </div>
+        <div style="padding: 6px 14px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--border-accent); border-radius: 8px; font-weight: 700; color: var(--primary); font-size: 12px;">
+          API Ready
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: Unit Economics & Fintech Shift (Interactive Calculator) -->
+    <section class="slide" data-index="4" data-notes="Юнит-экономика и Финтех: Вот финансовая магия. Если работать по классической подписке — это стабильные $25-$35 с агента в месяц. Но если мы подключаем финтех и берем всего 1% от безналичных платежей по Указу №586 — доход с одного агента вырастает в 4-10 раз!">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          Бизнес-модель: SaaS против Финтех-эквайринга
+        </div>
+        <h2 class="slide-title morph-2">
+          Юнит-экономика: от SaaS к <span class="highlight">1% финтех-оборота</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          Сравните потенциал выручки на интерактивном калькуляторе: классическая подписка vs 1% от безнала.
+        </p>
+      </div>
+
+      <div class="grid-2 morph-4">
+        <!-- Interactive Calculator with Switcher -->
+        <div class="calc-box">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px; color: #fff;">Модель монетизации стартапа:</span>
+            <span style="font-size: 11px; color: var(--primary); background: rgba(16,185,129,0.1); padding: 3px 8px; border-radius: 6px;">Интерактивный расчет</span>
+          </div>
+
+          <!-- Switcher -->
+          <div class="model-switcher">
+            <button class="model-btn active" id="btnModelFintech" onclick="setModel('fintech')">1% от безналичных оплат (Финтех)</button>
+            <button class="model-btn" id="btnModelSaas" onclick="setModel('saas')">SaaS (300 сомони / агент / мес)</button>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span>Подключено торговых агентов:</span>
+              <span class="val" id="calcAgentsVal">25 чел</span>
+            </div>
+            <input type="range" id="inputAgents" min="5" max="200" value="25" step="5">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <span id="slider2Label">Доля безналичных оплат (Указ №586):</span>
+              <span class="val" id="calcParam2Val">30%</span>
+            </div>
+            <input type="range" id="inputParam2" min="10" max="100" value="30" step="5">
+          </div>
+
+          <div class="calc-results">
+            <div>
+              <div class="metric-label">Месячная выручка SmartSale:</div>
+              <div class="metric-hero accent" style="font-size: 32px;" id="resRevenueVal">45 000 TJS</div>
+            </div>
+            <div>
+              <div class="metric-label">Годовой оборот ARR:</div>
+              <div class="metric-hero" style="font-size: 32px;" id="resArrVal">$49 000</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategic Breakdown -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="feature-card" style="border-left: 4px solid var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #fff; font-size: 16px;">Финтех-модель (1% от безнала):</span>
+              <span style="font-size: 12px; font-weight: 700; color: var(--primary);">10x потенциал</span>
+            </div>
+            <p style="font-size: 13px;">Средний оборот 1 агента в РТ: ~500 000 сомони/мес. При 30% безнала 1% дает **1 500 сомони с одного агента** вместо 300 сомони подписки!</p>
+          </div>
+
+          <div class="feature-card" style="border-left: 4px solid var(--secondary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #fff; font-size: 16px;">Нулевой барьер для дистрибьютора:</span>
+              <span style="font-size: 12px; font-weight: 700; color: var(--secondary);">Легкие продажи</span>
+            </div>
+            <p style="font-size: 13px;">Дистрибьютор не платит за софт вперед. Он начинает пользоваться системой бесплатно, оплачивая микро-комиссию только по факту реальных безналичных продаж.</p>
+          </div>
+
+          <div class="feature-card" style="border-left: 4px solid var(--accent);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-weight: 700; color: #fff; font-size: 16px;">Партнерство с банками РТ:</span>
+              <span style="font-size: 12px; font-weight: 700; color: var(--accent);">Win-Win</span>
+            </div>
+            <p style="font-size: 13px;">Банки (Dushanbe City, Alif, Freedom Bank) отдают долю интерчейнджа стартапу за генерацию миллиардного безналичного торгового оборота.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-size: 12px; color: var(--text-faint);">
+        При расчете учтен средний чек 1 500 TJS и 350 результативных заказов на 1 полевого сотрудника в месяц.
+      </div>
+    </section>
+
+    <!-- SLIDE 6: Market & Pilot Roadmap -->
+    <section class="slide" data-index="5" data-notes="Рынок и Дорожная карта пилотов: Мы смотрим на рынок реалистично. Наша ближайшая цель — подключить 3-5 первых якорных дистрибьюторов в Душанбе. Затем масштабироваться на 50 компаний и выйти в Согд.">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Размер рынка & План развития стартапа
+        </div>
+        <h2 class="slide-title morph-2">
+          Реалистичная дорожная карта: <br>
+          <span class="highlight">от первых пилотов к доминированию</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          Как инженерный стартап tajcodes планирует пройти путь до ключевого технологического оператора ритейла РТ.
+        </p>
+      </div>
+
+      <div class="grid-3 morph-4">
+        <div class="feature-card" style="border-top: 4px solid var(--primary);">
+          <div class="metric-label" style="color: var(--primary);">Фаза 1 (Q4 2026)</div>
+          <div class="metric-hero accent" style="font-size: 40px; margin-top: 8px;">3–5 Пилотов</div>
+          <p style="margin-top: 10px;">Внедрение у первых компаний-дистрибьюторов (продукты питания, кондитерские изделия, вода/соки). Доведение NPS до 90%.</p>
+        </div>
+
+        <div class="feature-card" style="border-top: 4px solid var(--secondary);">
+          <div class="metric-label" style="color: var(--secondary);">Фаза 2 (Q1–Q2 2027)</div>
+          <div class="metric-hero" style="font-size: 40px; margin-top: 8px;">300+ Агентов</div>
+          <p style="margin-top: 10px;">Подключение 20–25 средних дистрибьюторов Душанбе и Хатлона. Запуск банковского шлюза QR-оплаты в приложении.</p>
+        </div>
+
+        <div class="feature-card" style="border-top: 4px solid var(--accent);">
+          <div class="metric-label" style="color: var(--accent);">Фаза 3 (2027–2028)</div>
+          <div class="metric-hero accent" style="font-size: 40px; margin-top: 8px;">Север & Экспорт</div>
+          <p style="margin-top: 10px;">Экспансия в Согдийскую область (Худжанд) и подготовка к пилотам в Самарканде и Оше (рынок Ферганской долины).</p>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin: 0; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 18px 24px;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="font-size: 26px;">🎯</div>
+          <div>
+            <div style="font-weight: 700; color: #fff; font-size: 14px;">SAM (Рынок Таджикистана): $18M / год</div>
+            <div style="font-size: 12px; color: var(--text-muted);">450+ оптовых дистрибьюторов и 35 000 активных торговых точек.</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 14px; align-items: center;">
+          <div style="font-size: 26px;">🚀</div>
+          <div>
+            <div style="font-weight: 700; color: #fff; font-size: 14px;">SOM (Цель за 24 месяца): 50 компаний</div>
+            <div style="font-size: 12px; color: var(--text-muted);">1 200 активных агентов, выход на стабильный MRR в 350 000+ сомони.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: Government & IT Park Alignment -->
+    <section class="slide" data-index="6" data-notes="Государственный эффект: Наш стартап идеально ложится в повестку Агентства инноваций. Мы помогаем выполнить Указ Президента №586 по переходу на безналичный расчет, сохраняем валюту внутри страны и готовы стать резидентами IT Park РТ.">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Вклад в цифровую трансформацию Таджикистана
+        </div>
+        <h2 class="slide-title morph-2">
+          Поддержка государственных задач <br>
+          и <span class="highlight">интеграция в экосистему IT Park</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          SmartSale содействует ключевым инициативам Агентства инноваций и цифровых технологий при Президенте РТ.
+        </p>
+      </div>
+
+      <div class="grid-3 morph-4">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <h3>Указ Президента РТ №586</h3>
+          <p>Перевод расчетов розничных торговых точек из теневого наличного оборота в прозрачные безналичные банковские транзакции.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(6, 182, 212, 0.12); border-color: rgba(6, 182, 212, 0.25); color: var(--secondary);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3>Продовольственный мониторинг</h3>
+          <p>Агрегированные обезличенные данные по остаткам социально значимых товаров (мука, сахар, масло) в магазинах страны в реальном времени.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.25); color: var(--accent);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>
+          <h3>Отечественный IT-продукт</h3>
+          <p>Создан в Душанбе. Налоги, рабочие места программистов и серверная инфраструктура остаются внутри Республики Таджикистан.</p>
+        </div>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--border-accent); border-radius: 14px; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="live-dot"></div>
+          <span style="font-weight: 700; color: #fff; font-size: 14px;">Стартап готов к пилотированию с банками-партнерами и регуляторами форума TAJ-TECH</span>
+        </div>
+        <span style="font-size: 12px; color: var(--primary); font-weight: 700;">Готовность: 100%</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: Pre-Seed Ask & The Startup Offer -->
+    <section class="slide" data-index="7" data-notes="Финал: Наш честный стартап-оффер на форуме: мы ищем 2-3 прогрессивных дистрибьютора на бесплатное пилотное внедрение, банк для финтех-эквайринга и pre-seed ангела на $40k-$70k. Готовы показать живую работу приложения прямо сейчас на телефоне.">
+      <div>
+        <div class="slide-tagline morph-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Pre-Seed Раунд & Пилотные партнерства
+        </div>
+        <h2 class="slide-title morph-2">
+          Что стартап SmartSale <br>
+          <span class="highlight">ищет на форуме TAJ-TECH 2026</span>
+        </h2>
+        <p class="slide-subtitle morph-3">
+          Мы приглашаем к диалогу дистрибьюторов, банкиров и ангельских инвесторов на полях технологического форума.
+        </p>
+      </div>
+
+      <div class="grid-2 morph-4">
+        <!-- What we offer & seek -->
+        <div class="feature-card" style="padding: 28px;">
+          <h3 style="font-size: 20px; margin-bottom: 14px; color: var(--primary);">Цели участия стартапа:</h3>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--text-main);">
+            <li style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--primary); font-weight: 800; font-size: 16px;">1.</span>
+              <span><strong>2–3 Якорных дистрибьютора (Design Partners):</strong> Бесплатное пилотное внедрение, персональная адаптация под ваш склад и поддержка основателя 24/7.</span>
+            </li>
+            <li style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--primary); font-weight: 800; font-size: 16px;">2.</span>
+              <span><strong>Банк-партнер (Финтех-песочница):</strong> Интеграция QR-эквайринга в мобильное приложение для обслуживания безналичного торгового потока.</span>
+            </li>
+            <li style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--primary); font-weight: 800; font-size: 16px;">3.</span>
+              <span><strong>Pre-Seed ангельский раунд ($30k – $60k):</strong> Для доукомплектования команды полевой поддержки и подключения первых 500 розничных точек.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Founder & Contacts -->
+        <div class="feature-card" style="padding: 28px; background: rgba(16, 185, 129, 0.05); border-color: var(--border-accent);">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
+            <div>
+              <div style="font-size: 19px; font-weight: 800; color: #fff;">Команда разработки tajcodes</div>
+              <div style="font-size: 12px; color: var(--primary); margin-top: 4px;">Инженерная студия в Душанбе</div>
+            </div>
+            <div style="padding: 4px 10px; background: rgba(255,255,255,0.06); border-radius: 8px; font-size: 11px; font-weight: 700; color: var(--text-muted);">
+              taj.codes
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+            <div>👤 <strong>Основатель и техлид:</strong> Абдуллозода Иззатуллохон</div>
+            <div>🤝 <strong>Формат на TAJ-TECH:</strong> B2B / B2G Нетворкинг и живое демо в кулуарах</div>
+            <div>📱 <strong>Живое демо:</strong> Покажем работу приложения за 60 секунд прямо на телефоне</div>
+            <div>🌐 <strong>Сайт:</strong> <a href="https://taj.codes" style="color: var(--primary); text-decoration: none;">taj.codes</a> • 📧 info@taj.codes</div>
+          </div>
+
+          <button class="btn-icon btn-primary-action" style="width: 100%; justify-content: center; padding: 13px; font-size: 14px;" onclick="alert('Команда tajcodes открыта к переговорам на полях Taj-Tech! Контакт основателя: Абдуллозода Иззатуллохон (tajcodes)');">
+            Посмотреть живое демо на телефоне
+          </button>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-faint);">
+        <span>SmartSale Startup • Разработка tajcodes • Душанбе, Таджикистан</span>
+        <span>Навигация: [Пробел] / стрелки • Сетка слайдов: [G] • Заметки спикера: [N]</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Nav -->
+  <footer>
+    <div class="footer-left">
+      <div class="pitch-timer" id="timerBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="pitchTimer">00:00</span>
+      </div>
+
+      <div class="dots-indicator" id="dotsContainer">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <div class="footer-right">
+      <button class="btn-icon" id="btnPrev">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Назад</span>
+      </button>
+
+      <div class="counter-pill" id="slideCounter">
+        1 / 8
+      </div>
+
+      <button class="btn-icon" id="btnNext" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); color: var(--primary);">
+        <span>Далее</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Grid Matrix Modal -->
+  <div class="grid-modal" id="gridModal">
+    <div class="grid-modal-header">
+      <div class="grid-modal-title">Сетка слайдов стартап-питча</div>
+      <button class="btn-icon" id="btnCloseMatrix">
+        <span>Закрыть (Esc)</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="slide-matrix" id="slideMatrixGrid"></div>
+  </div>
+
+  <!-- Speaker Notes Drawer -->
+  <div class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <span>Питч-ноты для основателя</span>
+      <span style="cursor: pointer;" id="btnCloseNotes">✕</span>
+    </div>
+    <div class="notes-content" id="notesText"></div>
+  </div>
+
+  <script>
+    // State
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let currentModel = 'fintech'; // 'fintech' or 'saas'
+
+    // Ambient glow colors
+    const glowPalettes = [
+      'radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 40%), radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%)',
+      'radial-gradient(circle at 70% 30%, rgba(239, 68, 68, 0.16) 0%, transparent 40%), radial-gradient(circle at 20% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 45%)',
+      'radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.20) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(16, 185, 129, 0.16) 0%, transparent 45%)',
+      'radial-gradient(circle at 60% 40%, rgba(99, 102, 241, 0.18) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%)',
+      'radial-gradient(circle at 20% 30%, rgba(16, 185, 129, 0.22) 0%, transparent 40%), radial-gradient(circle at 80% 60%, rgba(16, 185, 129, 0.1) 0%, transparent 45%)',
+      'radial-gradient(circle at 80% 20%, rgba(6, 182, 212, 0.18) 0%, transparent 40%), radial-gradient(circle at 30% 80%, rgba(99, 102, 241, 0.14) 0%, transparent 45%)',
+      'radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 40%), radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%)',
+      'radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.22) 0%, transparent 40%), radial-gradient(circle at 70% 70%, rgba(6, 182, 212, 0.18) 0%, transparent 45%)'
+    ];
+
+    // Elements
+    const dotsContainer = document.getElementById('dotsContainer');
+    const slideCounter = document.getElementById('slideCounter');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const btnMatrix = document.getElementById('btnMatrix');
+    const btnCloseMatrix = document.getElementById('btnCloseMatrix');
+    const gridModal = document.getElementById('gridModal');
+    const slideMatrixGrid = document.getElementById('slideMatrixGrid');
+    const btnNotes = document.getElementById('btnNotes');
+    const notesDrawer = document.getElementById('notesDrawer');
+    const notesText = document.getElementById('notesText');
+    const btnCloseNotes = document.getElementById('btnCloseNotes');
+    const ambientGlow = document.getElementById('ambientGlow');
+    const pitchTimer = document.getElementById('pitchTimer');
+
+    // Init Dots
+    slides.forEach((slide, idx) => {
+      const dot = document.createElement('div');
+      dot.className = `dot ${idx === 0 ? 'active' : ''}`;
+      dot.addEventListener('click', () => goToSlide(idx));
+      dotsContainer.appendChild(dot);
+    });
+
+    // Populate Slide Matrix
+    slides.forEach((slide, idx) => {
+      const card = document.createElement('div');
+      card.className = `matrix-card ${idx === 0 ? 'current' : ''}`;
+      const titleElem = slide.querySelector('.slide-title');
+      const titleText = titleElem ? titleElem.innerText.replace(/\n/g, ' ') : `Слайд ${idx + 1}`;
+      
+      card.innerHTML = `
+        <div class="matrix-num">СЛАЙД ${idx + 1}</div>
+        <div class="matrix-card-title">${titleText.slice(0, 48)}...</div>
+        <div style="font-size: 11px; color: var(--text-muted);">Перейти →</div>
+      `;
+      card.addEventListener('click', () => {
+        goToSlide(idx);
+        closeMatrix();
+      });
+      slideMatrixGrid.appendChild(card);
+    });
+
+    // Navigation
+    function goToSlide(newIdx) {
+      if (newIdx < 0 || newIdx >= totalSlides || newIdx === currentSlide) return;
+
+      const prevSlide = slides[currentSlide];
+      const nextSlide = slides[newIdx];
+
+      prevSlide.classList.remove('active');
+      prevSlide.classList.add(newIdx > currentSlide ? 'prev' : '');
+
+      setTimeout(() => {
+        prevSlide.classList.remove('prev');
+      }, 500);
+
+      nextSlide.classList.add('active');
+      ambientGlow.style.background = glowPalettes[newIdx] || glowPalettes[0];
+
+      currentSlide = newIdx;
+      updateControls();
+    }
+
+    function updateControls() {
+      document.querySelectorAll('.dot').forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === currentSlide);
+      });
+
+      document.querySelectorAll('.matrix-card').forEach((card, idx) => {
+        card.classList.toggle('current', idx === currentSlide);
+      });
+
+      slideCounter.innerText = `${currentSlide + 1} / ${totalSlides}`;
+
+      const notes = slides[currentSlide].getAttribute('data-notes') || 'Нет заметок для этого слайда.';
+      notesText.innerHTML = notes;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+    }
+    function prevSlide() {
+      if (currentSlide > 0) goToSlide(currentSlide - 1);
+    }
+
+    btnNext.addEventListener('click', nextSlide);
+    btnPrev.addEventListener('click', prevSlide);
+
+    // Keyboard Hotkeys
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      } else if (e.key === 'g' || e.key === 'G') {
+        toggleMatrix();
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      } else if (e.key === 'Escape') {
+        closeMatrix();
+        notesDrawer.classList.remove('open');
+      }
+    });
+
+    // Fullscreen
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+    btnFullscreen.addEventListener('click', toggleFullscreen);
+
+    // Modals
+    function toggleMatrix() { gridModal.classList.toggle('open'); }
+    function closeMatrix() { gridModal.classList.remove('open'); }
+    btnMatrix.addEventListener('click', toggleMatrix);
+    btnCloseMatrix.addEventListener('click', closeMatrix);
+
+    function toggleNotes() { notesDrawer.classList.toggle('open'); }
+    btnNotes.addEventListener('click', toggleNotes);
+    btnCloseNotes.addEventListener('click', () => notesDrawer.classList.remove('open'));
+
+    // Pitch Timer
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        pitchTimer.innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+    startTimer();
+
+    // Slide 3: Live Screen Switcher Logic
+    const screenCaptions = {
+      'screen-dashboard': 'Аналитический веб-центр руководителя: динамика выручки в TJS, расчет АКБ/ОКБ и AI-рекомендации',
+      'screen-mobile': 'Мобильное приложение агента (Flutter): оформление заказа за 30 сек в ТТ "Ситора", оффлайн-каталог и печать чека',
+      'screen-photo': 'Фотоконтроль выкладки и мерчандайзинга: реальный аудит витрины напитков в Супермаркете "Пайкар-2", пр. Рудаки (чекин 8м)',
+      'screen-gps': 'Живая карта и GPS-трекинг: воспроизведение маршрута агента по точкам визитов в городе, скорость и заряд батареи'
+    };
+
+    window.switchLiveScreen = function(screenId, btn) {
+      document.querySelectorAll('.screen-img').forEach(img => img.classList.remove('active'));
+      document.querySelectorAll('.screen-tab-btn').forEach(b => b.classList.remove('active'));
+
+      const targetImg = document.getElementById(screenId);
+      if (targetImg) targetImg.classList.add('active');
+      if (btn) btn.classList.add('active');
+
+      const captionText = document.getElementById('screenCaptionText');
+      if (captionText && screenCaptions[screenId]) {
+        captionText.innerText = screenCaptions[screenId];
+      }
+    };
+
+    // Slide 5: Interactive Calculator & Model Switcher
+    const inputAgents = document.getElementById('inputAgents');
+    const inputParam2 = document.getElementById('inputParam2');
+    const calcAgentsVal = document.getElementById('calcAgentsVal');
+    const calcParam2Val = document.getElementById('calcParam2Val');
+    const slider2Label = document.getElementById('slider2Label');
+    const resRevenueVal = document.getElementById('resRevenueVal');
+    const resArrVal = document.getElementById('resArrVal');
+    const btnModelFintech = document.getElementById('btnModelFintech');
+    const btnModelSaas = document.getElementById('btnModelSaas');
+
+    window.setModel = function(model) {
+      currentModel = model;
+      if (model === 'fintech') {
+        btnModelFintech.classList.add('active');
+        btnModelSaas.classList.remove('active');
+        slider2Label.innerText = 'Доля безналичных оплат (Указ №586):';
+        inputParam2.min = 10;
+        inputParam2.max = 100;
+        inputParam2.value = 30;
+        inputParam2.step = 5;
+      } else {
+        btnModelSaas.classList.add('active');
+        btnModelFintech.classList.remove('active');
+        slider2Label.innerText = 'Тариф подписки (сомони / агент / мес):';
+        inputParam2.min = 200;
+        inputParam2.max = 600;
+        inputParam2.value = 300;
+        inputParam2.step = 25;
+      }
+      recalc();
+    };
+
+    function recalc() {
+      const agents = parseInt(inputAgents.value, 10);
+      calcAgentsVal.innerText = `${agents} чел`;
+
+      let monthlyRevenueTJS = 0;
+
+      if (currentModel === 'fintech') {
+        const cashlessPct = parseInt(inputParam2.value, 10);
+        calcParam2Val.innerText = `${cashlessPct}%`;
+
+        // 1 agent = ~350 orders * 1500 TJS = 525,000 TJS GMV
+        const gmvPerAgent = 525000;
+        const cashlessGMV = gmvPerAgent * (cashlessPct / 100);
+        const takeRate1Pct = cashlessGMV * 0.01;
+        monthlyRevenueTJS = Math.round(agents * takeRate1Pct);
+      } else {
+        const tariff = parseInt(inputParam2.value, 10);
+        calcParam2Val.innerText = `${tariff} TJS`;
+        monthlyRevenueTJS = agents * tariff;
+      }
+
+      resRevenueVal.innerText = `${monthlyRevenueTJS.toLocaleString('ru-RU')} TJS`;
+      const arrUSD = Math.round((monthlyRevenueTJS * 12) / 10.9); // ~10.9 TJS per USD
+      resArrVal.innerText = `$${arrUSD.toLocaleString('ru-RU')}`;
+    }
+
+    if (inputAgents && inputParam2) {
+      inputAgents.addEventListener('input', recalc);
+      inputParam2.addEventListener('input', recalc);
+      recalc();
+    }
+
+    updateControls();
+  </script>
+</body>
+</html>
