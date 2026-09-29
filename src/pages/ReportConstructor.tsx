@@ -842,20 +842,20 @@ export default function ReportConstructor() {
 
         {/* Date Pickers & Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm">
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl px-3 py-2 text-sm">
             <Calendar className="w-4 h-4 text-gray-400" />
             <input 
               type="date" 
               value={startDate} 
               onChange={e => setStartDate(e.target.value)} 
-              className="bg-transparent border-none text-xs text-gray-700 focus:outline-none"
+              className="bg-transparent border-none text-xs text-gray-700 dark:text-gray-200 focus:outline-none"
             />
             <span className="text-gray-400">—</span>
             <input 
               type="date" 
               value={endDate} 
               onChange={e => setEndDate(e.target.value)} 
-              className="bg-transparent border-none text-xs text-gray-700 focus:outline-none"
+              className="bg-transparent border-none text-xs text-gray-700 dark:text-gray-200 focus:outline-none"
             />
           </div>
 
@@ -873,9 +873,9 @@ export default function ReportConstructor() {
           <button
             onClick={() => setShowSaveTemplateModal(true)}
             title="Сохранить текущую структуру в «Мои шаблоны»"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/60 rounded-xl text-xs font-semibold transition-all active:scale-95"
           >
-            <Bookmark className="w-3.5 h-3.5 text-amber-600" />
+            <Bookmark className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>Сохранить шаблон</span>
           </button>
 
@@ -884,9 +884,9 @@ export default function ReportConstructor() {
             onClick={() => setShowPrintPreview(true)}
             disabled={!reportData}
             title="Открыть экранный предпросмотр бланка А4"
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:border-indigo-800 dark:text-indigo-300 dark:hover:bg-indigo-950/60 rounded-xl text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
           >
-            <Eye className="w-3.5 h-3.5 text-indigo-600" />
+            <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>Предпросмотр А4</span>
           </button>
 
@@ -924,13 +924,13 @@ export default function ReportConstructor() {
       </div>
 
       {/* POPULAR PRESETS & CUSTOM TEMPLATES (NO-PRINT) */}
-      <div className="no-print bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+      <div className="no-print bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 space-y-4">
         
         {/* CUSTOM USER TEMPLATES (МОИ ШАБЛОНЫ) */}
         {customTemplates.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                 <Bookmark className="w-3.5 h-3.5 text-amber-500" />
                 <span>⭐ Мои сохраненные шаблоны ({customTemplates.length})</span>
               </div>
@@ -942,16 +942,16 @@ export default function ReportConstructor() {
                   onClick={() => applyCustomTemplate(tmpl)}
                   className={`group relative flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl text-xs font-medium transition-all border cursor-pointer ${
                     activePreset === tmpl.id
-                      ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-sm font-semibold ring-2 ring-amber-500/20'
-                      : 'bg-amber-50/40 border-amber-200/70 text-gray-800 hover:bg-amber-50 hover:border-amber-300'
+                      ? 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-200 shadow-sm font-semibold ring-2 ring-amber-500/20'
+                      : 'bg-amber-50/40 border-amber-200/70 text-gray-800 dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-200 hover:bg-amber-50 hover:border-amber-300 dark:hover:bg-amber-950/40'
                   }`}
                 >
                   <div>
-                    <div className="flex items-center gap-1.5 font-semibold text-amber-950">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-950 dark:text-amber-100">
                       <span>⭐ {tmpl.name}</span>
                     </div>
                     {tmpl.description && (
-                      <div className="text-[11px] text-gray-500 font-normal mt-0.5 line-clamp-1 max-w-[200px]">
+                      <div className="text-[11px] text-gray-500 dark:text-gray-400 font-normal mt-0.5 line-clamp-1 max-w-[200px]">
                         {tmpl.description}
                       </div>
                     )}
@@ -982,12 +982,12 @@ export default function ReportConstructor() {
                 onClick={() => applyPreset(p)}
                 className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all text-left border ${
                   activePreset === p.id 
-                    ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-sm font-semibold ring-2 ring-blue-500/20' 
-                    : 'bg-gray-50/70 border-gray-200/80 text-gray-700 hover:bg-gray-100 hover:border-gray-300'
+                    ? 'bg-blue-50 border-blue-300 text-blue-800 dark:bg-blue-950/60 dark:border-blue-700 dark:text-blue-300 shadow-sm font-semibold ring-2 ring-blue-500/20' 
+                    : 'bg-gray-50/70 border-gray-200/80 text-gray-700 hover:bg-gray-100 hover:border-gray-300 dark:bg-slate-800/80 dark:border-slate-700/80 dark:text-gray-300 dark:hover:bg-slate-700'
                 }`}
               >
                 <div className="flex items-center gap-1.5 font-medium">{p.name}</div>
-                <div className="text-[11px] text-gray-500 font-normal mt-0.5 line-clamp-1">{p.description}</div>
+                <div className="text-[11px] text-gray-500 dark:text-gray-400 font-normal mt-0.5 line-clamp-1">{p.description}</div>
               </button>
             ))}
           </div>
@@ -999,11 +999,11 @@ export default function ReportConstructor() {
       <div className="no-print grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* LEFT COLUMN: FIELD LIBRARY */}
-        <div className="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col h-[520px]">
+        <div className="lg:col-span-4 bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-5 flex flex-col h-[520px]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4 text-blue-600" />
-              <h2 className="text-sm font-bold text-gray-900">Библиотека полей</h2>
+              <h2 className="text-sm font-bold text-gray-900 dark:text-white">Библиотека полей</h2>
             </div>
             <span className="text-[11px] text-gray-400">Перетащите в зоны справа</span>
           </div>
@@ -1016,12 +1016,12 @@ export default function ReportConstructor() {
               placeholder="Поиск полей и метрик..."
               value={searchField}
               onChange={e => setSearchField(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-xs text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
           {/* Category Tabs */}
-          <div className="flex items-center gap-1 pb-2 border-b border-gray-100 overflow-x-auto text-[11px]">
+          <div className="flex items-center gap-1 pb-2 border-b border-gray-100 dark:border-slate-800 overflow-x-auto text-[11px]">
             {[
               { id: 'all', label: 'Все' },
               { id: 'team', label: 'Команда' },
@@ -1035,8 +1035,8 @@ export default function ReportConstructor() {
                 onClick={() => setActiveCategory(tab.id)}
                 className={`px-2.5 py-1 rounded-lg font-medium whitespace-nowrap transition-colors ${
                   activeCategory === tab.id
-                    ? 'bg-blue-100 text-blue-700 font-semibold'
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 font-semibold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800'
                 }`}
               >
                 {tab.label}
@@ -1063,10 +1063,10 @@ export default function ReportConstructor() {
                         onDragStart={e => handleDragStart(e, dim.code, 'dim')}
                         className={`group flex items-center justify-between p-2 rounded-xl border text-xs cursor-grab active:cursor-grabbing transition-all ${
                           inRows 
-                            ? 'bg-indigo-50/70 border-indigo-200 text-indigo-950 font-medium'
+                            ? 'bg-indigo-50/70 border-indigo-200 text-indigo-950 dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-200 font-medium'
                             : inCols 
-                              ? 'bg-purple-50/70 border-purple-200 text-purple-950 font-medium'
-                              : 'bg-white border-gray-200 text-gray-800 hover:border-blue-400 hover:shadow-sm'
+                              ? 'bg-purple-50/70 border-purple-200 text-purple-950 dark:bg-purple-950/60 dark:border-purple-800 dark:text-purple-200 font-medium'
+                              : 'bg-white border-gray-200 text-gray-800 dark:bg-slate-900 dark:border-slate-800 dark:text-gray-200 hover:border-blue-400 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -1075,12 +1075,12 @@ export default function ReportConstructor() {
                         </div>
                         <div className="flex items-center gap-1">
                           {inRows && (
-                            <span className="px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold">
                               Строка
                             </span>
                           )}
                           {inCols && (
-                            <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 text-[10px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
                               Колонка
                             </span>
                           )}
@@ -1126,8 +1126,8 @@ export default function ReportConstructor() {
                         onDragStart={e => handleDragStart(e, met.code, 'metric')}
                         className={`group flex items-center justify-between p-2 rounded-xl border text-xs cursor-grab active:cursor-grabbing transition-all ${
                           isSelected
-                            ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 font-medium'
-                            : 'bg-white border-gray-200 text-gray-800 hover:border-emerald-400 hover:shadow-sm'
+                            ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 dark:bg-emerald-950/60 dark:border-emerald-800 dark:text-emerald-200 font-medium'
+                            : 'bg-white border-gray-200 text-gray-800 dark:bg-slate-900 dark:border-slate-800 dark:text-gray-200 hover:border-emerald-400 hover:shadow-sm'
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -1136,7 +1136,7 @@ export default function ReportConstructor() {
                         </div>
                         <div className="flex items-center gap-1">
                           {isSelected ? (
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold">
                               Активно
                             </span>
                           ) : (
@@ -1168,37 +1168,37 @@ export default function ReportConstructor() {
             className={`p-4 rounded-2xl border-2 border-dashed transition-all ${
               dragOverZone === 'rows'
                 ? 'border-indigo-500 bg-indigo-50/50 ring-4 ring-indigo-500/20'
-                : 'border-indigo-200 bg-indigo-50/20 hover:border-indigo-300'
+                : 'border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/20 dark:bg-indigo-950/20 hover:border-indigo-300'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg">
+                <span className="p-1.5 bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 rounded-lg">
                   <ArrowUpDown className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="text-xs font-bold text-indigo-950 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider">
                     Строки (Иерархия уровней группировки)
                   </h3>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
                     Первый уровень группирует таблицу, второй создает вложенный раскрывающийся список
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-semibold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950 px-2 py-0.5 rounded-full">
                 {selectedRows.length} ур.
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white rounded-xl border border-indigo-100">
+            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white dark:bg-slate-900/60 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
               {selectedRows.map((rowCode, idx) => {
                 const dim = meta.dimensions.find(d => d.code === rowCode);
                 return (
                   <div
                     key={rowCode}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 text-indigo-900 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
+                    className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/80 dark:to-blue-950/80 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
                   >
-                    <span className="w-4 h-4 rounded-full bg-indigo-200 text-indigo-800 text-[10px] flex items-center justify-center font-bold">
+                    <span className="w-4 h-4 rounded-full bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-[10px] flex items-center justify-center font-bold">
                       {idx + 1}
                     </span>
                     <span>{dim?.name || rowCode}</span>
@@ -1208,7 +1208,7 @@ export default function ReportConstructor() {
                       className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
                         activeFilters[rowCode]?.length
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-white/80 hover:bg-indigo-100 text-indigo-600'
+                          : 'bg-white/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-300'
                       }`}
                     >
                       <Filter className="w-2.5 h-2.5" />
@@ -1239,35 +1239,35 @@ export default function ReportConstructor() {
             className={`p-4 rounded-2xl border-2 border-dashed transition-all ${
               dragOverZone === 'columns'
                 ? 'border-purple-500 bg-purple-50/50 ring-4 ring-purple-500/20'
-                : 'border-purple-200 bg-purple-50/20 hover:border-purple-300'
+                : 'border-purple-200 dark:border-purple-900/60 bg-purple-50/20 dark:bg-purple-950/20 hover:border-purple-300'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-purple-100 text-purple-700 rounded-lg">
+                <span className="p-1.5 bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 rounded-lg">
                   <MoveRight className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="text-xs font-bold text-purple-950 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-purple-950 dark:text-purple-200 uppercase tracking-wider">
                     Столбцы (Кросс-таблица 2D Матрица)
                   </h3>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
                     Перенесите сюда Дату, Категорию или Склад для разворота по горизонтали
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-300 bg-purple-100 dark:bg-purple-950 px-2 py-0.5 rounded-full">
                 {selectedColumns.length > 0 ? 'Матрица активна' : 'Стандартно'}
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white rounded-xl border border-purple-100">
+            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white dark:bg-slate-900/60 rounded-xl border border-purple-100 dark:border-purple-900/40">
               {selectedColumns.map(colCode => {
                 const dim = meta.dimensions.find(d => d.code === colCode);
                 return (
                   <div
                     key={colCode}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 text-purple-900 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
+                    className="flex items-center gap-1.5 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/80 dark:to-pink-950/80 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
                   >
                     <span>{dim?.name || colCode}</span>
                     <button
@@ -1276,7 +1276,7 @@ export default function ReportConstructor() {
                       className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
                         activeFilters[colCode]?.length
                           ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-white/80 hover:bg-purple-100 text-purple-600'
+                          : 'bg-white/80 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-900 text-purple-600 dark:text-purple-300'
                       }`}
                     >
                       <Filter className="w-2.5 h-2.5" />
@@ -1307,35 +1307,35 @@ export default function ReportConstructor() {
             className={`p-4 rounded-2xl border-2 border-dashed transition-all ${
               dragOverZone === 'values'
                 ? 'border-emerald-500 bg-emerald-50/50 ring-4 ring-emerald-500/20'
-                : 'border-emerald-200 bg-emerald-50/20 hover:border-emerald-300'
+                : 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/20 dark:bg-emerald-950/20 hover:border-emerald-300'
             }`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <span className="p-1.5 bg-emerald-100 text-emerald-700 rounded-lg">
+                <span className="p-1.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 rounded-lg">
                   <Coins className="w-4 h-4" />
                 </span>
                 <div>
-                  <h3 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
+                  <h3 className="text-xs font-bold text-emerald-950 dark:text-emerald-200 uppercase tracking-wider">
                     Показатели (Рассчитываемые значения)
                   </h3>
-                  <p className="text-[11px] text-gray-500">
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
                     Суммы, объемы, чеки и показатели АКБ, отображаемые в ячейках
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded-full">
                 {selectedValues.length} метрик
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white rounded-xl border border-emerald-100">
+            <div className="flex flex-wrap items-center gap-2 min-h-[44px] p-2 bg-white dark:bg-slate-900/60 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
               {selectedValues.map(valCode => {
                 const met = meta.metrics.find(m => m.code === valCode);
                 return (
                   <div
                     key={valCode}
-                    className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-900 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
+                    className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/80 dark:to-teal-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs"
                   >
                     <span>{met?.name || valCode}</span>
                     {selectedValues.length > 1 && (

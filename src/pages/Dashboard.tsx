@@ -779,26 +779,26 @@ export default function Dashboard() {
           </div>
 
           {aiForecast.length === 0 ? (
-            <p className="text-xs text-[#86868b] italic py-6 text-center">Недостаточно исторических данных для формирования прогноза спроса.</p>
+            <p className="text-xs text-[#86868b] dark:text-slate-400 italic py-6 text-center">Недостаточно исторических данных для формирования прогноза спроса.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {aiForecast.slice(0, 4).map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl space-y-2">
+                <div key={idx} className="p-3.5 bg-[#fbfbfa] dark:bg-[#121214] border border-[#e9e9e7] dark:border-slate-800 rounded-xl space-y-2">
                   <div className="flex justify-between items-start">
-                    <span className="font-bold text-xs text-[#1d1d1f] truncate block max-w-[180px]">{item.name}</span>
-                    <span className="text-[10px] font-mono font-bold text-[#0071e3]">Точность: {Math.round(item.confidenceScore * 100)}%</span>
+                    <span className="font-bold text-xs text-[#1d1d1f] dark:text-white truncate block max-w-[180px]">{item.name}</span>
+                    <span className="text-[10px] font-mono font-bold text-[#0071e3] dark:text-blue-400">Точность: {Math.round(item.confidenceScore * 100)}%</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div>
-                      <span className="text-[#86868b] block text-[9px]">Остаток на складе:</span>
-                      <strong className="font-mono">{item.currentStock} шт.</strong>
+                      <span className="text-[#86868b] dark:text-slate-400 block text-[9px]">Остаток на складе:</span>
+                      <strong className="font-mono text-slate-800 dark:text-slate-200">{item.currentStock} шт.</strong>
                     </div>
                     <div>
-                      <span className="text-[#86868b] block text-[9px]">Прогноз спроса (неделя):</span>
-                      <strong className="text-emerald-700 font-mono">~{item.predictedNextWeekDemand} шт.</strong>
+                      <span className="text-[#86868b] dark:text-slate-400 block text-[9px]">Прогноз спроса (неделя):</span>
+                      <strong className="text-emerald-700 dark:text-emerald-400 font-mono">~{item.predictedNextWeekDemand} шт.</strong>
                     </div>
                   </div>
-                  <div className="text-[10px] p-2 bg-white border border-slate-200 rounded-lg text-slate-700 leading-tight">
+                  <div className="text-[10px] p-2 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 leading-tight">
                     💡 {item.recommendation}
                   </div>
                 </div>
@@ -810,34 +810,34 @@ export default function Dashboard() {
         {/* Right Column: SMM Leaderboard & Telegram (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
           {/* SMM Leaderboard */}
-          <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm space-y-4">
+          <div className="bg-white dark:bg-[#0a0a0a] border border-[#e3e3e8] dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                <div className="p-2 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl">
                   <Trophy className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#1d1d1f]">Лидеры Продаж & SMM</h3>
-                  <p className="text-[10px] text-[#86868b]">Рейтинг активности агентов</p>
+                  <h3 className="text-sm font-bold text-[#1d1d1f] dark:text-white">Лидеры Продаж & SMM</h3>
+                  <p className="text-[10px] text-[#86868b] dark:text-slate-400">Рейтинг активности агентов</p>
                 </div>
               </div>
             </div>
 
             {leaderboard.length === 0 ? (
-              <p className="text-xs text-[#86868b] italic py-4 text-center">Баллы за активность еще не начислены.</p>
+              <p className="text-xs text-[#86868b] dark:text-slate-400 italic py-4 text-center">Баллы за активность еще не начислены.</p>
             ) : (
               <div className="space-y-2">
                 {leaderboard.slice(0, 3).map((agent, rank) => (
-                  <div key={agent.id} className="flex items-center justify-between p-2.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-xl text-xs">
+                  <div key={agent.id} className="flex items-center justify-between p-2.5 bg-[#fbfbfa] dark:bg-[#121214] border border-[#e9e9e7] dark:border-slate-800 rounded-xl text-xs">
                     <div className="flex items-center gap-2">
                       <span className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[10px] ${
                         rank === 0 ? 'bg-amber-400 text-white' : rank === 1 ? 'bg-slate-300 text-slate-800' : 'bg-amber-700 text-white'
                       }`}>
                         {rank + 1}
                       </span>
-                      <span className="font-bold text-[#1d1d1f]">{agent.firstName} {agent.lastName}</span>
+                      <span className="font-bold text-[#1d1d1f] dark:text-white">{agent.firstName} {agent.lastName}</span>
                     </div>
-                    <span className="font-bold text-amber-700 font-mono">
+                    <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">
                       +{agent.smmPoints} pts
                     </span>
                   </div>
@@ -847,18 +847,18 @@ export default function Dashboard() {
           </div>
 
           {/* Telegram Bot Card */}
-          <div className="bg-gradient-to-br from-sky-50 to-blue-50 border border-sky-100 p-5 rounded-2xl shadow-sm space-y-3">
+          <div className="bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/40 dark:to-blue-950/40 border border-sky-100 dark:border-sky-900/50 p-5 rounded-2xl shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-sky-500 text-white rounded-xl shadow-sm">
                 <Send className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="font-bold text-xs text-[#1d1d1f]">Telegram Ассистент</h4>
-                <p className="text-[10px] text-[#5f6368]">Управление бизнесом с телефона</p>
+                <h4 className="font-bold text-xs text-[#1d1d1f] dark:text-white">Telegram Ассистент</h4>
+                <p className="text-[10px] text-[#5f6368] dark:text-slate-400">Управление бизнесом с телефона</p>
               </div>
             </div>
-            <p className="text-[11px] text-[#37352f] leading-relaxed">
-              Отправьте в боте команду <code className="px-1.5 py-0.5 bg-white rounded border border-sky-200 font-bold font-mono text-sky-800">/sales</code> для сводки выручки или <code className="px-1.5 py-0.5 bg-white rounded border border-sky-200 font-bold font-mono text-sky-800">/status</code> для проверки агентов на карте.
+            <p className="text-[11px] text-[#37352f] dark:text-slate-300 leading-relaxed">
+              Отправьте в боте команду <code className="px-1.5 py-0.5 bg-white dark:bg-sky-900/60 rounded border border-sky-200 dark:border-sky-800 font-bold font-mono text-sky-800 dark:text-sky-300">/sales</code> для сводки выручки или <code className="px-1.5 py-0.5 bg-white dark:bg-sky-900/60 rounded border border-sky-200 dark:border-sky-800 font-bold font-mono text-sky-800 dark:text-sky-300">/status</code> для проверки агентов на карте.
             </p>
           </div>
         </div>

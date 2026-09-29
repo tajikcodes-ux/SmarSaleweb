@@ -150,6 +150,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dark {
+  color-scheme: dark;
   --bg-main: #000000;
   --bg-card: #0a0a0a;
   --bg-sidebar: #000000;
@@ -164,6 +165,7 @@ h1, h2, h3, h4, h5, h6 {
 .dark body {
   background-color: var(--bg-main) !important;
   color: var(--text-main) !important;
+  color-scheme: dark;
 }
 
 .dark .bg-white {
@@ -188,8 +190,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Text Overrides */
-.dark .text-\[\#1d1d1f\] {
+.dark .text-\[\#1d1d1f\],
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-gray-900,
+.dark .text-gray-800 {
   color: var(--text-main) !important;
+}
+
+.dark .text-slate-700,
+.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-slate-600,
+.dark .text-gray-600 {
+  color: #94a3b8 !important;
 }
 
 .dark .text-\[\#5f6368\],
@@ -226,6 +242,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #0d0d0d !important;
   border-color: var(--border-color) !important;
   color: var(--text-main) !important;
+  color-scheme: dark !important;
 }
 
 .dark input::placeholder {
@@ -391,37 +408,93 @@ h1, h2, h3, h4, h5, h6 {
   color: #fde047 !important;
 }
 
-.dark .bg-emerald-50 {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-  border-color: rgba(16, 185, 129, 0.25) !important;
+.dark .bg-emerald-50,
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
   color: #6ee7b7 !important;
 }
 .dark .text-emerald-600, .dark .text-emerald-700, .dark .text-emerald-800 {
-  color: #a7f3d0 !important;
+  color: #6ee7b7 !important;
 }
 
-.dark .bg-blue-50 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-  border-color: rgba(59, 130, 246, 0.25) !important;
+.dark .bg-blue-50,
+.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 .dark .text-blue-600, .dark .text-blue-700, .dark .text-blue-800 {
   color: #60a5fa !important;
 }
 
-.dark .bg-indigo-50 {
-  background-color: rgba(99, 102, 241, 0.1) !important;
-  border-color: rgba(99, 102, 241, 0.25) !important;
+.dark .bg-indigo-50,
+.dark .bg-indigo-100 {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #a5b4fc !important;
 }
-.dark .text-indigo-600 {
+.dark .text-indigo-600, .dark .text-indigo-700, .dark .text-indigo-800, .dark .text-indigo-900, .dark .text-indigo-950 {
   color: #818cf8 !important;
 }
 
-.dark .bg-purple-50 {
-  background-color: rgba(168, 85, 247, 0.1) !important;
-  border-color: rgba(168, 85, 247, 0.25) !important;
+.dark .bg-purple-50,
+.dark .bg-purple-100 {
+  background-color: rgba(168, 85, 247, 0.15) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  color: #d8b4fe !important;
 }
-.dark .text-purple-600 {
+.dark .text-purple-600, .dark .text-purple-700, .dark .text-purple-800, .dark .text-purple-900, .dark .text-purple-950 {
   color: #c084fc !important;
+}
+
+/* Semi-transparent light backgrounds */
+.dark .bg-slate-100\/80 {
+  background-color: #18181b !important;
+}
+
+.dark .bg-gray-50\/70,
+.dark .bg-gray-50\/40 {
+  background-color: #121214 !important;
+  border-color: #27272a !important;
+  color: #e4e4e7 !important;
+}
+
+.dark .bg-amber-50\/40,
+.dark .bg-amber-50\/60 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+/* Gradients override for Dark Mode */
+.dark .from-indigo-50.to-blue-50 {
+  --tw-gradient-from: #1e1b4b !important;
+  --tw-gradient-to: #172554 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  color: #c7d2fe !important;
+  border-color: #3730a3 !important;
+}
+
+.dark .from-purple-50.to-pink-50 {
+  --tw-gradient-from: #3b0764 !important;
+  --tw-gradient-to: #4a044e !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  color: #f5d0fe !important;
+  border-color: #6b21a8 !important;
+}
+
+.dark .from-emerald-50.to-teal-50 {
+  --tw-gradient-from: #022c22 !important;
+  --tw-gradient-to: #134e4a !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  color: #a7f3d0 !important;
+  border-color: #065f46 !important;
+}
+
+.dark .from-sky-50.to-blue-50 {
+  --tw-gradient-from: #082f49 !important;
+  --tw-gradient-to: #172554 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+  border-color: #0369a1 !important;
 }
 
 /* Leaflet Map elements override for Dark Mode */

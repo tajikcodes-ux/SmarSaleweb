@@ -359,8 +359,8 @@ export default function Agents() {
                 <td className="p-3.5">
                   <span className={`px-2 py-0.5 rounded text-[9px] font-bold border ${
                     item.status === 'active' || !item.status
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                      : 'bg-rose-50 text-rose-700 border-rose-100'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-800'
+                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-800'
                   }`}>
                     {item.status || 'active'}
                   </span>
@@ -369,7 +369,7 @@ export default function Agents() {
                   {(() => {
                     if (!item.licenseExpirationDate) {
                       return (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1 shadow-sm">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1 shadow-sm">
                           <span>♾️</span> Бессрочно
                         </span>
                       );
@@ -378,7 +378,9 @@ export default function Agents() {
                     const isExpired = exp < new Date();
                     return (
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
-                        isExpired ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+                        isExpired 
+                          ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800' 
+                          : 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
                       }`}>
                         <span>{isExpired ? '⚠️' : '🗓️'}</span>
                         {isExpired ? 'Истекла ' : 'До '} {exp.toLocaleDateString()}
