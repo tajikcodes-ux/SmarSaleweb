@@ -601,5 +601,54 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
+/* ── Table, Gray Backgrounds & Contrast Overrides for Dark Mode ── */
+.dark .bg-gray-100,
+.dark .bg-gray-100\/80,
+.dark .bg-gray-100\/70,
+.dark .bg-gray-100\/60,
+.dark .bg-gray-100\/50,
+.dark .bg-gray-200,
+.dark .bg-gray-200\/80,
+.dark .bg-gray-200\/50 {
+  background-color: #141416 !important;
+}
+
+.dark .border-gray-300,
+.dark .border-gray-400 {
+  border-color: #27272a !important;
+}
+
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1f1f23 !important;
+}
+
+.dark .text-blue-900,
+.dark .text-blue-950 {
+  color: #93c5fd !important;
+}
+
+.dark .text-indigo-900,
+.dark .text-indigo-950 {
+  color: #a5b4fc !important;
+}
+
+.dark .text-purple-900,
+.dark .text-purple-950 {
+  color: #d8b4fe !important;
+}
+
+.dark .bg-blue-100,
+.dark .bg-blue-100\/60 {
+  background-color: rgba(30, 58, 138, 0.45) !important;
+}
+
+.dark .bg-blue-50,
+.dark .bg-blue-50\/50,
+.dark .bg-blue-50\/30,
+.dark .bg-blue-50\/20 {
+  background-color: rgba(30, 58, 138, 0.25) !important;
+}
+
 
 

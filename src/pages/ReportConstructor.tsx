@@ -824,18 +824,18 @@ export default function ReportConstructor() {
       )}
 
       {/* TOP HEADER & ACTION BAR (NO-PRINT) */}
-      <div className="no-print bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="no-print bg-white dark:bg-[#0a0a0a] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl text-white shadow-md shadow-blue-500/20">
               <Sliders className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Конструктор отчетов MBI</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Конструктор отчетов MBI</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
               OLAP 2.0
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
             Интерактивный Drag-and-Drop конструктор. Мгновенный предпросмотр структуры и данных в реальном времени.
           </p>
         </div>
@@ -1396,34 +1396,34 @@ export default function ReportConstructor() {
       {/* KPI SUMMARY CARDS (NO-PRINT) */}
       {reportData?.totals && (
         <div className="no-print grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium">Общая выручка</div>
-            <div className="text-xl font-bold text-gray-900 mt-1">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+            <div className="text-xs text-gray-500 dark:text-slate-400 font-medium">Общая выручка</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">
               {formatMetricValue(reportData.totals.totalAmount, 'currency')}
             </div>
-            <div className="text-[11px] text-emerald-600 font-medium mt-0.5 flex items-center gap-1">
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
               <span>За выбранный период</span>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium">Всего заказов</div>
-            <div className="text-xl font-bold text-gray-900 mt-1">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+            <div className="text-xs text-gray-500 dark:text-slate-400 font-medium">Всего заказов</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">
               {formatMetricValue(reportData.totals.orderCount, 'number')}
             </div>
-            <div className="text-[11px] text-gray-500 mt-0.5">
+            <div className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
               Ср. чек: {formatMetricValue(reportData.totals.avgCheck, 'currency')}
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium">АКБ / ОКБ Покрытие</div>
-            <div className="text-xl font-bold text-gray-900 mt-1 flex items-baseline gap-1.5">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+            <div className="text-xs text-gray-500 dark:text-slate-400 font-medium">АКБ / ОКБ Покрытие</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white mt-1 flex items-baseline gap-1.5">
               <span>{reportData.totals.acb}</span>
-              <span className="text-xs font-normal text-gray-400">/ {reportData.totals.okb}</span>
-              <span className="text-xs font-bold text-blue-600">({reportData.totals.acbIndex}%)</span>
+              <span className="text-xs font-normal text-gray-400 dark:text-slate-500">/ {reportData.totals.okb}</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">({reportData.totals.acbIndex}%)</span>
             </div>
-            <div className="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
+            <div className="w-full bg-gray-100 dark:bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
               <div 
                 className="bg-blue-600 h-full rounded-full transition-all duration-500" 
                 style={{ width: `${Math.min(100, reportData.totals.acbIndex || 0)}%` }}
@@ -1431,12 +1431,12 @@ export default function ReportConstructor() {
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <div className="text-xs text-gray-500 font-medium">Оценочная маржа</div>
-            <div className="text-xl font-bold text-gray-900 mt-1">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm">
+            <div className="text-xs text-gray-500 dark:text-slate-400 font-medium">Оценочная маржа</div>
+            <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">
               {formatMetricValue(reportData.totals.grossProfit, 'currency')}
             </div>
-            <div className="text-[11px] text-emerald-600 font-medium mt-0.5">
+            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
               Рентабельность: {reportData.totals.marginPercent}%
             </div>
           </div>
@@ -1444,7 +1444,7 @@ export default function ReportConstructor() {
       )}
 
       {/* REPORT DATA TABLE CONTAINER (ALSO USED FOR PRINTING) */}
-      <div id="printable-report" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div id="printable-report" className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
         
         {/* OFFICIAL PRINT HEADER (VISIBLE ONLY IN PRINT) */}
         <div className="print-only mb-4 border-b pb-4">
@@ -1469,28 +1469,28 @@ export default function ReportConstructor() {
         </div>
 
         {/* SCREEN TABLE HEADER WITH VIEW MODE TABS (NO-PRINT) */}
-        <div className="no-print p-4 bg-gray-50/70 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="no-print p-4 bg-gray-50/70 dark:bg-slate-900/90 border-b border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <TableIcon className="w-4 h-4 text-gray-600" />
-              <h3 className="text-sm font-bold text-gray-900">
+              <TableIcon className="w-4 h-4 text-gray-600 dark:text-slate-400" />
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                 {is2DMatrix ? '2D Кросс-матрица' : 'Иерархический отчет'}
               </h3>
               {reportData?.rows && (
-                <span className="text-xs text-gray-500 font-normal">
+                <span className="text-xs text-gray-500 dark:text-slate-400 font-normal">
                   ({reportData.rows.length} основных строк)
                 </span>
               )}
             </div>
 
             {/* TAB SWITCH: DATA vs STRUCTURE (BLUEPRINT PREVIEW) */}
-            <div className="flex items-center bg-gray-200/80 p-0.5 rounded-lg text-xs">
+            <div className="flex items-center bg-gray-200/80 dark:bg-slate-800 p-0.5 rounded-lg text-xs">
               <button
                 onClick={() => setViewMode('data')}
                 className={`px-3 py-1 rounded-md font-medium transition-all ${
                   viewMode === 'data'
-                    ? 'bg-white text-gray-900 shadow-xs font-semibold'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-slate-950 text-gray-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
                 }`}
               >
                 Данные отчета
@@ -1499,20 +1499,20 @@ export default function ReportConstructor() {
                 onClick={() => setViewMode('structure')}
                 className={`px-3 py-1 rounded-md font-medium transition-all flex items-center gap-1.5 ${
                   viewMode === 'structure'
-                    ? 'bg-white text-indigo-900 shadow-xs font-semibold'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white dark:bg-slate-950 text-indigo-900 dark:text-indigo-300 shadow-xs font-semibold'
+                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
                 }`}
               >
-                <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                <Eye className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 <span>Предпросмотр макета</span>
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
             <button
               onClick={() => setShowPrintPreview(true)}
-              className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium flex items-center gap-1"
             >
               <Eye className="w-3.5 h-3.5" />
               <span>Предпросмотр А4</span>
@@ -1525,140 +1525,140 @@ export default function ReportConstructor() {
         {/* LOADING INDICATOR */}
         {loading && (
           <div className="no-print p-12 text-center">
-            <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <div className="text-sm font-semibold text-gray-900">Выполняется OLAP-агрегация...</div>
-            <div className="text-xs text-gray-400 mt-1">Обработка заказов, SKU и клиентской базы</div>
+            <RefreshCw className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto mb-3" />
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">Выполняется OLAP-агрегация...</div>
+            <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">Обработка заказов, SKU и клиентской базы</div>
           </div>
         )}
 
         {/* VIEW MODE: STRUCTURE PREVIEW (BLUEPRINT PREVIEW) */}
         {viewMode === 'structure' && (
-          <div className="p-6 bg-slate-50 border-b border-gray-100">
-            <div className="max-w-4xl mx-auto bg-white rounded-xl border border-indigo-200 p-5 shadow-xs">
-              <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 uppercase">
-                  <Eye className="w-4 h-4 text-indigo-600" />
+          <div className="p-6 bg-slate-50 dark:bg-slate-950/40 border-b border-gray-100 dark:border-slate-800">
+            <div className="max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-xl border border-indigo-200 dark:border-indigo-900/60 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-indigo-900 dark:text-indigo-400 uppercase">
+                  <Eye className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   <span>Скелет макета таблицы (Blueprint Preview)</span>
                 </div>
-                <span className="text-[11px] text-gray-500">
+                <span className="text-[11px] text-gray-500 dark:text-slate-400">
                   Строк: {selectedRows.length}, Колонок: {selectedColumns.length > 0 ? 1 : 0}, Показателей: {selectedValues.length}
                 </span>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-xs border border-gray-300">
+                <table className="w-full text-xs border border-gray-300 dark:border-slate-700">
                   <thead>
                     {selectedColumns.length > 0 ? (
                       <>
-                        <tr className="bg-purple-100/70 border-b border-gray-300 font-bold text-purple-950">
-                          <th className="p-2 border border-gray-300">
+                        <tr className="bg-purple-100/70 dark:bg-purple-950/40 border-b border-gray-300 dark:border-slate-700 font-bold text-purple-950 dark:text-purple-300">
+                          <th className="p-2 border border-gray-300 dark:border-slate-700">
                             {selectedRows.map(r => meta.dimensions.find(d => d.code === r)?.name).join(' ➜ ')}
                           </th>
-                          <th className="p-2 border border-gray-300 text-center" colSpan={2}>
+                          <th className="p-2 border border-gray-300 dark:border-slate-700 text-center" colSpan={2}>
                             {meta.dimensions.find(d => d.code === selectedColumns[0])?.name} (Значение 1)
                           </th>
-                          <th className="p-2 border border-gray-300 text-center" colSpan={2}>
+                          <th className="p-2 border border-gray-300 dark:border-slate-700 text-center" colSpan={2}>
                             {meta.dimensions.find(d => d.code === selectedColumns[0])?.name} (Значение 2)
                           </th>
-                          <th className="p-2 border border-gray-300 text-center bg-purple-200/80">. . .</th>
-                          <th className="p-2 border border-gray-300 text-center bg-blue-100 text-blue-900" colSpan={selectedValues.length}>
+                          <th className="p-2 border border-gray-300 dark:border-slate-700 text-center bg-purple-200/80 dark:bg-purple-900/50 text-purple-950 dark:text-purple-200">. . .</th>
+                          <th className="p-2 border border-gray-300 dark:border-slate-700 text-center bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-300" colSpan={selectedValues.length}>
                             ИТОГО ЗА ПЕРИОД
                           </th>
                         </tr>
-                        <tr className="bg-gray-100 border-b border-gray-300 text-gray-700">
-                          <th className="p-2 border border-gray-300">Группировка</th>
+                        <tr className="bg-gray-100 dark:bg-slate-800 border-b border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300">
+                          <th className="p-2 border border-gray-300 dark:border-slate-700">Группировка</th>
                           {selectedValues.slice(0, 2).map(v => (
-                            <th key={`c1-${v}`} className="p-1.5 border border-gray-300 text-right">
+                            <th key={`c1-${v}`} className="p-1.5 border border-gray-300 dark:border-slate-700 text-right">
                               {meta.metrics.find(m => m.code === v)?.name}
                             </th>
                           ))}
                           {selectedValues.slice(0, 2).map(v => (
-                            <th key={`c2-${v}`} className="p-1.5 border border-gray-300 text-right">
+                            <th key={`c2-${v}`} className="p-1.5 border border-gray-300 dark:border-slate-700 text-right">
                               {meta.metrics.find(m => m.code === v)?.name}
                             </th>
                           ))}
-                          <th className="p-1.5 border border-gray-300 text-center">. . .</th>
+                          <th className="p-1.5 border border-gray-300 dark:border-slate-700 text-center">. . .</th>
                           {selectedValues.map(v => (
-                            <th key={`ct-${v}`} className="p-1.5 border border-gray-300 text-right font-bold text-blue-950 bg-blue-50">
+                            <th key={`ct-${v}`} className="p-1.5 border border-gray-300 dark:border-slate-700 text-right font-bold text-blue-950 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40">
                               {meta.metrics.find(m => m.code === v)?.name}
                             </th>
                           ))}
                         </tr>
                       </>
                     ) : (
-                      <tr className="bg-indigo-100/70 border-b border-gray-300 font-bold text-indigo-950">
-                        <th className="p-2.5 border border-gray-300">
+                      <tr className="bg-slate-100 dark:bg-slate-800 border-b border-gray-300 dark:border-slate-700 font-bold text-slate-800 dark:text-slate-200">
+                        <th className="p-2.5 border border-gray-300 dark:border-slate-700">
                           {selectedRows.map(r => meta.dimensions.find(d => d.code === r)?.name).join(' ➜ ')}
                         </th>
                         {selectedValues.map(v => (
-                          <th key={v} className="p-2.5 border border-gray-300 text-right">
+                          <th key={v} className="p-2.5 border border-gray-300 dark:border-slate-700 text-right">
                             {meta.metrics.find(m => m.code === v)?.name}
                           </th>
                         ))}
                       </tr>
                     )}
                   </thead>
-                  <tbody className="text-gray-600">
-                    <tr className="border-b border-gray-200 bg-white">
-                      <td className="p-2 border border-gray-300 font-semibold text-gray-900">
+                  <tbody className="text-gray-600 dark:text-slate-300">
+                    <tr className="border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <td className="p-2 border border-gray-300 dark:border-slate-700 font-semibold text-gray-900 dark:text-white">
                         {meta.dimensions.find(d => d.code === selectedRows[0])?.name} (Запись А)
                       </td>
                       {selectedColumns.length > 0 ? (
                         <>
-                          <td className="p-2 border border-gray-300 text-right font-mono">1 450.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">12</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">3 200.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">25</td>
-                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
-                          <td className="p-2 border border-gray-300 text-right font-bold font-mono text-blue-900 bg-blue-50/50">4 650.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">1 450.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">12</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">3 200.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">25</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-center font-mono text-gray-500">...</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-bold font-mono text-blue-900 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40">4 650.00</td>
                         </>
                       ) : (
                         selectedValues.map(v => (
-                          <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                          <td key={v} className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">
                             {v.includes('Amount') || v.includes('Profit') ? '12 450.00 TJS' : '15'}
                           </td>
                         ))
                       )}
                     </tr>
                     {selectedRows.length > 1 && (
-                      <tr className="border-b border-gray-200 bg-gray-50/60 text-[11px]">
-                        <td className="p-2 pl-6 border border-gray-300 text-gray-500">
+                      <tr className="border-b border-gray-200 dark:border-slate-700 bg-gray-50/60 dark:bg-slate-800/40 text-[11px]">
+                        <td className="p-2 pl-6 border border-gray-300 dark:border-slate-700 text-gray-500 dark:text-slate-400">
                           ↳ {meta.dimensions.find(d => d.code === selectedRows[1])?.name} (Вложенный элемент)
                         </td>
                         {selectedColumns.length > 0 ? (
                           <>
-                            <td className="p-2 border border-gray-300 text-right font-mono">600.00</td>
-                            <td className="p-2 border border-gray-300 text-right font-mono">5</td>
-                            <td className="p-2 border border-gray-300 text-right font-mono">1 100.00</td>
-                            <td className="p-2 border border-gray-300 text-right font-mono">8</td>
-                            <td className="p-2 border border-gray-300 text-center font-mono">...</td>
-                            <td className="p-2 border border-gray-300 text-right font-mono text-blue-900">1 700.00</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">600.00</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">5</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">1 100.00</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">8</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-center font-mono text-gray-500">...</td>
+                            <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-blue-900 dark:text-blue-300">1 700.00</td>
                           </>
                         ) : (
                           selectedValues.map(v => (
-                            <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                            <td key={v} className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">
                               {v.includes('Amount') || v.includes('Profit') ? '1 700.00 TJS' : '3'}
                             </td>
                           ))
                         )}
                       </tr>
                     )}
-                    <tr className="border-b border-gray-200 bg-white">
-                      <td className="p-2 border border-gray-300 font-semibold text-gray-900">
+                    <tr className="border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <td className="p-2 border border-gray-300 dark:border-slate-700 font-semibold text-gray-900 dark:text-white">
                         {meta.dimensions.find(d => d.code === selectedRows[0])?.name} (Запись Б)
                       </td>
                       {selectedColumns.length > 0 ? (
                         <>
-                          <td className="p-2 border border-gray-300 text-right font-mono">2 100.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">18</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">950.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">7</td>
-                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
-                          <td className="p-2 border border-gray-300 text-right font-bold font-mono text-blue-900 bg-blue-50/50">3 050.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">2 100.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">18</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">950.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">7</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-center font-mono text-gray-500">...</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-bold font-mono text-blue-900 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40">3 050.00</td>
                         </>
                       ) : (
                         selectedValues.map(v => (
-                          <td key={v} className="p-2 border border-gray-300 text-right font-mono">
+                          <td key={v} className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">
                             {v.includes('Amount') || v.includes('Profit') ? '8 320.00 TJS' : '9'}
                           </td>
                         ))
@@ -1666,20 +1666,20 @@ export default function ReportConstructor() {
                     </tr>
                   </tbody>
                   <tfoot>
-                    <tr className="bg-gray-100 font-bold border-t-2 border-gray-400 text-gray-900">
-                      <td className="p-2.5 border border-gray-300 uppercase">ИТОГО ПО КОМПАНИИ</td>
+                    <tr className="bg-gray-100 dark:bg-slate-800 font-bold border-t-2 border-gray-400 dark:border-slate-600 text-gray-900 dark:text-white">
+                      <td className="p-2.5 border border-gray-300 dark:border-slate-700 uppercase">ИТОГО ПО КОМПАНИИ</td>
                       {selectedColumns.length > 0 ? (
                         <>
-                          <td className="p-2 border border-gray-300 text-right font-mono">3 550.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">30</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">4 150.00</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono">32</td>
-                          <td className="p-2 border border-gray-300 text-center font-mono">...</td>
-                          <td className="p-2 border border-gray-300 text-right font-mono text-blue-800 bg-blue-100/60">7 700.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">3 550.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">30</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">4 150.00</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-gray-800 dark:text-slate-200">32</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-center font-mono text-gray-500">...</td>
+                          <td className="p-2 border border-gray-300 dark:border-slate-700 text-right font-mono text-blue-800 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-950/60">7 700.00</td>
                         </>
                       ) : (
                         selectedValues.map(v => (
-                          <td key={v} className="p-2.5 border border-gray-300 text-right font-mono text-blue-900">
+                          <td key={v} className="p-2.5 border border-gray-300 dark:border-slate-700 text-right font-mono text-blue-900 dark:text-blue-400 font-bold">
                             {v.includes('Amount') || v.includes('Profit') ? '20 770.00 TJS' : '24'}
                           </td>
                         ))
@@ -1695,9 +1695,9 @@ export default function ReportConstructor() {
         {/* EMPTY STATE */}
         {!loading && (!reportData || !reportData.rows || reportData.rows.length === 0) && (
           <div className="p-12 text-center">
-            <AlertCircle className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <div className="text-sm font-semibold text-gray-800">Нет данных за выбранный период</div>
-            <div className="text-xs text-gray-400 mt-1">
+            <AlertCircle className="w-8 h-8 text-gray-300 dark:text-slate-600 mx-auto mb-2" />
+            <div className="text-sm font-semibold text-gray-800 dark:text-white">Нет данных за выбранный период</div>
+            <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
               Попробуйте расширить диапазон дат или изменить фильтры
             </div>
           </div>
@@ -1710,10 +1710,10 @@ export default function ReportConstructor() {
               /* ======================= 2D CROSS-TAB MATRIX ======================= */
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-gray-100/80 text-gray-700 font-semibold border-b border-gray-200">
-                    <th className="py-3 px-4 sticky left-0 bg-gray-100 z-10 min-w-[220px]">
+                  <tr className="bg-gray-100/80 dark:bg-slate-800 text-gray-700 dark:text-slate-200 font-semibold border-b border-gray-200 dark:border-slate-700">
+                    <th className="py-3 px-4 sticky left-0 bg-gray-100 dark:bg-slate-800 z-10 min-w-[220px]">
                       {meta.dimensions.find(d => d.code === selectedRows[0])?.name || 'Строка'} 
-                      <span className="text-gray-400 font-normal ml-1">
+                      <span className="text-gray-400 dark:text-slate-400 font-normal ml-1">
                         \ {meta.dimensions.find(d => d.code === reportData.columnDimension)?.name || 'Колонка'}
                       </span>
                     </th>
@@ -1722,12 +1722,12 @@ export default function ReportConstructor() {
                         {cKey}
                       </th>
                     ))}
-                    <th className="py-3 px-4 text-right bg-blue-50/50 text-blue-900 font-bold min-w-[130px]">
+                    <th className="py-3 px-4 text-right bg-blue-50/50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-300 font-bold min-w-[130px]">
                       ИТОГО
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-800">
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-800 text-gray-800 dark:text-slate-200">
                   {reportData.rows.map((row: any) => {
                     const isExpanded = expandedRows[row.name];
                     const hasSub = row.subItems && row.subItems.length > 0;
@@ -1736,12 +1736,12 @@ export default function ReportConstructor() {
 
                     return (
                       <React.Fragment key={row.name}>
-                        <tr className="hover:bg-blue-50/30 transition-colors font-medium">
-                          <td className="py-2.5 px-4 sticky left-0 bg-white z-10 flex items-center gap-2">
+                        <tr className="hover:bg-blue-50/30 dark:hover:bg-slate-800/60 transition-colors font-medium">
+                          <td className="py-2.5 px-4 sticky left-0 bg-white dark:bg-slate-900 z-10 flex items-center gap-2">
                             {hasSub ? (
                               <button
                                 onClick={() => toggleRowExpand(row.name)}
-                                className="no-print p-0.5 hover:bg-gray-200 rounded text-gray-500"
+                                className="no-print p-0.5 hover:bg-gray-200 dark:hover:bg-slate-800 rounded text-gray-500 dark:text-slate-400"
                               >
                                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                               </button>
@@ -1750,7 +1750,7 @@ export default function ReportConstructor() {
                             )}
                             <button
                               onClick={() => handleOpenDrilldown(selectedRows[0], row.name)}
-                              className="text-left font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                              className="text-left font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
                               {row.name}
                             </button>
@@ -1759,25 +1759,25 @@ export default function ReportConstructor() {
                           {reportData.columnKeys.map((cKey: string) => {
                             const val = row.cells?.[cKey]?.[primaryMetric];
                             return (
-                              <td key={cKey} className="py-2.5 px-3 text-right text-gray-700">
+                              <td key={cKey} className="py-2.5 px-3 text-right text-gray-700 dark:text-slate-300">
                                 {val ? formatMetricValue(val, metricDef?.format || 'number') : '—'}
                               </td>
                             );
                           })}
 
-                          <td className="py-2.5 px-4 text-right font-bold text-blue-950 bg-blue-50/30">
+                          <td className="py-2.5 px-4 text-right font-bold text-blue-950 dark:text-blue-300 bg-blue-50/30 dark:bg-blue-950/30">
                             {formatMetricValue(row.metrics?.[primaryMetric], metricDef?.format || 'number')}
                           </td>
                         </tr>
 
                         {/* SUB-ROWS IN 2D */}
                         {hasSub && isExpanded && row.subItems.map((sub: any) => (
-                          <tr key={sub.name} className="bg-gray-50/60 text-gray-600 text-[11px] hover:bg-gray-100/70">
-                            <td className="py-2 px-4 pl-10 sticky left-0 bg-gray-50/90 z-10 flex items-center gap-1.5">
-                              <span className="text-gray-300">↳</span>
+                          <tr key={sub.name} className="bg-gray-50/60 dark:bg-slate-800/40 text-gray-600 dark:text-slate-400 text-[11px] hover:bg-gray-100/70 dark:hover:bg-slate-800/70">
+                            <td className="py-2 px-4 pl-10 sticky left-0 bg-gray-50/90 dark:bg-slate-900/90 z-10 flex items-center gap-1.5">
+                              <span className="text-gray-300 dark:text-slate-600">↳</span>
                               <button
                                 onClick={() => handleOpenDrilldown(selectedRows[1], sub.name)}
-                                className="hover:text-blue-600 text-left"
+                                className="hover:text-blue-600 dark:hover:text-blue-400 text-left text-gray-700 dark:text-slate-300"
                               >
                                 {sub.name}
                               </button>
@@ -1792,7 +1792,7 @@ export default function ReportConstructor() {
                               );
                             })}
 
-                            <td className="py-2 px-4 text-right font-semibold text-gray-800 bg-blue-50/20">
+                            <td className="py-2 px-4 text-right font-semibold text-gray-800 dark:text-slate-200 bg-blue-50/20 dark:bg-blue-950/20">
                               {formatMetricValue(sub.metrics?.[primaryMetric], metricDef?.format || 'number')}
                             </td>
                           </tr>
@@ -1805,20 +1805,20 @@ export default function ReportConstructor() {
                 {/* 2D GRAND TOTAL ROW */}
                 {reportData.totals && reportData.colTotals && (
                   <tfoot>
-                    <tr className="bg-gray-100 font-bold text-gray-900 border-t-2 border-gray-300">
-                      <td className="py-3 px-4 sticky left-0 bg-gray-100 z-10 uppercase text-xs">
+                    <tr className="bg-gray-100 dark:bg-slate-800 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700">
+                      <td className="py-3 px-4 sticky left-0 bg-gray-100 dark:bg-slate-800 z-10 uppercase text-xs text-gray-900 dark:text-white">
                         ИТОГО ПО КОМПАНИИ
                       </td>
                       {reportData.columnKeys.map((cKey: string) => {
                         const colTotal = reportData.colTotals?.[cKey]?.[selectedValues[0]];
                         const metricDef = meta.metrics.find(m => m.code === selectedValues[0]);
                         return (
-                          <td key={cKey} className="py-3 px-3 text-right">
+                          <td key={cKey} className="py-3 px-3 text-right text-gray-900 dark:text-white">
                             {formatMetricValue(colTotal, metricDef?.format || 'number')}
                           </td>
                         );
                       })}
-                      <td className="py-3 px-4 text-right text-blue-700 bg-blue-100/60 text-xs">
+                      <td className="py-3 px-4 text-right text-blue-700 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-950/60 text-xs">
                         {formatMetricValue(reportData.totals[selectedValues[0]], meta.metrics.find(m => m.code === selectedValues[0])?.format || 'number')}
                       </td>
                     </tr>
@@ -1829,7 +1829,7 @@ export default function ReportConstructor() {
               /* ======================= 1D TABULAR REPORT ======================= */
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-gray-100/80 text-gray-700 font-semibold border-b border-gray-200">
+                  <tr className="bg-gray-100/80 dark:bg-slate-800 text-gray-700 dark:text-slate-200 font-semibold border-b border-gray-200 dark:border-slate-700">
                     <th className="py-3 px-4 min-w-[240px]">
                       {meta.dimensions.find(d => d.code === selectedRows[0])?.name || 'Группировка'}
                     </th>
@@ -1840,19 +1840,19 @@ export default function ReportConstructor() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-800">
+                <tbody className="divide-y divide-gray-100 dark:divide-slate-800 text-gray-800 dark:text-slate-200">
                   {reportData.rows.map((row: any) => {
                     const isExpanded = expandedRows[row.name];
                     const hasSub = row.subItems && row.subItems.length > 0;
 
                     return (
                       <React.Fragment key={row.name}>
-                        <tr className="hover:bg-blue-50/30 transition-colors font-medium">
+                        <tr className="hover:bg-blue-50/30 dark:hover:bg-slate-800/60 transition-colors font-medium">
                           <td className="py-2.5 px-4 flex items-center gap-2">
                             {hasSub ? (
                               <button
                                 onClick={() => toggleRowExpand(row.name)}
-                                className="no-print p-0.5 hover:bg-gray-200 rounded text-gray-500"
+                                className="no-print p-0.5 hover:bg-gray-200 dark:hover:bg-slate-800 rounded text-gray-500 dark:text-slate-400"
                               >
                                 {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                               </button>
@@ -1861,7 +1861,7 @@ export default function ReportConstructor() {
                             )}
                             <button
                               onClick={() => handleOpenDrilldown(selectedRows[0], row.name)}
-                              className="text-left font-semibold text-gray-900 hover:text-blue-600 transition-colors"
+                              className="text-left font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
                               {row.name}
                             </button>
@@ -1870,7 +1870,7 @@ export default function ReportConstructor() {
                           {selectedValues.map(v => {
                             const mDef = meta.metrics.find(m => m.code === v);
                             return (
-                              <td key={v} className="py-2.5 px-4 text-right">
+                              <td key={v} className="py-2.5 px-4 text-right text-gray-800 dark:text-slate-200">
                                 {formatMetricValue(row.metrics?.[v], mDef?.format || 'number')}
                               </td>
                             );
@@ -1879,12 +1879,12 @@ export default function ReportConstructor() {
 
                         {/* SUB-ROWS IN 1D */}
                         {hasSub && isExpanded && row.subItems.map((sub: any) => (
-                          <tr key={sub.name} className="bg-gray-50/60 text-gray-600 text-[11px] hover:bg-gray-100/70">
+                          <tr key={sub.name} className="bg-gray-50/60 dark:bg-slate-800/40 text-gray-600 dark:text-slate-400 text-[11px] hover:bg-gray-100/70 dark:hover:bg-slate-800/70">
                             <td className="py-2 px-4 pl-10 flex items-center gap-1.5">
-                              <span className="text-gray-300">↳</span>
+                              <span className="text-gray-300 dark:text-slate-600">↳</span>
                               <button
                                 onClick={() => handleOpenDrilldown(selectedRows[1], sub.name)}
-                                className="hover:text-blue-600 text-left"
+                                className="hover:text-blue-600 dark:hover:text-blue-400 text-left text-gray-700 dark:text-slate-300"
                               >
                                 {sub.name}
                               </button>
@@ -1893,7 +1893,7 @@ export default function ReportConstructor() {
                             {selectedValues.map(v => {
                               const mDef = meta.metrics.find(m => m.code === v);
                               return (
-                                <td key={v} className="py-2 px-4 text-right">
+                                <td key={v} className="py-2 px-4 text-right text-gray-700 dark:text-slate-300">
                                   {formatMetricValue(sub.metrics?.[v], mDef?.format || 'number')}
                                 </td>
                               );
@@ -1908,12 +1908,12 @@ export default function ReportConstructor() {
                 {/* 1D GRAND TOTAL ROW */}
                 {reportData.totals && (
                   <tfoot>
-                    <tr className="bg-gray-100 font-bold text-gray-900 border-t-2 border-gray-300 text-xs">
-                      <td className="py-3 px-4 uppercase">ИТОГО ПО КОМПАНИИ</td>
+                    <tr className="bg-gray-100 dark:bg-slate-800 font-bold text-gray-900 dark:text-white border-t-2 border-gray-300 dark:border-slate-700 text-xs">
+                      <td className="py-3 px-4 uppercase text-gray-900 dark:text-white">ИТОГО ПО КОМПАНИИ</td>
                       {selectedValues.map(v => {
                         const mDef = meta.metrics.find(m => m.code === v);
                         return (
-                          <td key={v} className="py-3 px-4 text-right text-blue-900 font-bold">
+                          <td key={v} className="py-3 px-4 text-right text-blue-900 dark:text-blue-400 font-bold">
                             {formatMetricValue(reportData.totals[v], mDef?.format || 'number')}
                           </td>
                         );
@@ -2135,16 +2135,16 @@ export default function ReportConstructor() {
 
       {/* SAVE TEMPLATE MODAL (NO-PRINT) */}
       {showSaveTemplateModal && (
-        <div className="no-print fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="no-print fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
                 <Bookmark className="w-5 h-5 text-amber-500" />
-                <h3 className="text-base font-bold text-gray-900">Сохранить как шаблон</h3>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Сохранить как шаблон</h3>
               </div>
               <button 
                 onClick={() => setShowSaveTemplateModal(false)}
-                className="p-1 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-lg"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2152,7 +2152,7 @@ export default function ReportConstructor() {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-1">
                   Название шаблона *
                 </label>
                 <input
@@ -2160,12 +2160,12 @@ export default function ReportConstructor() {
                   placeholder="Например: Ежедневный срез по напиткам"
                   value={newTemplateName}
                   onChange={e => setNewTemplateName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-700 dark:text-slate-300 mb-1">
                   Описание (необязательно)
                 </label>
                 <textarea
@@ -2173,26 +2173,26 @@ export default function ReportConstructor() {
                   placeholder="Краткое описание назначения шаблона..."
                   value={newTemplateDesc}
                   onChange={e => setNewTemplateDesc(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200/80 text-[11px] text-gray-600 space-y-1">
-                <div className="font-semibold text-gray-800">Структура шаблона:</div>
-                <div>Строки: <span className="font-medium text-indigo-700">{selectedRows.join(', ') || 'нет'}</span></div>
-                <div>Столбцы: <span className="font-medium text-purple-700">{selectedColumns.join(', ') || 'нет'}</span></div>
-                <div>Показатели: <span className="font-medium text-emerald-700">{selectedValues.join(', ')}</span></div>
+              <div className="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-200/80 dark:border-slate-700/80 text-[11px] text-gray-600 dark:text-slate-300 space-y-1">
+                <div className="font-semibold text-gray-800 dark:text-slate-200">Структура шаблона:</div>
+                <div>Строки: <span className="font-medium text-indigo-700 dark:text-indigo-400">{selectedRows.join(', ') || 'нет'}</span></div>
+                <div>Столбцы: <span className="font-medium text-purple-700 dark:text-purple-400">{selectedColumns.join(', ') || 'нет'}</span></div>
+                <div>Показатели: <span className="font-medium text-emerald-700 dark:text-emerald-400">{selectedValues.join(', ')}</span></div>
                 {Object.keys(activeFilters).length > 0 && (
-                  <div>Фильтры: <span className="font-medium text-blue-700">{Object.keys(activeFilters).length} активных</span></div>
+                  <div>Фильтры: <span className="font-medium text-blue-700 dark:text-blue-400">{Object.keys(activeFilters).length} активных</span></div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setShowSaveTemplateModal(false)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition-colors"
+                className="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-colors"
               >
                 Отмена
               </button>
@@ -2211,18 +2211,18 @@ export default function ReportConstructor() {
 
       {/* IN-FIELD FILTER POPOVER MODAL (NO-PRINT) */}
       {filterPopover && (
-        <div className="no-print fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="no-print fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 dark:border-slate-800 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-gray-900">
+                <Filter className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   Фильтр: {filterPopover.name}
                 </h3>
               </div>
               <button 
                 onClick={() => { setFilterPopover(null); setFilterSearch(''); }}
-                className="p-1 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-lg"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2230,13 +2230,13 @@ export default function ReportConstructor() {
 
             {/* Filter search */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-400" />
+              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-gray-400 dark:text-slate-500" />
               <input
                 type="text"
                 placeholder="Поиск значений..."
                 value={filterSearch}
                 onChange={e => setFilterSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs text-gray-800 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -2250,19 +2250,19 @@ export default function ReportConstructor() {
 
               return (
                 <div>
-                  <div className="flex items-center justify-between text-[11px] mb-2 px-1 text-gray-500">
+                  <div className="flex items-center justify-between text-[11px] mb-2 px-1 text-gray-500 dark:text-slate-400">
                     <span>Найдено: {filteredList.length} из {allAvailable.length}</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => selectAllFilterDim(filterPopover.code, allAvailable)}
-                        className="text-blue-600 hover:underline font-semibold"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-semibold"
                       >
                         Выбрать все
                       </button>
                       <span>•</span>
                       <button
                         onClick={() => clearFilterDim(filterPopover.code)}
-                        className="text-gray-500 hover:text-rose-600 hover:underline"
+                        className="text-gray-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:underline"
                       >
                         Снять все
                       </button>
@@ -2270,9 +2270,9 @@ export default function ReportConstructor() {
                   </div>
 
                   {/* Scrollable Checkbox List */}
-                  <div className="max-h-60 overflow-y-auto border border-gray-100 rounded-xl divide-y divide-gray-50 p-1 bg-gray-50/50">
+                  <div className="max-h-60 overflow-y-auto border border-gray-100 dark:border-slate-800 rounded-xl divide-y divide-gray-50 dark:divide-slate-800/60 p-1 bg-gray-50/50 dark:bg-slate-950/40">
                     {filteredList.length === 0 ? (
-                      <div className="p-6 text-center text-gray-400 text-xs">
+                      <div className="p-6 text-center text-gray-400 dark:text-slate-500 text-xs">
                         Значения не найдены
                       </div>
                     ) : (
@@ -2285,13 +2285,13 @@ export default function ReportConstructor() {
                           <div
                             key={val}
                             onClick={() => toggleFilterItem(filterPopover.code, val)}
-                            className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white hover:shadow-xs cursor-pointer text-xs text-gray-800 transition-all"
+                            className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800/80 hover:shadow-xs cursor-pointer text-xs text-gray-800 dark:text-slate-200 transition-all"
                           >
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={() => {}} // handled by div click
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
+                              className="rounded border-gray-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
                             />
                             <span className="font-medium truncate">{val}</span>
                           </div>
@@ -2303,11 +2303,11 @@ export default function ReportConstructor() {
               );
             })()}
 
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => clearFilterDim(filterPopover.code)}
-                className="text-xs font-semibold text-rose-600 hover:underline"
+                className="text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline"
               >
                 Очистить фильтр
               </button>
@@ -2325,16 +2325,16 @@ export default function ReportConstructor() {
 
       {/* DRILLDOWN MODAL DRAWER (NO-PRINT) */}
       {drilldown.open && (
-        <div className="no-print fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col p-6 overflow-hidden animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+        <div className="no-print fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end">
+          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col p-6 overflow-hidden animate-in slide-in-from-right duration-200 border-l border-gray-100 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-slate-800">
               <div>
-                <h3 className="text-base font-bold text-gray-900">Детализация накладных</h3>
-                <p className="text-xs text-blue-600 font-medium mt-0.5">{drilldown.title}</p>
+                <h3 className="text-base font-bold text-gray-900 dark:text-white">Детализация накладных</h3>
+                <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-0.5">{drilldown.title}</p>
               </div>
               <button
                 onClick={() => setDrilldown(prev => ({ ...prev, open: false }))}
-                className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-xl"
+                className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-700 dark:hover:text-slate-200 rounded-xl"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -2342,43 +2342,43 @@ export default function ReportConstructor() {
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {drilldown.loading ? (
-                <div className="p-8 text-center text-gray-400">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+                <div className="p-8 text-center text-gray-400 dark:text-slate-500">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600 dark:text-blue-400" />
                   <span className="text-xs">Загрузка накладных...</span>
                 </div>
               ) : drilldown.orders.length === 0 ? (
-                <div className="p-8 text-center text-gray-400 text-xs">
+                <div className="p-8 text-center text-gray-400 dark:text-slate-500 text-xs">
                   Нет накладных по данной выборке
                 </div>
               ) : (
                 drilldown.orders.map((ord: any) => (
-                  <div key={ord.id} className="p-3.5 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-sm transition-all text-xs">
+                  <div key={ord.id} className="p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800/80 hover:shadow-sm transition-all text-xs">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="font-bold text-gray-900">
+                        <div className="font-bold text-gray-900 dark:text-white">
                           Заказ №{ord.id.slice(0, 8)}
                         </div>
-                        <div className="text-[11px] text-gray-500 mt-0.5">
-                          Клиент: <span className="font-semibold text-gray-700">{ord.client?.name}</span>
+                        <div className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
+                          Клиент: <span className="font-semibold text-gray-700 dark:text-slate-200">{ord.client?.name}</span>
                         </div>
-                        <div className="text-[11px] text-gray-500">
+                        <div className="text-[11px] text-gray-500 dark:text-slate-400">
                           Агент: {ord.salesRep?.firstName} {ord.salesRep?.lastName}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-blue-600 text-sm">
+                        <div className="font-bold text-blue-600 dark:text-blue-400 text-sm">
                           {Number(ord.totalAmount).toLocaleString('ru-RU')} TJS
                         </div>
                         <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
-                          ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                          ord.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
-                          'bg-amber-100 text-amber-800'
+                          ord.status === 'delivered' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                          ord.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300' :
+                          'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
                         }`}>
                           {ord.status}
                         </span>
                       </div>
                     </div>
-                    <div className="text-[10px] text-gray-400 mt-2 border-t border-gray-100 pt-1.5 flex justify-between">
+                    <div className="text-[10px] text-gray-400 dark:text-slate-500 mt-2 border-t border-gray-100 dark:border-slate-800 pt-1.5 flex justify-between">
                       <span>Дата: {new Date(ord.createdAt).toLocaleDateString('ru-RU')}</span>
                       <span>Оплата: {ord.client?.paymentType || 'CASH'}</span>
                     </div>
@@ -2387,10 +2387,10 @@ export default function ReportConstructor() {
               )}
             </div>
 
-            <div className="pt-4 border-t border-gray-100 flex justify-end">
+            <div className="pt-4 border-t border-gray-100 dark:border-slate-800 flex justify-end">
               <button
                 onClick={() => setDrilldown(prev => ({ ...prev, open: false }))}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold"
+                className="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl text-xs font-semibold"
               >
                 Закрыть
               </button>
