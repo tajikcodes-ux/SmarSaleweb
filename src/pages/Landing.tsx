@@ -26,7 +26,7 @@ import {
   Bot
 } from 'lucide-react';
 import heroDevicesMockup from '../assets/hero_devices_mockup.png';
-import logoClean from '../assets/logo_clean.png';
+import logoClean from '../assets/logo_clean.webp';
 import gpsTrackingMap from '../assets/gps_tracking_map.png';
 
 export default function Landing() {
