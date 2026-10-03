@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
