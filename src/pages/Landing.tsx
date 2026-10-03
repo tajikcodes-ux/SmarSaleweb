@@ -32,6 +32,9 @@ import gpsTrackingMap from '../assets/gps_tracking_map.png';
 export default function Landing() {
   const navigate = useNavigate();
 
+  // Flag to temporarily hide pricing section without deleting code
+  const SHOW_PRICING_SECTION = false;
+
   // Navigation mobile state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -201,9 +204,11 @@ export default function Landing() {
             <button onClick={() => scrollTo('calculator')} className="hover:text-[#0b57d0] transition-colors">
               Окупаемость
             </button>
-            <button onClick={() => scrollTo('pricing')} className="hover:text-[#0b57d0] transition-colors">
-              Тарифы
-            </button>
+            {SHOW_PRICING_SECTION && (
+              <button onClick={() => scrollTo('pricing')} className="hover:text-[#0b57d0] transition-colors">
+                Тарифы
+              </button>
+            )}
             <button onClick={() => scrollTo('faq')} className="hover:text-[#0b57d0] transition-colors">
               Вопросы
             </button>
@@ -259,9 +264,11 @@ export default function Landing() {
             <button onClick={() => scrollTo('calculator')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
               Калькулятор окупаемости
             </button>
-            <button onClick={() => scrollTo('pricing')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
-              Тарифы в сомони
-            </button>
+            {SHOW_PRICING_SECTION && (
+              <button onClick={() => scrollTo('pricing')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
+                Тарифы в сомони
+              </button>
+            )}
             <button onClick={() => scrollTo('faq')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
               Вопросы и ответы
             </button>
@@ -363,7 +370,7 @@ export default function Landing() {
                 <span>•</span>
                 <span>📱 100% офлайн без интернета</span>
                 <span>•</span>
-                <span>💼 Честные тарифы в сомони</span>
+                <span>{SHOW_PRICING_SECTION ? '💼 Честные тарифы в сомони' : '💼 Гибкие тарифные планы'}</span>
               </div>
             </div>
 
@@ -1115,7 +1122,7 @@ export default function Landing() {
                 <tr>
                   <td className="py-3 px-5 font-semibold text-slate-900">Стоимость и валюта</td>
                   <td className="py-3 px-5 text-center font-black text-[#0b57d0] bg-blue-50/40 border-x border-blue-100">
-                    От 85 TJS/мес за агента (в сомони)
+                    {SHOW_PRICING_SECTION ? 'От 85 TJS/мес за агента (в сомони)' : 'По запросу (Индивидуально)'}
                   </td>
                   <td className="py-3 px-5 text-center text-rose-700 font-medium">$20–$35/мес в долларах США</td>
                   <td className="py-3 px-5 text-center text-slate-700">Оклад штатного 1С-ника</td>
@@ -1271,8 +1278,9 @@ export default function Landing() {
       </section>
 
       {/* SECTION: TRANSPARENT PRICING IN TJS */}
-      <section id="pricing" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-12">
+      {SHOW_PRICING_SECTION && (
+        <section id="pricing" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-xs uppercase font-extrabold tracking-wider text-[#0b57d0] bg-blue-50 px-3 py-1 rounded border border-blue-200">
             Честные тарифы
           </span>
@@ -1430,6 +1438,7 @@ export default function Landing() {
 
         </div>
       </section>
+      )}
 
       {/* SECTION: HONEST FAQ */}
       <section id="faq" className="py-16 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1649,7 +1658,9 @@ export default function Landing() {
                 <li><button onClick={() => scrollTo('features')} className="hover:text-white">Приложение агента (SFA)</button></li>
                 <li><button onClick={() => scrollTo('mbi-constructor')} className="hover:text-white">Конструктор MBI в Excel</button></li>
                 <li><button onClick={() => scrollTo('integration-1c')} className="hover:text-white">Связка с 1С</button></li>
-                <li><button onClick={() => scrollTo('pricing')} className="hover:text-white">Тарифы в сомони</button></li>
+                {SHOW_PRICING_SECTION && (
+                  <li><button onClick={() => scrollTo('pricing')} className="hover:text-white">Тарифы в сомони</button></li>
+                )}
               </ul>
             </div>
 
