@@ -4,6 +4,7 @@ import {
   MessageSquare, Bug, Lightbulb, Star, ChevronDown, ChevronUp,
   RefreshCw, CheckCircle2, Clock, Archive, Send, Filter, Plus, X
 } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 const TYPE_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string }> = {
   SUGGESTION: { label: 'Предложение', icon: Lightbulb, color: '#f59e0b', bg: '#fef3c7' },
@@ -173,9 +174,7 @@ export default function FeedbackPanel() {
 
       {/* Feedback list */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <RefreshCw className="w-8 h-8 animate-spin text-[#86868b]" />
-        </div>
+        <LogoLoader className="py-16" label="Загрузка обратной связи..." />
       ) : feedbacks.length === 0 ? (
         <div className="text-center py-16 text-[#86868b]">
           <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />

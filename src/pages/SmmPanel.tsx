@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 import { Plus, Edit, Trash, Share2, Instagram, Facebook, Tv, Check, X, ExternalLink, Trophy, Filter, ZoomIn } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 // ─── Toast ───────────────────────────────────────────────
 type Toast = { id: number; msg: string; type: 'success' | 'error' };
@@ -255,13 +256,9 @@ export default function SmmPanel() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex-1 flex items-center justify-center bg-white border border-[#e3e3e8] rounded-2xl">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-8 h-8 border-4 border-[#0b57d0] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-bold text-[#5f6368]">Загрузка SMM-модуля...</span>
-          </div>
+        <div className="flex-1 flex items-center justify-center bg-white border border-[#e3e3e8] rounded-2xl p-12">
+          <LogoLoader label="Загрузка SMM-модуля..." />
         </div>
-
       ) : activeTab === 'tasks' ? (
         // ─── Tab 1: Tasks ──────────────────────────────────
         <div className="flex-1 overflow-y-auto space-y-4">

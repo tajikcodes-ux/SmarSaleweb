@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { UserPlus, Shield, Clock, X, Pencil, Trash2, Key, Send } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Agents() {
   const [users, setUsers] = useState<any[]>([]);
@@ -197,11 +198,7 @@ export default function Agents() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка торговых представителей..." />;
   }
 
   return (

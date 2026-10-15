@@ -4,6 +4,7 @@ import {
   Plus, Navigation, Wallet, Edit, Trash, X, FileText, 
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle 
 } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 
@@ -342,11 +343,7 @@ export default function Clients() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка клиентской базы и АКБ..." />;
   }
 
   return (

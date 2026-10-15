@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Plus, Edit, Trash, Gift, Percent } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Promotions() {
   const [promotions, setPromotions] = useState<any[]>([]);
@@ -112,11 +113,7 @@ export default function Promotions() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка маркетинговых акций..." />;
   }
 
   return (

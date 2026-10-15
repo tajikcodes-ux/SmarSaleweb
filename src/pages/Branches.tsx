@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Plus, Edit, Trash, Building2, Warehouse as WarehouseIcon, Users, Store } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Branches() {
   const [branches, setBranches] = useState<any[]>([]);
@@ -60,11 +61,7 @@ export default function Branches() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка филиалов..." />;
   }
 
   return (

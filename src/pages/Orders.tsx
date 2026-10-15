@@ -34,6 +34,9 @@ export default function Orders() {
   // Columns visibility customizer
   const [visibleColumns, setVisibleColumns] = useState<string[]>(['id', 'client', 'salesRep', 'workZone', 'contract', 'totalAmount', 'deliveryDate', 'paymentStatus', 'status', 'deliveryDriverId']);
   const [showColumnCustomizer, setShowColumnCustomizer] = useState(false);
+  const [tableDensity, setTableDensity] = useState<'comfortable' | 'compact'>(() => {
+    return (localStorage.getItem('orders_table_density') as 'comfortable' | 'compact') || 'comfortable';
+  });
 
   const exportToCsv = () => {
     const headers = ['ID Заказа', 'Клиент', 'Агент', 'Рабочая зона', 'Договор', 'Сумма (TJS)', 'Дата доставки', 'Оплата', 'Статус', 'Водитель'];
@@ -355,6 +358,22 @@ export default function Orders() {
           </div>
 
           <button
+            onClick={() => {
+              const next = tableDensity === 'comfortable' ? 'compact' : 'comfortable';
+              setTableDensity(next);
+              localStorage.setItem('orders_table_density', next);
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg font-semibold text-xs transition-all shadow-sm ${
+              tableDensity === 'compact'
+                ? 'bg-blue-50 border-blue-200 text-[#0071e3]'
+                : 'border-[#e9e9e7] hover:bg-[#fbfbfa] text-[#6a6a65]'
+            }`}
+            title={tableDensity === 'comfortable' ? 'Включить компактный режим таблицы (для ноутбуков)' : 'Включить стандартный режим таблицы'}
+          >
+            <span>{tableDensity === 'compact' ? '⚡ Компактно' : 'Обычный вид'}</span>
+          </button>
+
+          <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg font-semibold text-xs transition-all shadow-sm"
           >
@@ -616,22 +635,37 @@ export default function Orders() {
       <div className="bg-white border border-[#e9e9e7] rounded-xl overflow-x-auto shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#e9e9e7] bg-[#fbfbfa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
-              {visibleColumns.includes('id') && <th className="p-3.5">ID Заказа</th>}
-              {visibleColumns.includes('client') && <th className="p-3.5">Клиент</th>}
-              {visibleColumns.includes('salesRep') && <th className="p-3.5">Агент (Исполнитель)</th>}
-              {visibleColumns.includes('workZone') && <th className="p-3.5">Рабочая зона</th>}
-              {visibleColumns.includes('contract') && <th className="p-3.5">Договор</th>}
-              {visibleColumns.includes('totalAmount') && <th className="p-3.5">Сумма</th>}
-              {visibleColumns.includes('deliveryDate') && <th className="p-3.5">Дата доставки</th>}
-              {visibleColumns.includes('paymentStatus') && <th className="p-3.5">Оплата</th>}
-              {visibleColumns.includes('status') && <th className="p-3.5">Статус</th>}
-              {visibleColumns.includes('deliveryDriverId') && <th className="p-3.5">Доставка (Водитель)</th>}
-              <th className="p-3.5 text-right">Действия</th>
+            <tr className={`border-b border-[#e9e9e7] bg-[#fbfbfa] font-bold text-[#86868b] uppercase tracking-wider ${
+              tableDensity === 'compact' ? 'text-[9px]' : 'text-[10px]'
+            }`}>
+              {visibleColumns.includes('id') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>ID Заказа</th>}
+              {visibleColumns.includes('client') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Клиент</th>}
+              {visibleColumns.includes('salesRep') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Агент</th>}
+              {visibleColumns.includes('workZone') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Рабочая зона</th>}
+              {visibleColumns.includes('contract') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Договор</th>}
+              {visibleColumns.includes('totalAmount') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Сумма</th>}
+              {visibleColumns.includes('deliveryDate') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Дата доставки</th>}
+              {visibleColumns.includes('paymentStatus') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Оплата</th>}
+              {visibleColumns.includes('status') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Статус</th>}
+              {visibleColumns.includes('deliveryDriverId') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Водитель</th>}
+              <th className={`${tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'} text-right`}>Действия</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e9e9e7]/60 text-xs">
-            {filteredOrders.length === 0 ? (
+          <tbody className={`divide-y divide-[#e9e9e7]/60 ${tableDensity === 'compact' ? 'text-[11px]' : 'text-xs'}`}>
+            {loading ? (
+              Array.from({ length: 7 }).map((_, idx) => (
+                <tr key={idx} className="animate-pulse">
+                  {visibleColumns.map((col) => (
+                    <td key={col} className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>
+                      <div className="h-4 bg-slate-200/80 rounded w-4/5"></div>
+                    </td>
+                  ))}
+                  <td className={`${tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'} text-right`}>
+                    <div className="h-6 bg-slate-200/80 rounded w-16 ml-auto"></div>
+                  </td>
+                </tr>
+              ))
+            ) : filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length + 1} className="p-8 text-center text-xs text-[#86868b] italic">
                   Нет заказов, соответствующих заданным фильтрам.
@@ -641,35 +675,39 @@ export default function Orders() {
               filteredOrders.map((item) => (
                 <tr key={item.id} className="hover:bg-[#fbfbfa] transition-colors">
                   {visibleColumns.includes('id') && (
-                    <td className="p-3.5 font-bold text-[#6a6a65] font-mono">
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} font-bold text-[#6a6a65] font-mono`}>
                       {item.id.slice(0, 8).toUpperCase()}
                     </td>
                   )}
                   {visibleColumns.includes('client') && (
-                    <td className="p-3.5 font-bold text-[#37352f]">{item.client?.name || 'Магазин'}</td>
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} font-bold text-[#37352f]`}>
+                      {item.client?.name || 'Магазин'}
+                    </td>
                   )}
                   {visibleColumns.includes('salesRep') && (
-                    <td className="p-3.5 text-[#6a6a65]">
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-[#6a6a65]`}>
                       {item.salesRep?.firstName} {item.salesRep?.lastName}
                     </td>
                   )}
                   {visibleColumns.includes('workZone') && (
-                    <td className="p-3.5">
+                    <td className={tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'}>
                       <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[#6a6a65] text-[10px] font-medium">
                         {item.workZone}
                       </span>
                     </td>
                   )}
                   {visibleColumns.includes('contract') && (
-                    <td className="p-3.5 text-[#6a6a65]">{item.contract}</td>
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-[#6a6a65]`}>
+                      {item.contract}
+                    </td>
                   )}
                   {visibleColumns.includes('totalAmount') && (
-                    <td className="p-3.5 text-emerald-700 font-bold font-mono">
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-emerald-700 font-bold font-mono`}>
                       {parseFloat(item.totalAmount.toString()).toFixed(2)} TJS
                     </td>
                   )}
                   {visibleColumns.includes('deliveryDate') && (
-                    <td className="p-3.5 text-[#37352f]">
+                    <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-[#37352f]`}>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-[#0071e3]" />
                         <span>{new Date(item.deliveryDate).toLocaleDateString()}</span>
@@ -677,7 +715,7 @@ export default function Orders() {
                     </td>
                   )}
                   {visibleColumns.includes('paymentStatus') && (
-                    <td className="p-3.5">
+                    <td className={tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'}>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[9px] ${
                         item.paymentStatus === 'paid'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
@@ -689,20 +727,33 @@ export default function Orders() {
                     </td>
                   )}
                   {visibleColumns.includes('status') && (
-                    <td className="p-3.5">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                        item.status === 'approved'
-                          ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                          : item.status === 'delivered'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                          : 'bg-amber-50 text-amber-700 border border-amber-100'
-                      }`}>
-                        {item.status}
-                      </span>
+                    <td className={tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'}>
+                      {(() => {
+                        switch (item.status) {
+                          case 'approved':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-200">Одобрен</span>;
+                          case 'assembling':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">На сборке</span>;
+                          case 'assembled':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Собран</span>;
+                          case 'shipped':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-200">В пути</span>;
+                          case 'delivered':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Доставлен</span>;
+                          case 'cancelled':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Отменен</span>;
+                          case 'on_hold':
+                          case 'hold':
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-200">На проверке</span>;
+                          case 'pending':
+                          default:
+                            return <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Новый</span>;
+                        }
+                      })()}
                     </td>
                   )}
                   {visibleColumns.includes('deliveryDriverId') && (
-                    <td className="p-3.5">
+                    <td className={tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'}>
                       {['pending', 'approved', 'assembling', 'assembled'].includes(item.status) ? (
                         <select
                           value={item.deliveryDriverId || ''}
@@ -731,7 +782,8 @@ export default function Orders() {
                       )}
                     </td>
                   )}
-                  <td className="p-3.5 text-right">
+                  <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-right`}>
+
                     <div className="flex items-center justify-end gap-1.5">
                       {item.status === 'hold' && (
                         <>

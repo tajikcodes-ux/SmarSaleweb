@@ -316,8 +316,45 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#0b57d0] rounded-full animate-spin"></span>
+      <div className="space-y-6 animate-pulse">
+        {/* Top Header Skeleton */}
+        <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="space-y-2">
+            <div className="h-6 bg-slate-200 rounded w-64"></div>
+            <div className="h-4 bg-slate-100 rounded w-48"></div>
+          </div>
+          <div className="h-9 bg-slate-100 rounded-lg w-32"></div>
+        </div>
+
+        {/* 6 Metric Cards Skeletons */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm space-y-3">
+              <div className="flex justify-between items-center">
+                <div className="h-3.5 bg-slate-100 rounded w-20"></div>
+                <div className="w-7 h-7 bg-slate-100 rounded-lg"></div>
+              </div>
+              <div className="h-7 bg-slate-200 rounded w-24"></div>
+              <div className="h-3 bg-slate-100 rounded w-16"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Grid Skeletons */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
+            <div className="h-5 bg-slate-200 rounded w-40 mb-4"></div>
+            <div className="h-56 bg-slate-100 rounded-xl"></div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
+            <div className="h-5 bg-slate-200 rounded w-36 mb-4"></div>
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="h-9 bg-slate-100 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

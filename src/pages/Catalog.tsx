@@ -4,6 +4,7 @@ import {
   Plus, Package, Map, Edit, Trash, Users, ArrowLeftRight, Check, X, ClipboardList,
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle
 } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 import * as XLSX from 'xlsx-js-style';
 
 export default function Catalog() {
@@ -407,11 +408,7 @@ export default function Catalog() {
   };
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#0b57d0] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка каталога и остатков..." />;
   }
 
   return (

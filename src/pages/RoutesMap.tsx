@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -1028,11 +1029,7 @@ export default function RoutesMap() {
   })();
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка GPS-карты и маршрутов..." />;
   }
 
   return (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { DollarSign, Plus, Calendar, User, FileText, Filter, CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -110,11 +111,7 @@ export default function Payments() {
   const totalCollected = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
 
   if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка финансовых операций и оплат..." />;
   }
 
   return (

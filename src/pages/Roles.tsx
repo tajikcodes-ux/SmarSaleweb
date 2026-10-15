@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Plus, Trash, Shield, Info, Check, Save } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 interface Role {
   id: string;
@@ -174,14 +175,7 @@ export default function Roles() {
   };
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-[#f8f9fa] h-full">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-8 h-8 border-4 border-[#0b57d0] border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs font-bold text-[#5f6368]">Загрузка матрицы прав...</span>
-        </div>
-      </div>
-    );
+    return <LogoLoader fullPage label="Загрузка матрицы ролей и прав..." />;
   }
 
   return (

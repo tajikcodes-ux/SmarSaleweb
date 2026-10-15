@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { Shield, Plus, Key, Sparkles, Building, Check, Loader2, Trash2, Edit2, AlertTriangle, X, LogIn } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 interface Company {
   id: string;
@@ -228,9 +229,7 @@ export default function SuperAdmin() {
 
       {/* Main Grid */}
       {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="w-8 h-8 text-[#0b57d0] animate-spin" />
-        </div>
+        <LogoLoader fullPage label="Загрузка суперадмин-панели компаний..." />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {companies.map((c) => (

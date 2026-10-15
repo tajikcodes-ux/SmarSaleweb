@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import LogoLoader from '../components/LogoLoader';
 import { 
   Table as TableIcon, 
   Printer, 
@@ -1525,9 +1526,7 @@ export default function ReportConstructor() {
         {/* LOADING INDICATOR */}
         {loading && (
           <div className="no-print p-12 text-center">
-            <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
-            <div className="text-sm font-semibold text-gray-900">Выполняется OLAP-агрегация...</div>
-            <div className="text-xs text-gray-400 mt-1">Обработка заказов, SKU и клиентской базы</div>
+            <LogoLoader label="Выполняется OLAP-агрегация и расчет отчетов..." />
           </div>
         )}
 
@@ -2342,10 +2341,7 @@ export default function ReportConstructor() {
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {drilldown.loading ? (
-                <div className="p-8 text-center text-gray-400">
-                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
-                  <span className="text-xs">Загрузка накладных...</span>
-                </div>
+                <LogoLoader size={60} label="Загрузка накладных..." />
               ) : drilldown.orders.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs">
                   Нет накладных по данной выборке

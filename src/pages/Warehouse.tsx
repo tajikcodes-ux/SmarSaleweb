@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Warehouse() {
   const [activeTab, setActiveTab] = useState<'management' | 'picking'>('management');
@@ -235,9 +236,7 @@ export default function Warehouse() {
       {activeTab === 'management' && (
         <>
           {loadingWarehouses ? (
-            <div className="flex h-48 items-center justify-center">
-              <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-            </div>
+            <LogoLoader className="py-8" label="Загрузка складов..." />
           ) : warehouses.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-12 text-center text-xs text-[#86868b] italic">
               Склады еще не созданы. Нажмите "Создать склад" для добавления первого склада.
@@ -319,9 +318,7 @@ export default function Warehouse() {
       {activeTab === 'picking' && (
         <div className="grid grid-cols-1 gap-6">
           {loadingOrders ? (
-            <div className="flex h-48 items-center justify-center">
-              <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-            </div>
+            <LogoLoader className="py-8" label="Загрузка очереди на сборку..." />
           ) : orders.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-8 text-center text-xs text-[#86868b] italic">
               Нет заказов на сборку в данный момент.

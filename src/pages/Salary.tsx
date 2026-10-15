@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save } from 'lucide-react';
+import LogoLoader from '../components/LogoLoader';
 
 export default function Salary() {
   const [activeTab, setActiveTab] = useState<'sheet' | 'settings'>('sheet');
@@ -129,11 +130,7 @@ export default function Salary() {
   const targetMetPercentage = calculations.length > 0 ? Math.round((targetMetCount / calculations.length) * 100) : 100;
 
   if (loading && calculations.length === 0 && activeTab === 'sheet') {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="w-8 h-8 border-4 border-slate-200 border-t-[#37352f] rounded-full animate-spin"></span>
-      </div>
-    );
+    return <LogoLoader fullPage label="Расчет заработной платы и KPI..." />;
   }
 
   return (
