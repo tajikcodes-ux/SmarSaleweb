@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 export default function Warehouse() {
   const [activeTab, setActiveTab] = useState<'management' | 'picking'>('management');
@@ -236,7 +235,26 @@ export default function Warehouse() {
       {activeTab === 'management' && (
         <>
           {loadingWarehouses ? (
-            <LogoLoader className="py-8" label="Загрузка складов..." />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                      <div className="h-3 w-48 bg-slate-100 rounded"></div>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <div className="w-6 h-6 rounded bg-slate-100"></div>
+                      <div className="w-6 h-6 rounded bg-slate-100"></div>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                    <div className="h-3 w-28 bg-slate-100 rounded"></div>
+                    <div className="h-5 w-20 bg-slate-100 rounded-full"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : warehouses.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-12 text-center text-xs text-[#86868b] italic">
               Склады еще не созданы. Нажмите "Создать склад" для добавления первого склада.
@@ -318,7 +336,30 @@ export default function Warehouse() {
       {activeTab === 'picking' && (
         <div className="grid grid-cols-1 gap-6">
           {loadingOrders ? (
-            <LogoLoader className="py-8" label="Загрузка очереди на сборку..." />
+            <div className="grid grid-cols-1 gap-6 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-28 bg-slate-200 rounded"></div>
+                        <div className="h-4 w-16 bg-slate-100 rounded"></div>
+                      </div>
+                      <div className="h-3.5 w-44 bg-slate-200 rounded"></div>
+                      <div className="h-2.5 w-32 bg-slate-100 rounded"></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-8 w-24 bg-slate-100 rounded-lg"></div>
+                      <div className="h-8 w-28 bg-slate-200 rounded-lg"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-10 bg-slate-50 border border-slate-100 rounded-lg"></div>
+                    <div className="h-10 bg-slate-50 border border-slate-100 rounded-lg"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : orders.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-8 text-center text-xs text-[#86868b] italic">
               Нет заказов на сборку в данный момент.

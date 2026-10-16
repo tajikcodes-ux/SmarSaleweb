@@ -303,24 +303,73 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border-color) !important;
 }
 
-.dark .bg-slate-100 {
-  background-color: #1a1a1a !important;
+/* Neutral Backgrounds in Dark Mode */
+.dark .bg-slate-200,
+.dark .bg-slate-200\/80,
+.dark .bg-slate-300,
+.dark .bg-gray-200,
+.dark .bg-gray-300 {
+  background-color: #27272a !important;
   border-color: var(--border-color) !important;
 }
 
-.dark .bg-slate-50 {
-  background-color: #050505 !important;
+.dark .bg-slate-100,
+.dark .bg-slate-100\/80,
+.dark .bg-gray-100 {
+  background-color: #1c1c20 !important;
   border-color: var(--border-color) !important;
 }
 
-.dark .bg-slate-50\/50 {
-  background-color: #0c0c0c !important;
+.dark .bg-slate-50,
+.dark .bg-slate-50\/50,
+.dark .bg-slate-50\/40,
+.dark .bg-gray-50,
+.dark .bg-gray-50\/50 {
+  background-color: #111113 !important;
   border-color: var(--border-color) !important;
 }
 
-.dark .bg-slate-50\/40 {
-  background-color: rgba(26, 26, 26, 0.4) !important;
-  border-color: var(--border-color) !important;
+/* ── Universal Skeleton Loading in Dark Mode (Adaptive Shimmer Tokens) ── */
+.dark .animate-pulse .bg-slate-200,
+.dark .animate-pulse .bg-slate-200\/80,
+.dark .animate-pulse .bg-slate-300,
+.dark .animate-pulse .bg-gray-200,
+.dark .animate-pulse .bg-gray-300 {
+  background-color: #27272a !important;
+}
+
+.dark .animate-pulse .bg-slate-100,
+.dark .animate-pulse .bg-slate-100\/80,
+.dark .animate-pulse .bg-gray-100 {
+  background-color: #1c1c20 !important;
+}
+
+.dark .animate-pulse .bg-slate-50,
+.dark .animate-pulse .bg-slate-50\/50,
+.dark .animate-pulse .bg-slate-50\/40,
+.dark .animate-pulse .bg-gray-50,
+.dark .animate-pulse .bg-gray-50\/50 {
+  background-color: #121215 !important;
+}
+
+.dark .animate-pulse .bg-white {
+  background-color: #0a0a0c !important;
+  border-color: #1e1e22 !important;
+}
+
+.dark .animate-pulse .border-slate-100,
+.dark .animate-pulse .border-slate-200,
+.dark .animate-pulse .border-gray-100,
+.dark .animate-pulse .border-gray-200,
+.dark .animate-pulse .border-\[\#e9e9e7\],
+.dark .animate-pulse .border-\[\#e3e3e8\],
+.dark .animate-pulse .border-\[\#f0f0f4\],
+.dark .animate-pulse .border-\[\#f1f1f0\],
+.dark .animate-pulse .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .animate-pulse .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .animate-pulse .divide-\[\#e3e3e8\] > :not([hidden]) ~ :not([hidden]),
+.dark .animate-pulse .divide-\[\#e9e9e7\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e1e22 !important;
 }
 
 .dark input.bg-transparent {

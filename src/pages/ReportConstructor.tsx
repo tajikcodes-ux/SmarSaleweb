@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import LogoLoader from '../components/LogoLoader';
 import { 
   Table as TableIcon, 
   Printer, 
@@ -1525,8 +1524,21 @@ export default function ReportConstructor() {
 
         {/* LOADING INDICATOR */}
         {loading && (
-          <div className="no-print p-12 text-center">
-            <LogoLoader label="Выполняется OLAP-агрегация и расчет отчетов..." />
+          <div className="no-print p-6 animate-pulse space-y-3">
+            <div className="h-9 bg-slate-100 rounded-lg flex items-center px-4 gap-4">
+              <div className="h-4 w-32 bg-slate-200 rounded"></div>
+              <div className="h-4 w-24 bg-slate-200 rounded"></div>
+              <div className="h-4 w-24 bg-slate-200 rounded ml-auto"></div>
+              <div className="h-4 w-28 bg-slate-200 rounded"></div>
+            </div>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-11 bg-white border border-slate-100 rounded-lg flex items-center px-4 gap-4">
+                <div className="h-4 w-44 bg-slate-200 rounded"></div>
+                <div className="h-3.5 w-24 bg-slate-100 rounded"></div>
+                <div className="h-3.5 w-20 bg-slate-100 rounded ml-auto"></div>
+                <div className="h-4 w-28 bg-slate-200 rounded"></div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -2341,7 +2353,18 @@ export default function ReportConstructor() {
 
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {drilldown.loading ? (
-                <LogoLoader size={60} label="Загрузка накладных..." />
+                <div className="space-y-3 animate-pulse">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="p-3.5 rounded-xl border border-gray-100 bg-white space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div className="h-4 w-28 bg-slate-200 rounded"></div>
+                        <div className="h-4 w-20 bg-slate-100 rounded"></div>
+                      </div>
+                      <div className="h-3 w-40 bg-slate-100 rounded"></div>
+                      <div className="h-3 w-24 bg-slate-100 rounded"></div>
+                    </div>
+                  ))}
+                </div>
               ) : drilldown.orders.length === 0 ? (
                 <div className="p-8 text-center text-gray-400 text-xs">
                   Нет накладных по данной выборке

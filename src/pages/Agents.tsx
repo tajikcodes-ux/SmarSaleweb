@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { UserPlus, Shield, Clock, X, Pencil, Trash2, Key, Send } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 export default function Agents() {
   const [users, setUsers] = useState<any[]>([]);
@@ -198,7 +197,35 @@ export default function Agents() {
   };
 
   if (loading) {
-    return <LogoLoader fullPage label="Загрузка торговых представителей..." />;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-center bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div className="space-y-2">
+            <div className="h-5 bg-slate-200 rounded w-48"></div>
+            <div className="h-3 bg-slate-100 rounded w-72"></div>
+          </div>
+          <div className="h-8 bg-slate-200 rounded-lg w-36"></div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4">
+              <div className="flex items-center gap-3 border-b border-[#e9e9e7] pb-3">
+                <div className="w-10 h-10 bg-slate-200 rounded-full"></div>
+                <div className="space-y-1.5 flex-1">
+                  <div className="h-4 bg-slate-200 rounded w-32"></div>
+                  <div className="h-3 bg-slate-100 rounded w-20"></div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-3 bg-slate-100 rounded w-full"></div>
+                <div className="h-3 bg-slate-100 rounded w-4/5"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

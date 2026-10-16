@@ -3,7 +3,6 @@ import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -1029,7 +1028,52 @@ export default function RoutesMap() {
   })();
 
   if (loading) {
-    return <LogoLoader fullPage label="Загрузка GPS-карты и маршрутов..." />;
+    return (
+      <div className="space-y-4 flex flex-col h-[calc(100vh-140px)] animate-pulse">
+        {/* Top Controls Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div className="space-y-2">
+            <div className="h-5 w-52 bg-slate-200 rounded-md"></div>
+            <div className="h-3 w-80 bg-slate-100 rounded-md"></div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="h-9 w-48 bg-slate-100 rounded-lg"></div>
+            <div className="h-9 w-36 bg-slate-100 rounded-lg"></div>
+            <div className="h-9 w-28 bg-slate-200 rounded-lg"></div>
+          </div>
+        </div>
+
+        {/* Map & Sidebar Layout Skeleton */}
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+          {/* Map Area Placeholder */}
+          <div className="flex-1 bg-slate-100 border border-[#e9e9e7] rounded-xl relative overflow-hidden flex items-center justify-center min-h-[400px]">
+            <div className="space-y-2 text-center opacity-60">
+              <div className="w-12 h-12 bg-slate-200 rounded-full mx-auto"></div>
+              <div className="h-3 w-32 bg-slate-200 rounded mx-auto"></div>
+            </div>
+            {/* Mock Map Controls */}
+            <div className="absolute top-4 right-4 space-y-2">
+              <div className="w-8 h-8 bg-white/80 rounded-lg border border-slate-200"></div>
+              <div className="w-8 h-8 bg-white/80 rounded-lg border border-slate-200"></div>
+            </div>
+          </div>
+
+          {/* Right Sidebar List Skeleton */}
+          <div className="w-full lg:w-80 bg-white border border-[#e9e9e7] rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+            <div className="h-4 w-36 bg-slate-200 rounded mb-1"></div>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-3 border border-slate-100 rounded-lg bg-slate-50/50 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-slate-200"></div>
+                  <div className="h-3.5 w-32 bg-slate-200 rounded"></div>
+                </div>
+                <div className="h-2.5 w-44 bg-slate-100 rounded pl-7"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

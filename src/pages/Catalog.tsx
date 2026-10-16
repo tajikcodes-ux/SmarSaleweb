@@ -4,7 +4,6 @@ import {
   Plus, Package, Map, Edit, Trash, Users, ArrowLeftRight, Check, X, ClipboardList,
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle
 } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 import * as XLSX from 'xlsx-js-style';
 
 export default function Catalog() {
@@ -408,7 +407,72 @@ export default function Catalog() {
   };
 
   if (loading) {
-    return <LogoLoader fullPage label="Загрузка каталога и остатков..." />;
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Top Header Card Skeleton */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 border border-[#e3e3e8] rounded-2xl shadow-sm gap-4">
+          <div className="space-y-2">
+            <div className="h-6 w-56 bg-slate-200 rounded-md"></div>
+            <div className="h-3.5 w-80 bg-slate-100 rounded-md"></div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <div className="h-9 w-36 bg-slate-200 rounded-xl"></div>
+            <div className="h-9 w-32 bg-slate-200 rounded-xl"></div>
+            <div className="h-9 w-28 bg-slate-200 rounded-xl"></div>
+            <div className="h-9 w-28 bg-slate-200 rounded-xl"></div>
+          </div>
+        </div>
+
+        {/* Tabs Bar Skeleton */}
+        <div className="flex border-b border-[#e3e3e8] gap-4 pb-2">
+          <div className="h-7 w-32 bg-slate-200 rounded-md"></div>
+          <div className="h-7 w-36 bg-slate-100 rounded-md"></div>
+          <div className="h-7 w-28 bg-slate-100 rounded-md"></div>
+          <div className="h-7 w-28 bg-slate-100 rounded-md"></div>
+          <div className="h-7 w-32 bg-slate-100 rounded-md"></div>
+        </div>
+
+        {/* Filters Bar Skeleton */}
+        <div className="bg-white p-4 border border-[#e3e3e8] rounded-2xl flex flex-wrap gap-3 items-center justify-between">
+          <div className="h-10 w-72 bg-slate-100 rounded-xl"></div>
+          <div className="flex gap-2">
+            <div className="h-10 w-44 bg-slate-100 rounded-xl"></div>
+            <div className="h-10 w-32 bg-slate-100 rounded-xl"></div>
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-[#e3e3e8] rounded-2xl overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-[#f0f0f4] flex gap-4 bg-slate-50/50">
+            <div className="h-4 w-12 bg-slate-200 rounded"></div>
+            <div className="h-4 w-48 bg-slate-200 rounded"></div>
+            <div className="h-4 w-28 bg-slate-200 rounded ml-auto"></div>
+            <div className="h-4 w-24 bg-slate-200 rounded"></div>
+            <div className="h-4 w-20 bg-slate-200 rounded"></div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+              <div key={i} className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100"></div>
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-44 bg-slate-200 rounded"></div>
+                    <div className="h-3 w-28 bg-slate-100 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-6 w-24 bg-slate-100 rounded-full"></div>
+                <div className="h-4 w-20 bg-slate-200 rounded"></div>
+                <div className="h-4 w-16 bg-slate-100 rounded"></div>
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100"></div>
+                  <div className="w-8 h-8 rounded-lg bg-slate-100"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

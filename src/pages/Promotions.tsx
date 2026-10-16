@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Plus, Edit, Trash, Gift, Percent } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 export default function Promotions() {
   const [promotions, setPromotions] = useState<any[]>([]);
@@ -113,7 +112,46 @@ export default function Promotions() {
   };
 
   if (loading) {
-    return <LogoLoader fullPage label="Загрузка маркетинговых акций..." />;
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div className="space-y-2">
+            <div className="h-5 w-48 bg-slate-200 rounded-md"></div>
+            <div className="h-3 w-80 bg-slate-100 rounded-md"></div>
+          </div>
+          <div className="h-8 w-36 bg-slate-200 rounded-lg"></div>
+        </div>
+
+        {/* Grid of Promos Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-36 bg-slate-200 rounded"></div>
+                    <div className="h-2.5 w-20 bg-slate-100 rounded"></div>
+                  </div>
+                  <div className="h-5 w-16 bg-slate-100 rounded-full"></div>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-2">
+                  <div className="h-3 w-40 bg-slate-200 rounded"></div>
+                  <div className="h-3 w-32 bg-slate-100 rounded"></div>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                <div className="h-5 w-20 bg-slate-100 rounded-full"></div>
+                <div className="flex gap-2">
+                  <div className="w-6 h-6 rounded bg-slate-100"></div>
+                  <div className="w-6 h-6 rounded bg-slate-100"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

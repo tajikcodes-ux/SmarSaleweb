@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 export default function Salary() {
   const [activeTab, setActiveTab] = useState<'sheet' | 'settings'>('sheet');
@@ -130,7 +129,65 @@ export default function Salary() {
   const targetMetPercentage = calculations.length > 0 ? Math.round((targetMetCount / calculations.length) * 100) : 100;
 
   if (loading && calculations.length === 0 && activeTab === 'sheet') {
-    return <LogoLoader fullPage label="Расчет заработной платы и KPI..." />;
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Top action panel Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div className="space-y-2">
+            <div className="h-5 w-52 bg-slate-200 rounded-md"></div>
+            <div className="h-3 w-80 bg-slate-100 rounded-md"></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-28 bg-slate-100 rounded-lg"></div>
+            <div className="h-8 w-28 bg-slate-200 rounded-lg"></div>
+          </div>
+        </div>
+
+        {/* Tabs Menu Skeleton */}
+        <div className="flex border-b border-[#e9e9e7] gap-6 pb-2">
+          <div className="h-4 w-36 bg-slate-200 rounded"></div>
+          <div className="h-4 w-40 bg-slate-100 rounded"></div>
+        </div>
+
+        {/* Metric Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm space-y-2">
+              <div className="h-3 w-32 bg-slate-100 rounded"></div>
+              <div className="h-7 w-28 bg-slate-200 rounded"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-[#e9e9e7] rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex gap-6 bg-slate-50/50">
+            <div className="h-3.5 w-32 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-24 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-28 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-28 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-24 bg-slate-200 rounded ml-auto"></div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="p-4 flex items-center justify-between gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-100"></div>
+                  <div className="space-y-1">
+                    <div className="h-3.5 w-32 bg-slate-200 rounded"></div>
+                    <div className="h-2.5 w-20 bg-slate-100 rounded"></div>
+                  </div>
+                </div>
+                <div className="h-4 w-20 bg-slate-100 rounded"></div>
+                <div className="h-4 w-24 bg-slate-100 rounded"></div>
+                <div className="h-4 w-24 bg-slate-100 rounded"></div>
+                <div className="h-5 w-28 bg-slate-200 rounded font-bold"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

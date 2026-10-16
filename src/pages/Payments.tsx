@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { DollarSign, Plus, Calendar, User, FileText, Filter, CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -111,7 +110,79 @@ export default function Payments() {
   const totalCollected = filteredPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
 
   if (loading) {
-    return <LogoLoader fullPage label="Загрузка финансовых операций и оплат..." />;
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex justify-between items-center bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div className="space-y-2">
+            <div className="h-6 w-48 bg-slate-200 rounded-md"></div>
+            <div className="h-3 w-80 bg-slate-100 rounded-md"></div>
+          </div>
+          <div className="h-8 w-32 bg-slate-200 rounded-lg"></div>
+        </div>
+
+        {/* Permissions Toggles Skeleton */}
+        <div className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4">
+          <div className="space-y-2">
+            <div className="h-4 w-72 bg-slate-200 rounded"></div>
+            <div className="h-3 w-96 bg-slate-100 rounded"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+            <div className="h-16 bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center justify-between">
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-44 bg-slate-200 rounded"></div>
+                <div className="h-2.5 w-56 bg-slate-100 rounded"></div>
+              </div>
+              <div className="h-6 w-11 bg-slate-200 rounded-full"></div>
+            </div>
+            <div className="h-16 bg-slate-50 border border-slate-100 rounded-xl p-4 flex items-center justify-between">
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-48 bg-slate-200 rounded"></div>
+                <div className="h-2.5 w-56 bg-slate-100 rounded"></div>
+              </div>
+              <div className="h-6 w-11 bg-slate-200 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters & KPI Summary bar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#e9e9e7] rounded-xl p-4 flex gap-4 items-center shadow-sm md:col-span-2">
+            <div className="h-4 w-16 bg-slate-200 rounded"></div>
+            <div className="h-9 w-64 bg-slate-100 rounded-lg"></div>
+          </div>
+          <div className="bg-white border border-[#e9e9e7] rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div className="space-y-1.5">
+              <div className="h-3 w-28 bg-slate-100 rounded"></div>
+              <div className="h-6 w-32 bg-slate-200 rounded"></div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-slate-100"></div>
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="bg-white border border-[#e9e9e7] rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-slate-100 flex gap-6 bg-slate-50/50">
+            <div className="h-3.5 w-24 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-44 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-28 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-24 bg-slate-200 rounded"></div>
+            <div className="h-3.5 w-24 bg-slate-200 rounded ml-auto"></div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="p-4 flex items-center justify-between gap-6">
+                <div className="h-4 w-28 bg-slate-100 rounded"></div>
+                <div className="h-4 w-48 bg-slate-200 rounded"></div>
+                <div className="h-4 w-24 bg-slate-200 rounded font-bold"></div>
+                <div className="h-6 w-20 bg-slate-100 rounded-full"></div>
+                <div className="h-6 w-24 bg-slate-100 rounded-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

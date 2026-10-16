@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../services/api';
 import { Plus, Edit, Trash, Share2, Instagram, Facebook, Tv, Check, X, ExternalLink, Trophy, Filter, ZoomIn } from 'lucide-react';
-import LogoLoader from '../components/LogoLoader';
 
 // ─── Toast ───────────────────────────────────────────────
 type Toast = { id: number; msg: string; type: 'success' | 'error' };
@@ -256,8 +255,28 @@ export default function SmmPanel() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex-1 flex items-center justify-center bg-white border border-[#e3e3e8] rounded-2xl p-12">
-          <LogoLoader label="Загрузка SMM-модуля..." />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="bg-white border border-[#e3e3e8] rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-slate-100"></div>
+                  <div className="h-5 w-20 bg-slate-100 rounded-full"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-40 bg-slate-200 rounded"></div>
+                  <div className="h-3 w-56 bg-slate-100 rounded"></div>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                <div className="h-4 w-16 bg-slate-100 rounded"></div>
+                <div className="flex gap-2">
+                  <div className="w-6 h-6 rounded bg-slate-100"></div>
+                  <div className="w-6 h-6 rounded bg-slate-100"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : activeTab === 'tasks' ? (
         // ─── Tab 1: Tasks ──────────────────────────────────
