@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../services/api';
-import logoClean from '../assets/logo_clean.png';
+import logoClean from '../assets/logo_clean.webp';
 import {
   LayoutDashboard,
   BarChart3,

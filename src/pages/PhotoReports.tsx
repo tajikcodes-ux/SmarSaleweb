@@ -412,79 +412,79 @@ export default function PhotoReports() {
 
       {/* ── KPI METRICS CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Всего фото</span>
-            <div className="p-2 rounded-xl bg-slate-100 text-slate-600">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Всего фото</span>
+            <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
               <Camera className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">{stats.total}</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white mt-2">{stats.total}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">В базе за все время</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Требуют проверки</span>
-            <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Требуют проверки</span>
+            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
               <Clock className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-blue-600 mt-2">{stats.pending}</div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">{stats.pending}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">Ожидают супервайзера</div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">Одобрено</span>
-            <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Одобрено</span>
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-emerald-600 mt-2">{stats.approved}</div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{stats.approved}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">
             {stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0}% от общего числа
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500">С замечаниями</span>
-            <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
+            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">С замечаниями</span>
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-amber-600 mt-2">{stats.warning}</div>
+          <div className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">{stats.warning}</div>
           <div className="text-[11px] text-slate-400 mt-0.5">Требуют доработки</div>
         </div>
       </div>
 
       {/* ── FILTER TOOLBAR ── */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+      <div className="bg-white dark:bg-[#0a0a0a] p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
         {/* Top row: Date segments & export */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-xl text-xs font-medium">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-xl text-xs font-medium">
             <button
               onClick={() => { setActiveDateFilter('today'); setCustomDate(''); }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'today' && !customDate ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'today' && !customDate ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Сегодня
             </button>
             <button
               onClick={() => { setActiveDateFilter('yesterday'); setCustomDate(''); }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'yesterday' && !customDate ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'yesterday' && !customDate ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Вчера
             </button>
             <button
               onClick={() => { setActiveDateFilter('week'); setCustomDate(''); }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'week' && !customDate ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'week' && !customDate ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               7 дней
             </button>
             <button
               onClick={() => { setActiveDateFilter('all'); setCustomDate(''); }}
-              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'all' && !customDate ? 'bg-white text-slate-900 font-bold shadow-xs' : 'text-slate-600 hover:text-slate-900'}`}
+              className={`px-3 py-1.5 rounded-lg transition-all ${activeDateFilter === 'all' && !customDate ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               Все
             </button>
@@ -495,12 +495,12 @@ export default function PhotoReports() {
               type="date"
               value={customDate}
               onChange={(e) => setCustomDate(e.target.value)}
-              className="text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:border-[#0b57d0]"
+              className="text-xs px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-700 dark:text-slate-200 focus:outline-none focus:border-[#0b57d0]"
             />
 
             <button
               onClick={handleExportExcel}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-700 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition-all flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5 text-slate-500" />
               <span>Экспорт для завода (.xlsx)</span>
@@ -624,7 +624,7 @@ export default function PhotoReports() {
             return (
               <div
                 key={group.key}
-                className="group bg-white rounded-2xl border border-[#e3e3e8] hover:border-blue-400/60 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
+                className="group bg-white dark:bg-[#0a0a0a] rounded-2xl border border-[#e3e3e8] dark:border-slate-800 hover:border-blue-400/60 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col cursor-pointer"
                 onClick={() => openLightbox(currentPhoto, group)}
               >
                 {/* Image & Carousel Container */}
@@ -738,34 +738,34 @@ export default function PhotoReports() {
                 <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between text-xs">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-medium text-slate-700 flex items-center gap-1 truncate">
+                      <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1 truncate">
                         <UserIcon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
                         <span className="truncate">{group.agentName}</span>
                       </span>
-                      <span className="text-[10px] font-bold text-emerald-600 font-mono flex items-center gap-0.5 flex-shrink-0">
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-0.5 flex-shrink-0">
                         <MapPin className="w-3.5 h-3.5" />
                         {group.distanceMeters ? `${group.distanceMeters}м` : 'GPS ✓'}
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-500 truncate" title={group.clientAddress}>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate" title={group.clientAddress}>
                       {group.clientAddress}
                     </p>
 
                     {/* Show supervisor remark if any photo has a comment */}
                     {group.photos.some(p => p.comment) && (
-                      <div className="p-2 rounded-lg bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 line-clamp-2 leading-snug flex items-start gap-1.5">
-                        <MessageSquare className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div className="p-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/50 text-[11px] text-amber-900 dark:text-amber-200 line-clamp-2 leading-snug flex items-start gap-1.5">
+                        <MessageSquare className="w-3 h-3 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                         <span>{group.photos.find(p => p.comment)?.comment}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                    <span className="text-blue-700 font-medium truncate">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold truncate">
                       {group.orderInfo ? group.orderInfo.split('•')[0] : 'Без заказа'}
                     </span>
-                    <strong className="font-mono text-slate-800 flex-shrink-0">
+                    <strong className="font-mono text-slate-800 dark:text-slate-200 flex-shrink-0">
                       {group.orderInfo ? group.orderInfo.split('•')[1] || '' : ''}
                     </strong>
                   </div>

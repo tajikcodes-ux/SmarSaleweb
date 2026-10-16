@@ -202,6 +202,11 @@
       transform: scale(1.04) translateY(-24px);
     }
 
+    .slide.leave-back {
+      opacity: 0;
+      transform: scale(0.96) translateY(24px);
+    }
+
     /* Morphing Elements Stagger Animation */
     .slide.active .morph-1 { animation: morphIn 0.45s 0.05s cubic-bezier(0.16, 1, 0.3, 1) both; }
     .slide.active .morph-2 { animation: morphIn 0.45s 0.10s cubic-bezier(0.16, 1, 0.3, 1) both; }
@@ -1745,17 +1750,23 @@
     function goToSlide(newIdx) {
       if (newIdx < 0 || newIdx >= totalSlides || newIdx === currentSlide) return;
 
-      const prevSlide = slides[currentSlide];
-      const nextSlide = slides[newIdx];
+      const currentEl = slides[currentSlide];
+      const targetEl = slides[newIdx];
 
-      prevSlide.classList.remove('active');
-      prevSlide.classList.add(newIdx > currentSlide ? 'prev' : '');
+      currentEl.classList.remove('active');
+      if (newIdx > currentSlide) {
+        currentEl.classList.add('prev');
+        setTimeout(() => {
+          currentEl.classList.remove('prev');
+        }, 450);
+      } else {
+        currentEl.classList.add('leave-back');
+        setTimeout(() => {
+          currentEl.classList.remove('leave-back');
+        }, 450);
+      }
 
-      setTimeout(() => {
-        prevSlide.classList.remove('prev');
-      }, 450);
-
-      nextSlide.classList.add('active');
+      targetEl.classList.add('active');
       ambientGlow.style.background = glowPalettes[newIdx] || glowPalettes[0];
 
       currentSlide = newIdx;
