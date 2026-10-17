@@ -565,17 +565,17 @@ export default function RoutesMap() {
       maxZoom: 19,
     });
 
-    // Add default reliable high-speed layer (OpenStreetMap Standard - 100% stable & 0 watermarks)
-    osmLayer.addTo(map);
+    // Add default detailed layer (OSM Humanitarian - vibrant, high detail)
+    hotLayer.addTo(map);
 
     // Layer switcher control (top-right)
     L.control.layers(
       {
+        '🎨 Детализированная (OSM HOT)': hotLayer,
         '🌐 Стандартная карта (OpenStreetMap)': osmLayer,
         '🗺️ Топографическая (Esri Topo)': topoLayer,
         '🤍 Светлый минимализм (Esri Light)': lightGrayLayer,
         '🏙️ Городские улицы (Esri Street)': streetLayer,
-        '🎨 Детализированная (OSM HOT)': hotLayer,
         '🛰️ Спутниковая карта (Satellite)': satelliteLayer,
       },
       undefined,

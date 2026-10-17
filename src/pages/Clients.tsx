@@ -230,8 +230,8 @@ export default function Clients() {
       const map = L.map('client-select-map').setView([latitude, longitude], 13);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
+      L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors, Tiles courtesy of Humanitarian OpenStreetMap Team'
       }).addTo(map);
 
       const marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
