@@ -3,6 +3,7 @@ import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass } from 'lucide-react';
+import MapLibreView from '../components/MapLibreView';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -79,6 +80,11 @@ export default function RoutesMap() {
   const [timelineTime, setTimelineTime] = useState(720); // 720 mins = 12:00
   const [isPlayingTimeline, setIsPlayingTimeline] = useState(false);
   const [timelineSpeed, setTimelineSpeed] = useState(1);
+  const [mapEngine, setMapEngine] = useState<'maplibre' | 'leaflet'>(() => {
+    return (localStorage.getItem('smartsale_map_engine') as 'maplibre' | 'leaflet') || 'maplibre';
+  });
+  const [is3D, setIs3D] = useState(true);
+  const [searchFocusedPoint, setSearchFocusedPoint] = useState<{ lat: number; lon: number; name?: string } | null>(null);
 
   // Timeline playback timer
   useEffect(() => {
@@ -464,11 +470,13 @@ export default function RoutesMap() {
   const handleSelectSearchResult = (item: any) => {
     setShowMapSearchDropdown(false);
     setMapSearchQuery(item.name);
-    if (!mapRef.current) return;
 
     const lat = item.lat || item.latitude;
     const lon = item.lon || item.longitude;
     if (!lat || !lon) return;
+
+    setSearchFocusedPoint({ lat, lon, name: item.name });
+    if (!mapRef.current) return;
 
     mapRef.current.flyTo([lat, lon], 17, { duration: 1.2 });
 
@@ -1643,9 +1651,42 @@ export default function RoutesMap() {
 
       {/* Main interactive split view */}
       <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
-        {/* Left column: Leaflet map view */}
+        {/* Left column: Map view (Dual Engine: MapLibre 3D + Leaflet 2D) */}
         <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
-          <div ref={mapContainerRef} className="w-full h-full min-h-[300px] z-0" />
+          {/* MapLibre 3D Vector Engine */}
+          <div
+            className="w-full h-full absolute inset-0 z-0"
+            style={{ display: mapEngine === 'maplibre' ? 'block' : 'none' }}
+          >
+            <MapLibreView
+              clients={clients}
+              agents={agents}
+              routes={routes}
+              selectedAgentId={selectedAgentId}
+              onSelectAgent={setSelectedAgentId}
+              onAssignClient={handleAssignClientDirectly}
+              historyTrack={historyTrack}
+              timelineTime={timelineTime}
+              showRoadRoutes={showRoadRoutes}
+              showLiveAgents={showLiveAgents}
+              showClients={showClients}
+              showLandmarks={showLandmarks}
+              showMarketLeads={showMarketLeads}
+              marketLeads={marketLeads}
+              onConvertLead={handleConvertLead}
+              mapFilter={mapFilter}
+              is3D={is3D}
+              onToggle3D={() => setIs3D((prev) => !prev)}
+              searchFocusedPoint={searchFocusedPoint}
+            />
+          </div>
+
+          {/* Leaflet 2D Raster Engine */}
+          <div
+            ref={mapContainerRef}
+            className="w-full h-full min-h-[300px] z-0"
+            style={{ display: mapEngine === 'leaflet' ? 'block' : 'none' }}
+          />
 
           {/* Top Center Floating Search Bar & GIS Layer Toggles */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex flex-col items-center gap-2 w-[92%] sm:w-auto max-w-lg pointer-events-auto">
@@ -1705,6 +1746,46 @@ export default function RoutesMap() {
 
             {/* Layer Toggles Pills */}
             <div className="flex flex-wrap items-center justify-center gap-1 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-1 shadow-lg text-[11px]">
+              {/* Dual-Engine Switcher */}
+              <button
+                type="button"
+                id="btn-engine-maplibre"
+                onClick={() => {
+                  setMapEngine('maplibre');
+                  localStorage.setItem('smartsale_map_engine', 'maplibre');
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  mapEngine === 'maplibre'
+                    ? 'bg-[#0071e3] text-white font-bold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Векторный GPU-движок: 3D-дворы, плавный зум и нулевой лаг"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>3D Вектор</span>
+              </button>
+
+              <button
+                type="button"
+                id="btn-engine-leaflet"
+                onClick={() => {
+                  setMapEngine('leaflet');
+                  localStorage.setItem('smartsale_map_engine', 'leaflet');
+                  setTimeout(() => mapRef.current?.invalidateSize(), 50);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  mapEngine === 'leaflet'
+                    ? 'bg-[#0071e3] text-white font-bold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Растровый движок Leaflet"
+              >
+                <Layers className="w-3 h-3" />
+                <span>Растр 2D</span>
+              </button>
+
+              <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
               <button
                 type="button"
                 onClick={() => setShowRoadRoutes(!showRoadRoutes)}
