@@ -44,8 +44,8 @@ export default function RoutesMap() {
   const [showRoadRoutes, setShowRoadRoutes] = useState(true);
   const [showLiveAgents, setShowLiveAgents] = useState(true);
   const [showClients, setShowClients] = useState(true);
-  const [showLandmarks, setShowLandmarks] = useState(true);
-  const showLandmarksRef = useRef(true);
+  const [showLandmarks, setShowLandmarks] = useState(false);
+  const showLandmarksRef = useRef(false);
   const [showMarketLeads, setShowMarketLeads] = useState(false);
   const showMarketLeadsRef = useRef(false);
   const [leadsCategory, setLeadsCategory] = useState<'ALL' | 'SHOP' | 'CAFE' | 'PHARMACY'>('ALL');
