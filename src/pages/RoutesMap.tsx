@@ -102,22 +102,28 @@ export default function RoutesMap() {
 
   const getAgentStatusInfo = (agent: any) => {
     if (agent.onShift === false) {
-      return { isOnline: false, text: 'Смена закрыта', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
+      return { isOnline: false, text: 'Смена закрыта', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' };
     }
     if (!agent.recordedAt) {
-      return { isOnline: false, text: 'Нет GPS данных', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200' };
+      return { isOnline: false, text: 'Нет GPS данных', color: 'bg-slate-400', badgeClass: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' };
     }
     const lastTime = new Date(agent.recordedAt).getTime();
     const now = new Date().getTime();
     const diffMins = Math.floor((now - lastTime) / (1000 * 60));
 
     if (diffMins < 10) {
-      return { isOnline: true, text: `В сети (${diffMins === 0 ? 'сейчас' : diffMins + ' мин назад'})`, color: 'bg-emerald-500', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      return { isOnline: true, text: `В сети (${diffMins === 0 ? 'сейчас' : diffMins + ' мин назад'})`, color: 'bg-emerald-500', badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800' };
     } else if (diffMins < 60) {
-      return { isOnline: false, text: `Вне сети (${diffMins} мин)`, color: 'bg-amber-500', badgeClass: 'bg-amber-50 text-amber-800 border-amber-200' };
+      return { isOnline: false, text: `Вне сети (${diffMins} мин)`, color: 'bg-amber-500', badgeClass: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800' };
     } else {
       const diffHours = Math.floor(diffMins / 60);
-      return { isOnline: false, text: `Вне сети (${diffHours} ч назад)`, color: 'bg-rose-500', badgeClass: 'bg-rose-50 text-rose-700 border-rose-200' };
+      const diffDays = Math.floor(diffHours / 24);
+      return { 
+        isOnline: false, 
+        text: diffDays > 0 ? `Вне сети (${diffDays} дн назад)` : `Вне сети (${diffHours} ч назад)`, 
+        color: 'bg-rose-500', 
+        badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800' 
+      };
     }
   };
 
@@ -703,20 +709,6 @@ export default function RoutesMap() {
       historyPathRef.current = null;
     }
 
-    const agentIcon = L.divIcon({
-      className: 'custom-agent-icon',
-      html: `<div class="relative w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-full border-2 border-white shadow-md font-bold text-xs"><span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40 animate-ping"></span>A</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
-    });
-
-    const activeAgentIcon = L.divIcon({
-      className: 'custom-agent-active-icon',
-      html: `<div class="relative w-9 h-9 flex items-center justify-center bg-[#0071e3] text-white rounded-full border-3 border-white shadow-lg font-bold text-xs"><span class="absolute inline-flex h-full w-full rounded-full bg-blue-300 opacity-60 animate-ping"></span>★</div>`,
-      iconSize: [36, 36],
-      iconAnchor: [18, 18],
-    });
-
     const routeClientIcon = L.divIcon({
       className: 'custom-route-client-icon',
       html: `<div class="w-7 h-7 bg-amber-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white font-bold text-[10px]">📍</div>`,
@@ -818,15 +810,55 @@ export default function RoutesMap() {
         }
 
         const isSelected = agent.userId === selectedAgentId;
-        L.marker([agent.latitude, agent.longitude], { icon: isSelected ? activeAgentIcon : agentIcon })
+        const statusInfo = getAgentStatusInfo(agent);
+        const roleInfo = getAgentRoleLabel(agent);
+
+        // Filter by online/offline status if set
+        if (agentStatusFilter === 'ONLINE' && !statusInfo.isOnline) return;
+        if (agentStatusFilter === 'OFFLINE' && statusInfo.isOnline) return;
+
+        // Dynamic marker styling based on online / offline / closed shift status
+        const markerBg = isSelected ? 'bg-[#0071e3]' : statusInfo.color;
+        const pingHtml = statusInfo.isOnline 
+          ? `<span class="absolute inline-flex h-full w-full rounded-full ${isSelected ? 'bg-blue-300 opacity-60' : 'bg-emerald-400 opacity-40'} animate-ping"></span>` 
+          : '';
+
+        const dynamicAgentIcon = L.divIcon({
+          className: 'custom-agent-dynamic-icon',
+          html: `
+            <div class="relative w-8 h-8 flex items-center justify-center ${markerBg} text-white rounded-full ${isSelected ? 'border-3 border-white shadow-lg' : 'border-2 border-white shadow-md'} font-bold text-xs">
+              ${pingHtml}
+              ${isSelected ? '★' : 'A'}
+            </div>
+          `,
+          iconSize: isSelected ? [36, 36] : [32, 32],
+          iconAnchor: isSelected ? [18, 18] : [16, 16],
+        });
+
+        const speedVal = agent.speed !== null && agent.speed !== undefined ? Math.round(Number(agent.speed)) : 0;
+        const recordedDateStr = agent.recordedAt 
+          ? new Date(agent.recordedAt).toLocaleString('ru-RU', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              hour: '2-digit', 
+              minute: '2-digit',
+              timeZone: 'Asia/Dushanbe'
+            }) 
+          : 'Нет данных';
+
+        L.marker([agent.latitude, agent.longitude], { icon: dynamicAgentIcon })
           .addTo(markersGroup)
           .bindPopup(`
-            <div class="text-[#37352f] font-sans p-0.5">
-              <h4 class="font-bold text-xs">${agent.firstName} ${agent.lastName}</h4>
-              <p class="text-[10px] text-slate-400 mt-0.5">Торговый представитель (В сети)</p>
-              <div class="space-y-0.5 text-[10px] mt-1">
+            <div class="text-[#37352f] font-sans p-1 min-w-[200px]">
+              <div class="flex items-center justify-between gap-1 mb-1.5 border-b border-slate-100 pb-1">
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${roleInfo.badgeClass}">${roleInfo.label}</span>
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${statusInfo.badgeClass}">${statusInfo.text}</span>
+              </div>
+              <h4 class="font-bold text-xs text-slate-900">${agent.firstName} ${agent.lastName}</h4>
+              <div class="space-y-0.5 text-[10px] mt-2 text-slate-600">
                 <div><strong>Батарея:</strong> ${agent.batteryLevel || 100}%</div>
-                <div><strong>Скорость:</strong> ${agent.speed || 0} км/ч</div>
+                <div><strong>Скорость:</strong> ${speedVal} км/ч</div>
+                <div><strong>GPS фиксация:</strong> ${recordedDateStr}</div>
               </div>
             </div>
           `);
@@ -1244,7 +1276,7 @@ export default function RoutesMap() {
     }
 
     // Auto-fit bounds disabled to show all Tajikistan by default
-  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes]);
+  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes, agentStatusFilter]);
 
   const selectedAgentDetails = agents.find((a) => a.userId === selectedAgentId);
   const selectedAgentRoutes = routes
