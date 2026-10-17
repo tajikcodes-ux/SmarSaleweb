@@ -699,5 +699,81 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(30, 58, 138, 0.25) !important;
 }
 
+/* Professional GIS Map Styles: House Numbers (Text Halo) & POI Badges */
+.house-number-marker {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #1e293b; /* Глубокий графитово-синий */
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  /* Белая обводка букв (Text Halo) */
+  text-shadow: 
+    -1.5px -1.5px 0 #ffffff,
+     1.5px -1.5px 0 #ffffff,
+    -1.5px  1.5px 0 #ffffff,
+     1.5px  1.5px 0 #ffffff,
+     0px -1.5px 0 #ffffff,
+     0px  1.5px 0 #ffffff,
+    -1.5px  0px 0 #ffffff,
+     1.5px  0px 0 #ffffff,
+     0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.house-number-marker:hover {
+  color: #0284c7;
+  transform: scale(1.15);
+  transition: transform 0.1s ease;
+}
+
+.poi-badge-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.poi-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  font-size: 13px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.poi-badge:hover {
+  transform: scale(1.18);
+}
+.poi-shop      { background: linear-gradient(135deg, #f59e0b, #d97706); } /* Торговля / Маркеты */
+.poi-medical   { background: linear-gradient(135deg, #0284c7, #0369a1); } /* Больницы / Аптеки */
+.poi-food      { background: linear-gradient(135deg, #ef4444, #b91c1c); } /* Кафе / Общепит */
+.poi-transport { background: linear-gradient(135deg, #6366f1, #4338ca); } /* Остановки / Транспорт */
+
+.poi-caption {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0f172a;
+  text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+  margin-top: 2px;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 
 

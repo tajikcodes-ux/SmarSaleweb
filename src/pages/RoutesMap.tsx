@@ -17,6 +17,9 @@ export default function RoutesMap() {
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
   const leadsGroupRef = useRef<L.LayerGroup | null>(null);
+  const housesLayerRef = useRef<L.LayerGroup | null>(null);
+  const poiLayerRef = useRef<L.LayerGroup | null>(null);
+  const viewportFetchTimeoutRef = useRef<any>(null);
   const polylineRef = useRef<L.Polyline | null>(null);
   const historyPathRef = useRef<L.Polyline | null>(null);
   const searchMarkerRef = useRef<L.Marker | null>(null);
@@ -506,6 +509,137 @@ export default function RoutesMap() {
     searchMarkerRef.current = marker;
   };
 
+  // Zoom Culling & Viewport GIS loading for POI and House Numbers
+  const refreshViewportGIS = () => {
+    if (!mapRef.current) return;
+    const zoom = mapRef.current.getZoom();
+
+    if (viewportFetchTimeoutRef.current) {
+      clearTimeout(viewportFetchTimeoutRef.current);
+    }
+
+    // Zoom < 14: clear houses and POIs immediately (zero-lag)
+    if (zoom < 14.0) {
+      housesLayerRef.current?.clearLayers();
+      poiLayerRef.current?.clearLayers();
+      return;
+    }
+
+    // Zoom 14.0 - 16.4: clear houses immediately, keep only POIs
+    if (zoom < 16.5) {
+      housesLayerRef.current?.clearLayers();
+    }
+
+    viewportFetchTimeoutRef.current = setTimeout(async () => {
+      if (!mapRef.current) return;
+      const currentZoom = mapRef.current.getZoom();
+      if (currentZoom < 14.0) return;
+
+      const bounds = mapRef.current.getBounds();
+      try {
+        const res = await api.get('/geo/viewport-landmarks', {
+          params: {
+            minLat: bounds.getSouth(),
+            minLon: bounds.getWest(),
+            maxLat: bounds.getNorth(),
+            maxLon: bounds.getEast(),
+            zoom: currentZoom,
+          },
+        });
+
+        const { poi = [], houses = [] } = res.data || {};
+
+        // 1. Render POIs (Zoom >= 14.0)
+        if (poiLayerRef.current) {
+          poiLayerRef.current.clearLayers();
+          poi.forEach((item: any) => {
+            const typeClass = item.type || 'shop';
+            const showCaption = currentZoom >= 15.5;
+
+            const poiIcon = L.divIcon({
+              className: 'poi-badge-container',
+              html: `
+                <div class="poi-badge poi-${typeClass}">
+                  <span>${item.icon || '📍'}</span>
+                </div>
+                ${showCaption ? `<span class="poi-caption">${item.name}</span>` : ''}
+              `,
+              iconSize: [90, 44],
+              iconAnchor: [45, 13],
+            });
+
+            const leadPayload = {
+              name: item.name,
+              address: `${item.city || 'Худжанд'}, ${item.name}`,
+              latitude: item.lat,
+              longitude: item.lon,
+              category: item.category || 'POI',
+            };
+            const encodedLead = encodeURIComponent(JSON.stringify(leadPayload));
+
+            L.marker([item.lat, item.lon], { icon: poiIcon })
+              .addTo(poiLayerRef.current!)
+              .bindPopup(`
+                <div class="text-[#37352f] font-sans p-1.5 min-w-[200px]">
+                  <div class="flex items-center gap-1.5 mb-1">
+                    <span class="text-base">${item.icon || '📍'}</span>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded text-white poi-${typeClass}">${item.category}</span>
+                  </div>
+                  <h4 class="font-bold text-xs text-slate-900">${item.name}</h4>
+                  <p class="text-[10px] text-slate-500 mt-0.5">${item.city || 'Согд'}</p>
+                  <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                    <button onclick="window.convertLeadFromMap('${encodedLead}')" style="width: 100%; padding: 6px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                      ⚡ Сделать клиентом
+                    </button>
+                  </div>
+                </div>
+              `);
+          });
+        }
+
+        // 2. Render House Numbers (Text Halo effect, Zoom >= 16.5)
+        if (housesLayerRef.current) {
+          housesLayerRef.current.clearLayers();
+          if (currentZoom >= 16.5 && houses.length > 0) {
+            houses.forEach((h: any) => {
+              const houseIcon = L.divIcon({
+                className: 'house-number-marker',
+                html: `<span>${h.cleanNumber}</span>`,
+                iconSize: [30, 16],
+                iconAnchor: [15, 8],
+              });
+
+              const housePayload = {
+                name: h.name,
+                address: h.name,
+                latitude: h.lat,
+                longitude: h.lon,
+                category: 'HOUSE',
+              };
+              const encodedHouse = encodeURIComponent(JSON.stringify(housePayload));
+
+              L.marker([h.lat, h.lon], { icon: houseIcon })
+                .addTo(housesLayerRef.current!)
+                .bindPopup(`
+                  <div class="text-[#37352f] font-sans p-1.5 min-w-[190px]">
+                    <div class="text-[10px] font-bold text-slate-400 mb-0.5 uppercase tracking-wide">Номер дома</div>
+                    <h4 class="font-bold text-xs text-slate-900">${h.name}</h4>
+                    <div class="mt-2.5 pt-2 border-t border-slate-100">
+                      <button onclick="window.convertLeadFromMap('${encodedHouse}')" style="width: 100%; padding: 6px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+                        ⚡ Сделать клиентом
+                      </button>
+                    </div>
+                  </div>
+                `);
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load viewport landmarks', err);
+      }
+    }, 200);
+  };
+
   useEffect(() => {
     loadData();
   }, [date]);
@@ -544,6 +678,13 @@ export default function RoutesMap() {
     const map = L.map(mapContainerRef.current).setView([centerLat, centerLon], 7);
     mapRef.current = map;
 
+    // Tile Layer 0: CartoDB Positron (Neutral, pastel light aesthetic, maxZoom 20)
+    const positronLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; CartoDB &copy; OpenStreetMap',
+      maxZoom: 20,
+      subdomains: 'abcd',
+    });
+
     // Tile Layer 1: OpenStreetMap Humanitarian (Vibrant, high detail, 0 watermarks)
     const hotLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles courtesy of <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>',
@@ -580,16 +721,17 @@ export default function RoutesMap() {
       maxZoom: 19,
     });
 
-    // Add default detailed layer (OSM Humanitarian - vibrant, high detail)
-    hotLayer.addTo(map);
+    // Add default pastel light layer (CartoDB Positron - maxZoom 20, zero-clutter)
+    positronLayer.addTo(map);
 
     // Layer switcher control (top-right)
     L.control.layers(
       {
+        '🤍 Минимализм (CartoDB Positron)': positronLayer,
         '🎨 Детализированная (OSM HOT)': hotLayer,
+        '🏢 Светло-серая (Esri Light)': lightGrayLayer,
         '🌐 Стандартная карта (OpenStreetMap)': osmLayer,
         '🗺️ Топографическая (Esri Topo)': topoLayer,
-        '🤍 Светлый минимализм (Esri Light)': lightGrayLayer,
         '🏙️ Городские улицы (Esri Street)': streetLayer,
         '🛰️ Спутниковая карта (Satellite)': satelliteLayer,
       },
@@ -603,7 +745,14 @@ export default function RoutesMap() {
     const leadsGroup = L.layerGroup().addTo(map);
     leadsGroupRef.current = leadsGroup;
 
+    const poiLayer = L.layerGroup().addTo(map);
+    poiLayerRef.current = poiLayer;
+
+    const housesLayer = L.layerGroup().addTo(map);
+    housesLayerRef.current = housesLayer;
+
     map.on('moveend', () => {
+      refreshViewportGIS();
       if (showMarketLeadsRef.current) {
         if (leadsFetchTimeoutRef.current) clearTimeout(leadsFetchTimeoutRef.current);
         leadsFetchTimeoutRef.current = setTimeout(() => {
@@ -612,7 +761,17 @@ export default function RoutesMap() {
       }
     });
 
+    map.on('zoomend', () => {
+      refreshViewportGIS();
+    });
+
+    // Initial check on load
+    setTimeout(() => {
+      refreshViewportGIS();
+    }, 400);
+
     return () => {
+      if (viewportFetchTimeoutRef.current) clearTimeout(viewportFetchTimeoutRef.current);
       map.remove();
       mapRef.current = null;
     };
