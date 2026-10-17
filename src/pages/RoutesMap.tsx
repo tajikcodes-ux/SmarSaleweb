@@ -442,8 +442,9 @@ export default function RoutesMap() {
         const res = await api.get('/geo/suggest', {
           params: { q: mapSearchQuery.trim(), limit: 6 },
         });
-        setMapSearchResults(res.data?.suggestions || []);
-        setShowMapSearchDropdown(true);
+        const results = Array.isArray(res.data) ? res.data : (res.data?.suggestions || []);
+        setMapSearchResults(results);
+        setShowMapSearchDropdown(results.length > 0);
       } catch (err) {
         console.error('Map search failed', err);
       } finally {
@@ -460,8 +461,9 @@ export default function RoutesMap() {
     setMapSearchQuery(item.name);
     if (!mapRef.current) return;
 
-    const lat = item.latitude;
-    const lon = item.longitude;
+    const lat = item.lat || item.latitude;
+    const lon = item.lon || item.longitude;
+    if (!lat || !lon) return;
 
     mapRef.current.flyTo([lat, lon], 17, { duration: 1.2 });
 
@@ -471,21 +473,28 @@ export default function RoutesMap() {
 
     const icon = L.divIcon({
       className: 'custom-search-pin',
-      html: `<div class="relative flex items-center justify-center"><div class="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold shadow-xl border-2 border-white animate-bounce text-xs">📍</div></div>`,
+      html: `<div class="relative flex items-center justify-center"><div class="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold shadow-xl border-2 border-white animate-bounce text-xs">${item.icon || '📍'}</div></div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
 
     const marker = L.marker([lat, lon], { icon }).addTo(mapRef.current);
-    const encodedItem = encodeURIComponent(JSON.stringify(item));
+    const leadPayload = {
+      name: item.name,
+      address: `${item.city || 'Худжанд'}, ${item.name}`,
+      latitude: lat,
+      longitude: lon,
+      category: item.category || 'OTHER',
+    };
+    const encodedItem = encodeURIComponent(JSON.stringify(leadPayload));
 
     marker.bindPopup(`
       <div class="text-[#37352f] font-sans p-1.5 min-w-[200px]">
         <div class="flex items-center gap-1 text-[10px] text-purple-600 font-bold mb-1">
-          <span>📍 Найдено в национальной базе Согда</span>
+          <span>📍 Найдено в базе Согда (${item.city || 'Согд'})</span>
         </div>
         <h4 class="font-bold text-xs text-slate-900">${item.name}</h4>
-        <p class="text-[10px] text-slate-500 mt-0.5">${item.address || ''}</p>
+        <p class="text-[10px] text-slate-500 mt-0.5">${item.category || ''}</p>
         <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
           <button onclick="window.convertLeadFromMap('${encodedItem}')" style="width: 100%; padding: 6px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
             ⚡ Сделать клиентом
@@ -1485,12 +1494,14 @@ export default function RoutesMap() {
                       onClick={() => handleSelectSearchResult(item)}
                       className="w-full text-left px-3 py-2 hover:bg-blue-50/70 dark:hover:bg-blue-950/40 transition-colors flex items-center justify-between gap-2 text-xs"
                     >
-                      <div className="min-w-0">
-                        <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">
-                          {item.category === 'SHOP' ? '🏪 ' : item.category === 'CAFE' ? '☕ ' : item.category === 'PHARMACY' ? '💊 ' : '📍 '}
-                          {item.name}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm shrink-0">{item.icon || '📍'}</span>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                            {item.name}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate">{item.category || item.layer || ''}</div>
                         </div>
-                        <div className="text-[10px] text-slate-500 truncate">{item.address || ''}</div>
                       </div>
                       <span className="shrink-0 text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">
                         {item.city || 'Согд'}
