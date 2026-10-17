@@ -73,7 +73,7 @@ export default function RoutesMap() {
   const [optimizing, setOptimizing] = useState(false);
 
   const [mobileTab, setMobileTab] = useState<'map' | 'list'>('map');
-  const [showLegend, setShowLegend] = useState(true);
+  const [showLegend, setShowLegend] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
