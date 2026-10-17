@@ -548,10 +548,10 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Leaflet Map elements override for Dark Mode */
 .dark .leaflet-container {
-  background: #0d0d0d !important;
+  background: #f1f5f9 !important;
 }
 .dark .leaflet-tile {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+  filter: none !important;
 }
 .dark .leaflet-bar a {
   background-color: #1a1a1a !important;
@@ -731,30 +731,32 @@ h1, h2, h3, h4, h5, h6 {
 
 .poi-badge-container {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  position: relative;
 }
 
 .poi-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-  font-size: 13px;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  font-size: 11px;
   color: #ffffff;
   cursor: pointer;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.poi-badge:hover {
-  transform: scale(1.18);
+.poi-badge-container:hover .poi-badge {
+  transform: scale(1.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 .poi-shop      { background: linear-gradient(135deg, #f59e0b, #d97706); } /* Торговля / Маркеты */
 .poi-medical   { background: linear-gradient(135deg, #0284c7, #0369a1); } /* Больницы / Аптеки */
@@ -762,16 +764,26 @@ h1, h2, h3, h4, h5, h6 {
 .poi-transport { background: linear-gradient(135deg, #6366f1, #4338ca); } /* Остановки / Транспорт */
 
 .poi-caption {
-  font-size: 10.5px;
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  font-size: 11px;
   font-weight: 700;
   color: #0f172a;
-  text-shadow: -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
-  margin-top: 2px;
-  text-align: center;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 3px 8px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   white-space: nowrap;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  pointer-events: none;
+  z-index: 9999;
+}
+.poi-badge-container:hover .poi-caption {
+  display: block;
 }
 
 

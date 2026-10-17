@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -39,6 +39,8 @@ export default function RoutesMap() {
   const [showRoadRoutes, setShowRoadRoutes] = useState(true);
   const [showLiveAgents, setShowLiveAgents] = useState(true);
   const [showClients, setShowClients] = useState(true);
+  const [showLandmarks, setShowLandmarks] = useState(true);
+  const showLandmarksRef = useRef(true);
   const [showMarketLeads, setShowMarketLeads] = useState(false);
   const showMarketLeadsRef = useRef(false);
   const [leadsCategory, setLeadsCategory] = useState<'ALL' | 'SHOP' | 'CAFE' | 'PHARMACY'>('ALL');
@@ -518,22 +520,28 @@ export default function RoutesMap() {
       clearTimeout(viewportFetchTimeoutRef.current);
     }
 
-    // Zoom < 14: clear houses and POIs immediately (zero-lag)
-    if (zoom < 14.0) {
+    if (!showLandmarksRef.current) {
       housesLayerRef.current?.clearLayers();
       poiLayerRef.current?.clearLayers();
       return;
     }
 
-    // Zoom 14.0 - 16.4: clear houses immediately, keep only POIs
-    if (zoom < 16.5) {
+    // Zoom < 14.5: clear houses and POIs immediately (zero-lag)
+    if (zoom < 14.5) {
+      housesLayerRef.current?.clearLayers();
+      poiLayerRef.current?.clearLayers();
+      return;
+    }
+
+    // Zoom 14.5 - 16.7: clear houses immediately, keep only POIs
+    if (zoom < 16.8) {
       housesLayerRef.current?.clearLayers();
     }
 
     viewportFetchTimeoutRef.current = setTimeout(async () => {
-      if (!mapRef.current) return;
+      if (!mapRef.current || !showLandmarksRef.current) return;
       const currentZoom = mapRef.current.getZoom();
-      if (currentZoom < 14.0) return;
+      if (currentZoom < 14.5) return;
 
       const bounds = mapRef.current.getBounds();
       try {
@@ -549,12 +557,21 @@ export default function RoutesMap() {
 
         const { poi = [], houses = [] } = res.data || {};
 
-        // 1. Render POIs (Zoom >= 14.0)
+        // 1. Render POIs (Zoom >= 14.5) with pixel collision avoidance
         if (poiLayerRef.current) {
           poiLayerRef.current.clearLayers();
+          const placedPixels: { x: number; y: number }[] = [];
+
           poi.forEach((item: any) => {
+            if (!mapRef.current) return;
+            const pt = mapRef.current.latLngToContainerPoint([item.lat, item.lon]);
+            // Avoid badge overlap: minimum 36px distance on screen
+            if (placedPixels.some((p) => Math.hypot(p.x - pt.x, p.y - pt.y) < 36)) {
+              return;
+            }
+            placedPixels.push(pt);
+
             const typeClass = item.type || 'shop';
-            const showCaption = currentZoom >= 15.5;
 
             const poiIcon = L.divIcon({
               className: 'poi-badge-container',
@@ -562,10 +579,10 @@ export default function RoutesMap() {
                 <div class="poi-badge poi-${typeClass}">
                   <span>${item.icon || '📍'}</span>
                 </div>
-                ${showCaption ? `<span class="poi-caption">${item.name}</span>` : ''}
+                <span class="poi-caption">${item.name}</span>
               `,
-              iconSize: [90, 44],
-              iconAnchor: [45, 13],
+              iconSize: [22, 22],
+              iconAnchor: [11, 11],
             });
 
             const leadPayload = {
@@ -597,16 +614,26 @@ export default function RoutesMap() {
           });
         }
 
-        // 2. Render House Numbers (Text Halo effect, Zoom >= 16.5)
+        // 2. Render House Numbers (Text Halo effect, Zoom >= 16.8) with pixel collision avoidance
         if (housesLayerRef.current) {
           housesLayerRef.current.clearLayers();
-          if (currentZoom >= 16.5 && houses.length > 0) {
+          if (currentZoom >= 16.8 && houses.length > 0) {
+            const placedHousePixels: { x: number; y: number }[] = [];
+
             houses.forEach((h: any) => {
+              if (!mapRef.current) return;
+              const pt = mapRef.current.latLngToContainerPoint([h.lat, h.lon]);
+              // Prevent overlapping house numbers: minimum 26px distance
+              if (placedHousePixels.some((p) => Math.hypot(p.x - pt.x, p.y - pt.y) < 26)) {
+                return;
+              }
+              placedHousePixels.push(pt);
+
               const houseIcon = L.divIcon({
                 className: 'house-number-marker',
                 html: `<span>${h.cleanNumber}</span>`,
-                iconSize: [30, 16],
-                iconAnchor: [15, 8],
+                iconSize: [26, 14],
+                iconAnchor: [13, 7],
               });
 
               const housePayload = {
@@ -1715,6 +1742,30 @@ export default function RoutesMap() {
               >
                 <Store className="w-3 h-3" />
                 <span>Клиенты</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !showLandmarks;
+                  setShowLandmarks(next);
+                  showLandmarksRef.current = next;
+                  if (!next) {
+                    poiLayerRef.current?.clearLayers();
+                    housesLayerRef.current?.clearLayers();
+                  } else {
+                    refreshViewportGIS();
+                  }
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  showLandmarks
+                    ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+                title="Ориентиры (POI) и номера домов во дворах"
+              >
+                <Compass className="w-3 h-3" />
+                <span>Ориентиры</span>
               </button>
 
               <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5" />
