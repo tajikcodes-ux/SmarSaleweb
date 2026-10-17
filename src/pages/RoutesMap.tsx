@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -16,8 +16,10 @@ export default function RoutesMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
+  const leadsGroupRef = useRef<L.LayerGroup | null>(null);
   const polylineRef = useRef<L.Polyline | null>(null);
   const historyPathRef = useRef<L.Polyline | null>(null);
+  const searchMarkerRef = useRef<L.Marker | null>(null);
   
   const [agents, setAgents] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -29,6 +31,24 @@ export default function RoutesMap() {
   const [historyTrack, setHistoryTrack] = useState<any[]>([]);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
+
+  // GIS & Smart Geo Layers
+  const [showRoadRoutes, setShowRoadRoutes] = useState(true);
+  const [showLiveAgents, setShowLiveAgents] = useState(true);
+  const [showClients, setShowClients] = useState(true);
+  const [showMarketLeads, setShowMarketLeads] = useState(false);
+  const showMarketLeadsRef = useRef(false);
+  const [leadsCategory, setLeadsCategory] = useState<'ALL' | 'SHOP' | 'CAFE' | 'PHARMACY'>('ALL');
+  const leadsCategoryRef = useRef<'ALL' | 'SHOP' | 'CAFE' | 'PHARMACY'>('ALL');
+  const [marketLeads, setMarketLeads] = useState<any[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const leadsFetchTimeoutRef = useRef<any>(null);
+
+  // Map 81k Landmark & Address Search
+  const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [mapSearchResults, setMapSearchResults] = useState<any[]>([]);
+  const [isSearchingMap, setIsSearchingMap] = useState(false);
+  const [showMapSearchDropdown, setShowMapSearchDropdown] = useState(false);
 
   // Planner states
   const [selectedClientIdToAssign, setSelectedClientIdToAssign] = useState('');
@@ -154,9 +174,18 @@ export default function RoutesMap() {
     (window as any).jumpTimelineToMinutes = (mins: number) => {
       setTimelineTime(mins);
     };
+    (window as any).convertLeadFromMap = (encodedLeadJson: string) => {
+      try {
+        const lead = JSON.parse(decodeURIComponent(encodedLeadJson));
+        handleConvertLead(lead);
+      } catch (err) {
+        console.error('Failed to parse lead json', err);
+      }
+    };
     return () => {
       delete (window as any).assignRouteFromMap;
       delete (window as any).jumpTimelineToMinutes;
+      delete (window as any).convertLeadFromMap;
     };
   }, [routes, selectedAgentId, date]);
 
@@ -344,6 +373,124 @@ export default function RoutesMap() {
     }
   };
 
+  // Fetch unreached market leads for current map bounding box
+  const fetchMarketLeadsForBounds = async (bounds: L.LatLngBounds, category: string) => {
+    setLoadingLeads(true);
+    try {
+      const res = await api.get('/geo/market-leads', {
+        params: {
+          minLat: bounds.getSouth(),
+          minLon: bounds.getWest(),
+          maxLat: bounds.getNorth(),
+          maxLon: bounds.getEast(),
+          category: category !== 'ALL' ? category : undefined,
+        },
+      });
+      setMarketLeads(res.data?.leads || []);
+    } catch (err) {
+      console.error('Failed to fetch market leads', err);
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
+  // 1-Click Convert Lead into Client & optionally assign to selected agent
+  const handleConvertLead = async (lead: any) => {
+    try {
+      setLoadingLeads(true);
+      await api.post('/geo/convert-lead', {
+        name: lead.name,
+        address: lead.address,
+        latitude: lead.latitude,
+        longitude: lead.longitude,
+        category: lead.category,
+        assignAgentId: selectedAgentIdRef.current || undefined,
+      });
+
+      alert(`✅ Торговая точка "${lead.name}" успешно добавлена в базу SmartSale!${selectedAgentIdRef.current ? ' И прикреплена к маршруту агента.' : ''}`);
+
+      // Reload clients and routes to show the new client marker
+      await loadData();
+
+      // Remove from market leads layer
+      setMarketLeads((prev) => prev.filter((item) => !(Math.abs(item.latitude - lead.latitude) < 0.0001 && Math.abs(item.longitude - lead.longitude) < 0.0001)));
+    } catch (err: any) {
+      console.error('Failed to convert lead', err);
+      alert(err.response?.data?.message || 'Ошибка при конвертации торговой точки в клиента');
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
+  // Map 81k Landmark & Address Search autocomplete effect
+  useEffect(() => {
+    if (!mapSearchQuery.trim()) {
+      setMapSearchResults([]);
+      setIsSearchingMap(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearchingMap(true);
+      try {
+        const res = await api.get('/geo/suggest', {
+          params: { q: mapSearchQuery.trim(), limit: 6 },
+        });
+        setMapSearchResults(res.data?.suggestions || []);
+        setShowMapSearchDropdown(true);
+      } catch (err) {
+        console.error('Map search failed', err);
+      } finally {
+        setIsSearchingMap(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [mapSearchQuery]);
+
+  // Select landmark from search results and fly to it
+  const handleSelectSearchResult = (item: any) => {
+    setShowMapSearchDropdown(false);
+    setMapSearchQuery(item.name);
+    if (!mapRef.current) return;
+
+    const lat = item.latitude;
+    const lon = item.longitude;
+
+    mapRef.current.flyTo([lat, lon], 17, { duration: 1.2 });
+
+    if (searchMarkerRef.current) {
+      searchMarkerRef.current.remove();
+    }
+
+    const icon = L.divIcon({
+      className: 'custom-search-pin',
+      html: `<div class="relative flex items-center justify-center"><div class="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold shadow-xl border-2 border-white animate-bounce text-xs">📍</div></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+    });
+
+    const marker = L.marker([lat, lon], { icon }).addTo(mapRef.current);
+    const encodedItem = encodeURIComponent(JSON.stringify(item));
+
+    marker.bindPopup(`
+      <div class="text-[#37352f] font-sans p-1.5 min-w-[200px]">
+        <div class="flex items-center gap-1 text-[10px] text-purple-600 font-bold mb-1">
+          <span>📍 Найдено в национальной базе Согда</span>
+        </div>
+        <h4 class="font-bold text-xs text-slate-900">${item.name}</h4>
+        <p class="text-[10px] text-slate-500 mt-0.5">${item.address || ''}</p>
+        <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+          <button onclick="window.convertLeadFromMap('${encodedItem}')" style="width: 100%; padding: 6px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
+            ⚡ Сделать клиентом
+          </button>
+        </div>
+      </div>
+    `).openPopup();
+
+    searchMarkerRef.current = marker;
+  };
+
   useEffect(() => {
     loadData();
   }, [date]);
@@ -438,11 +585,82 @@ export default function RoutesMap() {
     const markersGroup = L.layerGroup().addTo(map);
     markersGroupRef.current = markersGroup;
 
+    const leadsGroup = L.layerGroup().addTo(map);
+    leadsGroupRef.current = leadsGroup;
+
+    map.on('moveend', () => {
+      if (showMarketLeadsRef.current) {
+        if (leadsFetchTimeoutRef.current) clearTimeout(leadsFetchTimeoutRef.current);
+        leadsFetchTimeoutRef.current = setTimeout(() => {
+          fetchMarketLeadsForBounds(map.getBounds(), leadsCategoryRef.current);
+        }, 350);
+      }
+    });
+
     return () => {
       map.remove();
       mapRef.current = null;
     };
   }, [loading]);
+
+  // Sync market leads markers on map
+  useEffect(() => {
+    if (!leadsGroupRef.current) return;
+    leadsGroupRef.current.clearLayers();
+
+    if (!showMarketLeads || marketLeads.length === 0) return;
+
+    marketLeads.forEach((lead) => {
+      if (!lead.latitude || !lead.longitude) return;
+
+      let bgClass = 'bg-amber-500';
+      let iconChar = '🏪';
+      let catLabel = 'Магазин';
+
+      if (lead.category === 'CAFE') {
+        bgClass = 'bg-purple-600';
+        iconChar = '☕';
+        catLabel = 'Кафе / Общепит';
+      } else if (lead.category === 'PHARMACY') {
+        bgClass = 'bg-teal-600';
+        iconChar = '💊';
+        catLabel = 'Аптека';
+      }
+
+      const leadIcon = L.divIcon({
+        className: 'custom-lead-icon',
+        html: `
+          <div class="relative group cursor-pointer">
+            <div class="w-7 h-7 ${bgClass} text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white text-xs transform hover:scale-125 transition-transform">
+              ${iconChar}
+            </div>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const encodedLead = encodeURIComponent(JSON.stringify(lead));
+
+      L.marker([lead.latitude, lead.longitude], { icon: leadIcon })
+        .addTo(leadsGroupRef.current!)
+        .bindPopup(`
+          <div class="text-[#37352f] font-sans p-1.5 min-w-[210px]">
+            <div class="flex items-center justify-between gap-1 mb-1">
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded text-white ${bgClass}">${catLabel}</span>
+              <span class="text-[9px] text-amber-600 font-bold bg-amber-50 px-1 py-0.5 rounded border border-amber-200">Белое пятно</span>
+            </div>
+            <h4 class="font-bold text-xs text-slate-900">${lead.name}</h4>
+            <p class="text-[10px] text-slate-500 mt-0.5">${lead.address || 'Адрес в Согде'}</p>
+            <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+              <button onclick="window.convertLeadFromMap('${encodedLead}')" style="width: 100%; padding: 6px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                ⚡ Сделать клиентом
+              </button>
+            </div>
+          </div>
+        `);
+    });
+  }, [marketLeads, showMarketLeads]);
 
   const getCheckInWarning = (visit: any, client: any) => {
     if (!visit || !visit.checkInLat || !visit.checkInLon || !client || !client.latitude || !client.longitude) {
@@ -507,7 +725,8 @@ export default function RoutesMap() {
     });
 
     // Plot clients
-    clients.forEach((client) => {
+    if (showClients) {
+      clients.forEach((client) => {
       if (!client.latitude || !client.longitude) return;
 
       const lat = parseFloat(client.latitude.toString());
@@ -573,12 +792,13 @@ export default function RoutesMap() {
             ` : ''}
           </div>
         `);
-    });
+      });
+    }
 
     const isToday = date === new Date().toISOString().split('T')[0];
 
-    // Plot live agents (Only when viewing today's map)
-    if (isToday) {
+    // Plot live agents (Only when viewing today's map and showLiveAgents is true)
+    if (isToday && showLiveAgents) {
       agents.forEach((agent) => {
         if (!agent.latitude || !agent.longitude) return;
 
@@ -980,19 +1200,51 @@ export default function RoutesMap() {
       }
 
       if (pathCoords.length > 1 && mapRef.current) {
-        const polyline = L.polyline(pathCoords, {
-          color: '#0071e3',
-          weight: 4,
-          opacity: 0.8,
-          dashArray: '8, 8',
-        }).addTo(mapRef.current);
-        
-        polylineRef.current = polyline;
+        if (showRoadRoutes && routeClientCoords.length >= 2) {
+          // Asynchronously query road network geometry
+          api.post('/geo/route-geometry', { stops: routeClientCoords })
+            .then((res) => {
+              if (res.data?.geometry && res.data.geometry.length > 0 && mapRef.current) {
+                if (polylineRef.current) {
+                  polylineRef.current.remove();
+                }
+                const roadPolyline = L.polyline(res.data.geometry, {
+                  color: '#0071e3',
+                  weight: 5,
+                  opacity: 0.85,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                }).addTo(mapRef.current);
+                polylineRef.current = roadPolyline;
+              }
+            })
+            .catch(() => {
+              // Direct dashed fallback
+              if (mapRef.current) {
+                const polyline = L.polyline(pathCoords, {
+                  color: '#0071e3',
+                  weight: 4,
+                  opacity: 0.8,
+                  dashArray: '8, 8',
+                }).addTo(mapRef.current);
+                polylineRef.current = polyline;
+              }
+            });
+        } else {
+          const polyline = L.polyline(pathCoords, {
+            color: '#0071e3',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '8, 8',
+          }).addTo(mapRef.current);
+          
+          polylineRef.current = polyline;
+        }
       }
     }
 
     // Auto-fit bounds disabled to show all Tajikistan by default
-  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime]);
+  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes]);
 
   const selectedAgentDetails = agents.find((a) => a.userId === selectedAgentId);
   const selectedAgentRoutes = routes
@@ -1162,6 +1414,169 @@ export default function RoutesMap() {
         {/* Left column: Leaflet map view */}
         <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           <div ref={mapContainerRef} className="w-full h-full min-h-[300px] z-0" />
+
+          {/* Top Center Floating Search Bar & GIS Layer Toggles */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex flex-col items-center gap-2 w-[92%] sm:w-auto max-w-lg pointer-events-auto">
+            {/* Search Bar for 81k landmarks */}
+            <div className="relative w-full sm:w-96 shadow-lg rounded-xl">
+              <div className="flex items-center bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#0071e3] transition-all">
+                <Search className="w-4 h-4 text-slate-400 shrink-0 mr-2" />
+                <input
+                  type="text"
+                  placeholder="Поиск по 81 000 адресам Согда (13-й мкр...)"
+                  value={mapSearchQuery}
+                  onChange={(e) => setMapSearchQuery(e.target.value)}
+                  onFocus={() => { if (mapSearchResults.length > 0) setShowMapSearchDropdown(true); }}
+                  className="w-full bg-transparent text-xs text-[#37352f] dark:text-slate-100 placeholder-slate-400 outline-none"
+                />
+                {mapSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setMapSearchQuery(''); setMapSearchResults([]); setShowMapSearchDropdown(false); }}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {isSearchingMap && (
+                  <RefreshCw className="w-3.5 h-3.5 text-[#0071e3] animate-spin shrink-0 ml-1" />
+                )}
+              </div>
+
+              {/* Autocomplete Dropdown */}
+              {showMapSearchDropdown && mapSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl shadow-2xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 z-50 max-h-64 overflow-y-auto">
+                  {mapSearchResults.map((item, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectSearchResult(item)}
+                      className="w-full text-left px-3 py-2 hover:bg-blue-50/70 dark:hover:bg-blue-950/40 transition-colors flex items-center justify-between gap-2 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                          {item.category === 'SHOP' ? '🏪 ' : item.category === 'CAFE' ? '☕ ' : item.category === 'PHARMACY' ? '💊 ' : '📍 '}
+                          {item.name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate">{item.address || ''}</div>
+                      </div>
+                      <span className="shrink-0 text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">
+                        {item.city || 'Согд'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Layer Toggles Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-1 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-1 shadow-lg text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowRoadRoutes(!showRoadRoutes)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  showRoadRoutes
+                    ? 'bg-blue-50 text-[#0071e3] dark:bg-blue-950/50 dark:text-blue-300 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+                title="Следовать дорогам (дорожная сеть Согда)"
+              >
+                <Navigation className="w-3 h-3" />
+                <span>Дороги</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLiveAgents(!showLiveAgents)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  showLiveAgents
+                    ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+              >
+                <Users className="w-3 h-3" />
+                <span>Агенты</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowClients(!showClients)}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                  showClients
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 font-semibold'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
+                }`}
+              >
+                <Store className="w-3 h-3" />
+                <span>Клиенты</span>
+              </button>
+
+              <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+              {/* Market Leads / Белые пятна Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !showMarketLeads;
+                  setShowMarketLeads(next);
+                  showMarketLeadsRef.current = next;
+                  if (next && mapRef.current) {
+                    fetchMarketLeadsForBounds(mapRef.current.getBounds(), leadsCategory);
+                  } else {
+                    setMarketLeads([]);
+                    leadsGroupRef.current?.clearLayers();
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg transition-all ${
+                  showMarketLeads
+                    ? 'bg-gradient-to-r from-amber-500 to-violet-600 text-white font-bold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Показать непокрытые торговые точки (магазины, аптеки, кафе)"
+              >
+                <Zap className="w-3 h-3" />
+                <span>Белые пятна</span>
+                {marketLeads.length > 0 && showMarketLeads && (
+                  <span className="bg-white/30 text-[9px] px-1 rounded font-mono">
+                    {marketLeads.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Category Filter for Market Leads when active */}
+            {showMarketLeads && (
+              <div className="flex items-center gap-1 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-amber-200/60 dark:border-amber-900/40 rounded-xl px-2 py-1 shadow-md text-[10px] animate-fadeIn">
+                <span className="text-amber-600 dark:text-amber-400 font-bold mr-1">Точки:</span>
+                {(['ALL', 'SHOP', 'CAFE', 'PHARMACY'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setLeadsCategory(cat);
+                      leadsCategoryRef.current = cat;
+                      if (mapRef.current) {
+                        fetchMarketLeadsForBounds(mapRef.current.getBounds(), cat);
+                      }
+                    }}
+                    className={`px-2 py-0.5 rounded-md transition-all font-medium ${
+                      leadsCategory === cat
+                        ? 'bg-amber-500 text-white shadow-xs font-bold'
+                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {cat === 'ALL' && 'Все'}
+                    {cat === 'SHOP' && '🏪 Магазины'}
+                    {cat === 'CAFE' && '☕ Общепит'}
+                    {cat === 'PHARMACY' && '💊 Аптеки'}
+                  </button>
+                ))}
+                {loadingLeads && (
+                  <RefreshCw className="w-3 h-3 text-amber-500 animate-spin ml-1" />
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Left Vertical Role/Type Floating Toolbar */}
           {isFiltersCollapsed ? (
@@ -1415,6 +1830,20 @@ export default function RoutesMap() {
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-0.5 border-t-2 border-dashed border-emerald-500 flex-shrink-0"></div>
                   <span className="text-slate-700 dark:text-slate-300">Трек движения (GPS история)</span>
+                </div>
+
+                <div className="font-bold text-slate-400 dark:text-slate-500 text-[9px] uppercase tracking-wider pt-1.5 border-t border-slate-100 dark:border-slate-800">Белые пятна (Лиды)</div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">🏪</div>
+                  <span className="text-slate-700 dark:text-slate-300">Магазин (Потенциал)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">☕</div>
+                  <span className="text-slate-700 dark:text-slate-300">Кафе / Общепит</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 bg-teal-600 text-white rounded-full flex items-center justify-center font-bold text-[9px] shadow-sm flex-shrink-0">💊</div>
+                  <span className="text-slate-700 dark:text-slate-300">Аптека</span>
                 </div>
               </div>
             )}

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import api from '../services/api';
 import { 
   Plus, Navigation, Wallet, Edit, Trash, X, FileText, 
-  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle 
+  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
@@ -151,6 +152,53 @@ export default function Clients() {
   const [creditLimit, setCreditLimit] = useState(0);
   const [priceCategoryId, setPriceCategoryId] = useState('');
   const [error, setError] = useState('');
+
+  // Smart Address Autocomplete state
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchingAddress, setSearchingAddress] = useState(false);
+  const addressDebounceRef = useRef<any>(null);
+
+  const handleAddressChange = (val: string) => {
+    setAddress(val);
+    if (!val || val.trim().length < 2) {
+      setAddressSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (addressDebounceRef.current) {
+      clearTimeout(addressDebounceRef.current);
+    }
+
+    addressDebounceRef.current = setTimeout(async () => {
+      setSearchingAddress(true);
+      try {
+        const res = await api.get(`/geo/suggest?q=${encodeURIComponent(val)}`);
+        setAddressSuggestions(res.data || []);
+        setShowSuggestions((res.data || []).length > 0);
+      } catch (err) {
+        console.error('Geo suggest error:', err);
+      } finally {
+        setSearchingAddress(false);
+      }
+    }, 200);
+  };
+
+  const handleSelectSuggestion = (item: any) => {
+    const fullAddr = `${item.city}, ${item.name}`;
+    setAddress(fullAddr);
+    setLatitude(item.lat);
+    setLongitude(item.lon);
+    updateMapMarker(item.lat, item.lon);
+    if (mapRef.current) {
+      mapRef.current.setView([item.lat, item.lon], 16);
+    }
+    if (!name && item.category !== 'Адреса и дома') {
+      setName(item.name);
+    }
+    setShowSuggestions(false);
+  };
 
   // Map refs
   const mapRef = useRef<L.Map | null>(null);
@@ -522,14 +570,51 @@ export default function Clients() {
                 onChange={(e) => setPhone(e.target.value)}
                 className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
               />
-              <input
-                type="text"
-                placeholder="Адрес*"
-                required
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400 md:col-span-2"
-              />
+              <div className="relative md:col-span-2">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Адрес торговой точки (введите 13 17, улицу или ориентир)*"
+                    required
+                    value={address}
+                    onChange={(e) => handleAddressChange(e.target.value)}
+                    onFocus={() => {
+                      if (addressSuggestions.length > 0) setShowSuggestions(true);
+                    }}
+                    className="w-full bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 pr-8 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white placeholder-slate-400"
+                  />
+                  {searchingAddress ? (
+                    <div className="absolute right-2.5 top-3 w-3.5 h-3.5 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 absolute right-2.5 top-3 text-[#0071e3]/60 pointer-events-none" />
+                  )}
+                </div>
+
+                {/* Suggestions Dropdown */}
+                {showSuggestions && addressSuggestions.length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 max-h-56 overflow-y-auto bg-white dark:bg-[#0a0a0a] border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-xl shadow-xl divide-y divide-slate-100 dark:divide-white/5">
+                    {addressSuggestions.map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(item)}
+                        className="w-full px-3 py-2 text-left hover:bg-blue-50/70 dark:hover:bg-blue-950/30 transition-colors flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-base flex-shrink-0">{item.icon || '📍'}</span>
+                          <div className="truncate">
+                            <span className="font-bold text-[#1d1d1f] dark:text-white">{item.name}</span>
+                            <span className="text-[10px] text-slate-400 ml-1.5 font-normal">({item.city})</span>
+                          </div>
+                        </div>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 flex-shrink-0">
+                          {item.category}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input
                 type="number"
                 step="any"
