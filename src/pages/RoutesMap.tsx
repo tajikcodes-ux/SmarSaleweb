@@ -1784,6 +1784,23 @@ export default function RoutesMap() {
                 <span>Растр 2D</span>
               </button>
 
+              {mapEngine === 'maplibre' && (
+                <button
+                  type="button"
+                  id="btn-toggle-3d"
+                  onClick={() => setIs3D((prev) => !prev)}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    is3D
+                      ? 'bg-blue-50 text-[#0071e3] dark:bg-blue-950/50 dark:text-blue-300 font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                  title="Переключить перспективу 3D / 2D"
+                >
+                  <Compass className={`w-3 h-3 ${is3D ? 'text-[#0071e3] dark:text-blue-300' : 'text-slate-500'}`} />
+                  <span>{is3D ? '3D Дворы' : '2D План'}</span>
+                </button>
+              )}
+
               <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
               <button

@@ -42,8 +42,8 @@ test.describe('SmartSale MapLibre GL 3D Engine & Dual-Mode E2E Tests', () => {
   });
 
   test('2. Toggle 3D Perspective button', async ({ page }) => {
-    // Find 3D toggle button (3D Дворы / 2D План)
-    const perspectiveBtn = page.locator('button[title*="3D / 2D"]');
+    // Find 3D toggle button (3D Дворы / 2D План) in toolbar
+    const perspectiveBtn = page.locator('#btn-toggle-3d');
     await expect(perspectiveBtn).toBeVisible({ timeout: 15000 });
 
     // By default it is in 3D mode

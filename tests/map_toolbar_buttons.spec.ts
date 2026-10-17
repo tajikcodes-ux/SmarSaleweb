@@ -19,6 +19,11 @@ test.describe('SmartSale Map Toolbar Buttons & Legend E2E Tests', () => {
     // 2. Navigate to map page
     await page.goto('/map');
     await page.waitForURL('**/map', { timeout: 15000 });
+    
+    // Switch to Leaflet 2D raster engine for these tests
+    const rasterBtn = page.locator('#btn-engine-leaflet');
+    await expect(rasterBtn).toBeVisible({ timeout: 15000 });
+    await rasterBtn.click();
     await page.waitForSelector('.leaflet-container', { timeout: 15000 });
   });
 
