@@ -678,66 +678,70 @@ export default function RoutesMap() {
     const map = L.map(mapContainerRef.current).setView([centerLat, centerLon], 7);
     mapRef.current = map;
 
-    // Tile Layer 0: CartoDB Positron (Neutral, pastel light aesthetic, maxZoom 20)
-    const positronLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; CartoDB &copy; OpenStreetMap',
-      maxZoom: 20,
-      subdomains: 'abcd',
-    });
-
-    // Tile Layer 1: OpenStreetMap Humanitarian (Vibrant, high detail, 0 watermarks)
+    // Tile Layer 1: OpenStreetMap Humanitarian (Vibrant, high detail, 0 watermarks, free)
     const hotLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Tiles courtesy of <a href="https://www.hotosm.org/">Humanitarian OpenStreetMap Team</a>',
       maxZoom: 19,
     });
 
-    // Tile Layer 2: Esri Light Gray Canvas (Clean, modern light aesthetic, 0 watermarks)
-    const lightGrayLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-      maxZoom: 19,
-    });
-
-    // Tile Layer 3: Esri Topo Map (Rich topographic & street detail, 0 watermarks)
-    const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom',
-      maxZoom: 19,
-    });
-
-    // Tile Layer 4: Esri Street Map (Commercial street map, 0 watermarks)
-    const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ',
-      maxZoom: 19,
-    });
-
-    // Tile Layer 5: Esri World Imagery (High-res Satellite view, 0 watermarks)
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS',
-      maxZoom: 19,
-    });
-
-    // Tile Layer 6: OpenStreetMap Standard
+    // Tile Layer 2: OpenStreetMap Standard
     const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     });
 
-    // Add default pastel light layer (CartoDB Positron - maxZoom 20, zero-clutter)
-    positronLayer.addTo(map);
+    // Tile Layer 3: Esri Light Gray Canvas (Clean, modern light aesthetic, 0 watermarks)
+    const lightGrayLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 4: Esri Topo Map (Rich topographic & street detail, 0 watermarks)
+    const topoLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 5: Esri Street Map (Commercial street map, 0 watermarks)
+    const streetLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 6: Esri World Imagery (High-res Satellite view, 0 watermarks)
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS',
+      maxZoom: 19,
+    });
+
+    // Tile Layer 7: CartoDB Positron (Requires API key from carto.com/basemaps/apikey)
+    const cartoKey = (import.meta.env.VITE_CARTO_API_KEY as string) || '';
+    const cartoUrl = cartoKey
+      ? `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=${cartoKey}`
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    const positronLayer = L.tileLayer(cartoUrl, {
+      attribution: '&copy; CartoDB &copy; OpenStreetMap',
+      maxZoom: 20,
+      subdomains: 'abcd',
+    });
+
+    // Default active layer: OSM HOT (high detail, free, no API key required)
+    hotLayer.addTo(map);
 
     // Layer switcher control (top-right)
-    L.control.layers(
-      {
-        '🤍 Минимализм (CartoDB Positron)': positronLayer,
-        '🎨 Детализированная (OSM HOT)': hotLayer,
-        '🏢 Светло-серая (Esri Light)': lightGrayLayer,
-        '🌐 Стандартная карта (OpenStreetMap)': osmLayer,
-        '🗺️ Топографическая (Esri Topo)': topoLayer,
-        '🏙️ Городские улицы (Esri Street)': streetLayer,
-        '🛰️ Спутниковая карта (Satellite)': satelliteLayer,
-      },
-      undefined,
-      { position: 'topright' }
-    ).addTo(map);
+    const baseLayers: Record<string, L.TileLayer> = {
+      '🎨 Детализированная (OSM HOT)': hotLayer,
+      '🌐 Стандартная карта (OpenStreetMap)': osmLayer,
+      '🏢 Светло-серая (Esri Light)': lightGrayLayer,
+      '🗺️ Топографическая (Esri Topo)': topoLayer,
+      '🏙️ Городские улицы (Esri Street)': streetLayer,
+      '🛰️ Спутниковая карта (Satellite)': satelliteLayer,
+    };
+    if (cartoKey) {
+      baseLayers['🤍 Минимализм (CartoDB Positron)'] = positronLayer;
+    }
+
+    L.control.layers(baseLayers, undefined, { position: 'topright' }).addTo(map);
 
     const markersGroup = L.layerGroup().addTo(map);
     markersGroupRef.current = markersGroup;
