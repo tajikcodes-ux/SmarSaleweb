@@ -61,21 +61,21 @@ test.describe('SmartSale Map Toolbar Buttons & Legend E2E Tests', () => {
     await expect(landmarksBtn).not.toHaveClass(/bg-sky-50/);
   });
 
-  test('3. Toggle [🌙 Тёмная] / [☀️ Светлая] map theme button', async ({ page }) => {
-    const themeBtn = page.locator('button[title*="Переключить карту"]');
-    await expect(themeBtn).toBeVisible();
+  test('3. Global theme toggle (#theme-toggle-btn) controls map theme', async ({ page }) => {
+    const globalThemeBtn = page.locator('#theme-toggle-btn');
+    await expect(globalThemeBtn).toBeVisible();
 
-    const initialText = await themeBtn.innerText();
+    const isDarkInitial = await page.evaluate(() => document.documentElement.classList.contains('dark'));
 
-    // Click to toggle
-    await themeBtn.click();
-    const toggledText = await themeBtn.innerText();
-    expect(toggledText).not.toBe(initialText);
+    // Click global theme toggle
+    await globalThemeBtn.click();
+    const isDarkToggled = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+    expect(isDarkToggled).toBe(!isDarkInitial);
 
     // Click again to revert
-    await themeBtn.click();
-    const revertedText = await themeBtn.innerText();
-    expect(revertedText).toBe(initialText);
+    await globalThemeBtn.click();
+    const isDarkReverted = await page.evaluate(() => document.documentElement.classList.contains('dark'));
+    expect(isDarkReverted).toBe(isDarkInitial);
   });
 
   test('4. Toggle [⚡ Белые пятна] and Category Filters', async ({ page }) => {

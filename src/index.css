@@ -556,26 +556,6 @@ h1, h2, h3, h4, h5, h6 {
 .dark .leaflet-tile.satellite-tile {
   filter: none !important;
 }
-
-/* Force light map mode when toggled */
-.force-light-map .leaflet-container {
-  background: #f1f5f9 !important;
-}
-.force-light-map .leaflet-tile {
-  filter: none !important;
-}
-
-/* Force dark map mode when toggled */
-.force-dark-map .leaflet-container {
-  background: #0d0d0d !important;
-}
-.force-dark-map .leaflet-tile:not(.satellite-tile) {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) !important;
-}
-.force-dark-map .leaflet-tile.satellite-tile {
-  filter: none !important;
-}
-
 .dark .leaflet-bar a {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
@@ -808,8 +788,7 @@ h1, h2, h3, h4, h5, h6 {
 .poi-badge-container:hover .poi-caption {
   display: block;
 }
-.dark .poi-caption,
-.force-dark-map .poi-caption {
+.dark .poi-caption {
   color: #f8fafc;
   background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.15);

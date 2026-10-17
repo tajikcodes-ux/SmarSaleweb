@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass, Moon, Sun } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass } from 'lucide-react';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -34,11 +34,6 @@ export default function RoutesMap() {
   const [historyTrack, setHistoryTrack] = useState<any[]>([]);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
-
-  // Map Dark/Light Mode
-  const [mapTheme, setMapTheme] = useState<'dark' | 'light'>(() => {
-    return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
-  });
 
   // GIS & Smart Geo Layers
   const [showRoadRoutes, setShowRoadRoutes] = useState(true);
@@ -1650,7 +1645,7 @@ export default function RoutesMap() {
       <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
         {/* Left column: Leaflet map view */}
         <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
-          <div ref={mapContainerRef} className={`w-full h-full min-h-[300px] z-0 ${mapTheme === 'dark' ? 'force-dark-map' : 'force-light-map'}`} />
+          <div ref={mapContainerRef} className="w-full h-full min-h-[300px] z-0" />
 
           {/* Top Center Floating Search Bar & GIS Layer Toggles */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex flex-col items-center gap-2 w-[92%] sm:w-auto max-w-lg pointer-events-auto">
@@ -1772,20 +1767,6 @@ export default function RoutesMap() {
               >
                 <Compass className="w-3 h-3" />
                 <span>Ориентиры</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMapTheme(prev => prev === 'dark' ? 'light' : 'dark')}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
-                  mapTheme === 'dark'
-                    ? 'bg-slate-800 text-amber-300 dark:bg-slate-800 dark:text-amber-300 font-semibold border border-slate-700 shadow-sm'
-                    : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 font-semibold'
-                }`}
-                title={mapTheme === 'dark' ? 'Переключить карту в светлый режим' : 'Переключить карту в тёмный режим'}
-              >
-                {mapTheme === 'dark' ? <Moon className="w-3 h-3 text-amber-300" /> : <Sun className="w-3 h-3 text-amber-500" />}
-                <span>{mapTheme === 'dark' ? 'Тёмная' : 'Светлая'}</span>
               </button>
 
               <div className="h-3 w-[1px] bg-slate-200 dark:bg-slate-700 mx-0.5" />
