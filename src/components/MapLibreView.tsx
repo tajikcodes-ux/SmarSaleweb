@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
+
+try {
+  if (maplibreWorkerUrl) {
+    maplibregl.setWorkerUrl(maplibreWorkerUrl);
+  }
+} catch (e) {
+  console.warn('Failed to set worker URL', e);
+}
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Compass } from 'lucide-react';
 
