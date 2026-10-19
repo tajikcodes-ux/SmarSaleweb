@@ -961,14 +961,14 @@ export default function Catalog() {
             </div>
 
             {/* Quick Filter Badges (All, In Stock, Low Stock, Out of Stock) */}
-            <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100 items-center">
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100 dark:border-[#27272a] items-center">
               <span className="text-[11px] font-bold text-[#86868b] mr-1">Наличие:</span>
               <button
                 onClick={() => setProductStockFilter('all')}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
                   productStockFilter === 'all'
-                    ? 'bg-[#1d1d1f] text-white shadow-sm'
-                    : 'bg-slate-100 hover:bg-slate-200 text-[#5f6368]'
+                    ? 'bg-[#1d1d1f] dark:bg-white dark:text-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 dark:bg-[#141416] hover:bg-slate-200 dark:hover:bg-[#1e1e22] text-[#5f6368] dark:text-slate-300 border border-transparent dark:border-[#27272a]'
                 }`}
               >
                 Все товары ({stockCounts.all})
@@ -978,7 +978,7 @@ export default function Catalog() {
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   productStockFilter === 'in_stock'
                     ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/50'
+                    : 'bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/50'
                 }`}
               >
                 <CheckCircle2 className="w-3 h-3" />
@@ -989,7 +989,7 @@ export default function Catalog() {
                 className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   productStockFilter === 'low_stock'
                     ? 'bg-amber-600 text-white shadow-sm'
-                    : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/50'
+                    : 'bg-amber-50 dark:bg-amber-950/20 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50'
                 }`}
               >
                 <AlertTriangle className="w-3 h-3" />
@@ -997,10 +997,10 @@ export default function Catalog() {
               </button>
               <button
                 onClick={() => setProductStockFilter('out_of_stock')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                   productStockFilter === 'out_of_stock'
                     ? 'bg-rose-600 text-white shadow-sm'
-                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50'
+                    : 'bg-rose-50 dark:bg-rose-950/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/50'
                 }`}
               >
                 Нет на складе ({stockCounts.out_of_stock})

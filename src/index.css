@@ -798,3 +798,24 @@ h1, h2, h3, h4, h5, h6 {
 
 
 
+
+/* Filter Badges & Inner Pills Polish in Dark Mode */
+.dark .bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.22) !important;
+  color: #fda4af !important;
+}
+
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+  color: #fde047 !important;
+}
+
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.22) !important;
+  color: #6ee7b7 !important;
+}
+
+.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+  color: #93c5fd !important;
+}

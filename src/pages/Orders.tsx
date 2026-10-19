@@ -603,8 +603,8 @@ export default function Orders() {
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 statusFilter === 'all'
-                  ? 'bg-[#1d1d1f] text-white shadow-sm'
-                  : 'bg-white hover:bg-slate-100 text-slate-600 border border-[#e9e9e7]'
+                  ? 'bg-[#1d1d1f] dark:bg-white dark:text-slate-900 text-white shadow-sm'
+                  : 'bg-white dark:bg-[#111113] hover:bg-slate-100 dark:hover:bg-[#1a1a1e] text-slate-600 dark:text-slate-300 border border-[#e9e9e7] dark:border-[#27272a]'
               }`}
             >
               Все заказы ({processedOrders.length})
@@ -612,31 +612,39 @@ export default function Orders() {
 
             <button
               onClick={() => setStatusFilter('today')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 statusFilter === 'today'
                   ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-blue-50 text-blue-600 border border-blue-200'
+                  : 'bg-white dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/50'
               }`}
             >
-              <Clock className="w-3 h-3" />
+              <Clock className="w-3.5 h-3.5" />
               <span>Сегодня</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-700 font-bold ml-0.5">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'today'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+              }`}>
                 {todayCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('on_hold')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 statusFilter === 'on_hold'
                   ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-amber-50 text-amber-700 border border-amber-200'
+                  : 'bg-white dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50'
               }`}
             >
-              <AlertTriangle className="w-3 h-3" />
+              <AlertTriangle className="w-3.5 h-3.5" />
               <span>На удержании (Hold)</span>
               {onHoldCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold ml-0.5">
+                <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  statusFilter === 'on_hold'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+                }`}>
                   {onHoldCount}
                 </span>
               )}
@@ -644,28 +652,32 @@ export default function Orders() {
 
             <button
               onClick={() => setStatusFilter('unpaid')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 statusFilter === 'unpaid'
                   ? 'bg-rose-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-rose-50 text-rose-600 border border-rose-200'
+                  : 'bg-white dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50'
               }`}
             >
-              <CreditCard className="w-3 h-3" />
+              <CreditCard className="w-3.5 h-3.5" />
               <span>Неоплаченные</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold ml-0.5">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                statusFilter === 'unpaid'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+              }`}>
                 {unpaidCount}
               </span>
             </button>
 
             <button
               onClick={() => setStatusFilter('delivered')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 statusFilter === 'delivered'
                   ? 'bg-emerald-700 text-white shadow-sm'
-                  : 'bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-white dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50'
               }`}
             >
-              <CheckCircle2 className="w-3 h-3" />
+              <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Доставленные ({deliveredCount})</span>
             </button>
           </div>

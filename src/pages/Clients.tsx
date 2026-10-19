@@ -896,8 +896,8 @@ export default function Clients() {
               onClick={() => setDebtFilter('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 debtFilter === 'all'
-                  ? 'bg-[#1d1d1f] text-white shadow-sm'
-                  : 'bg-white hover:bg-slate-100 text-slate-600 border border-[#e9e9e7]'
+                  ? 'bg-[#1d1d1f] dark:bg-white dark:text-slate-900 text-white shadow-sm'
+                  : 'bg-white dark:bg-[#111113] hover:bg-slate-100 dark:hover:bg-[#1a1a1e] text-slate-600 dark:text-slate-300 border border-[#e9e9e7] dark:border-[#27272a]'
               }`}
             >
               Все точки ({clients.length})
@@ -905,29 +905,37 @@ export default function Clients() {
 
             <button
               onClick={() => setDebtFilter('debtors')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 debtFilter === 'debtors'
                   ? 'bg-rose-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-rose-50 text-rose-600 border border-rose-200'
+                  : 'bg-white dark:bg-rose-950/20 hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50'
               }`}
             >
               <span>Должники</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold ml-0.5">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                debtFilter === 'debtors'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+              }`}>
                 {debtorClientsCount} ({totalDebtSum > 0 ? totalDebtSum.toFixed(0) + ' TJS' : '0 TJS'})
               </span>
             </button>
 
             <button
               onClick={() => setDebtFilter('overlimit')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 debtFilter === 'overlimit'
                   ? 'bg-amber-600 text-white shadow-sm'
-                  : 'bg-white hover:bg-amber-50 text-amber-700 border border-amber-200'
+                  : 'bg-white dark:bg-amber-950/20 hover:bg-amber-50 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50'
               }`}
             >
-              <AlertTriangle className="w-3 h-3" />
+              <AlertTriangle className="w-3.5 h-3.5" />
               <span>Превышен лимит</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold ml-0.5">
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                debtFilter === 'overlimit'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
+              }`}>
                 {overlimitClientsCount}
               </span>
             </button>
@@ -937,7 +945,7 @@ export default function Clients() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 debtFilter === 'nodebt'
                   ? 'bg-emerald-700 text-white shadow-sm'
-                  : 'bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-white dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50'
               }`}
             >
               Без долга ({clients.length - debtorClientsCount})
