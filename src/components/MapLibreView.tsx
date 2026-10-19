@@ -11,6 +11,7 @@ try {
 }
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Compass } from 'lucide-react';
+import api from '../services/api';
 
 interface MapLibreViewProps {
   clients: any[];
@@ -515,6 +516,21 @@ export default function MapLibreView({
       });
 
       map.addLayer({
+        id: 'route-casing',
+        type: 'line',
+        source: 'route-source',
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': isDarkMode ? '#0f172a' : '#ffffff',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 5, 16, 8],
+          'line-opacity': 0.85,
+        },
+      });
+
+      map.addLayer({
         id: 'route-line',
         type: 'line',
         source: 'route-source',
@@ -525,7 +541,7 @@ export default function MapLibreView({
         paint: {
           'line-color': '#0071e3',
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 3, 16, 5],
-          'line-opacity': 0.85,
+          'line-opacity': 0.95,
         },
       });
 
@@ -764,7 +780,7 @@ export default function MapLibreView({
   }, [marketLeads, showMarketLeads]);
 
   // 7. Update Route Lines & History Track
-  const updateRouteData = (map: maplibregl.Map) => {
+  const updateRouteData = async (map: maplibregl.Map) => {
     const routeSource = map.getSource('route-source') as maplibregl.GeoJSONSource;
     const historySource = map.getSource('history-track-source') as maplibregl.GeoJSONSource;
 
@@ -774,7 +790,7 @@ export default function MapLibreView({
       } else {
         const agentRoutes = routes
           .filter((r) => r.salesRepId === selectedAgentId)
-          .sort((a, b) => a.sequence - b.sequence);
+          .sort((a, b) => (a.visitSequence || a.sequence || 0) - (b.visitSequence || b.sequence || 0));
 
         const coords: [number, number][] = [];
         agentRoutes.forEach((r) => {
@@ -789,6 +805,7 @@ export default function MapLibreView({
         });
 
         if (coords.length > 1) {
+          // 1. Immediately render direct lines as fallback
           routeSource.setData({
             type: 'FeatureCollection',
             features: [
@@ -802,6 +819,35 @@ export default function MapLibreView({
               },
             ],
           });
+
+          // 2. Query high-speed C++ OSRM for true road geometry
+          try {
+            const stops = coords.map(([lon, lat]) => [lat, lon]);
+            const res = await api.post('/geo/route-geometry', { stops });
+            if (res.data?.coordinates && res.data.coordinates.length > 1 && mapRef.current) {
+              const currentSrc = mapRef.current.getSource('route-source') as maplibregl.GeoJSONSource;
+              if (currentSrc) {
+                currentSrc.setData({
+                  type: 'FeatureCollection',
+                  features: [
+                    {
+                      type: 'Feature',
+                      geometry: {
+                        type: 'LineString',
+                        coordinates: res.data.coordinates,
+                      },
+                      properties: {
+                        distanceKm: res.data.distanceKm,
+                        durationMinutes: res.data.durationMinutes,
+                      },
+                    },
+                  ],
+                });
+              }
+            }
+          } catch (_) {
+            // Keep direct fallback
+          }
         } else {
           routeSource.setData({ type: 'FeatureCollection', features: [] });
         }
