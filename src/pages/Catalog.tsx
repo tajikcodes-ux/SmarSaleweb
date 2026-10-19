@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { 
   Plus, Package, Map, Edit, Trash, Users, ArrowLeftRight, Check, X, ClipboardList,
-  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle
+  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw
 } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 
@@ -156,6 +156,188 @@ export default function Catalog() {
   const [whAddress, setWhAddress] = useState('');
   const [whBranchId, setWhBranchId] = useState('');
   const [branches, setBranches] = useState<any[]>([]);
+
+  // Smart Filters, Search, Sort & Bulk State for Catalog
+  const [productSearch, setProductSearch] = useState('');
+  const [productStockFilter, setProductStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
+  const [productCategoryFilter, setProductCategoryFilter] = useState<string>('all');
+  const [productSortField, setProductSortField] = useState<'name' | 'sku' | 'price' | 'unit' | 'stock' | 'category'>('name');
+  const [productSortDirection, setProductSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+
+  const getProductStock = (p: any): number => {
+    if (typeof p.totalStock === 'number') return p.totalStock;
+    if (Array.isArray(p.stocks)) {
+      return p.stocks.reduce((sum: number, s: any) => sum + (parseFloat(s.quantity) || 0), 0);
+    }
+    return 0;
+  };
+
+  const getProductCategoryName = (p: any): string => {
+    if (p.category?.name) return p.category.name;
+    if (p.categoryId) {
+      const found = categories.find((c) => c.id === p.categoryId);
+      if (found) return found.name;
+    }
+    return 'Без категории';
+  };
+
+  const stockCounts = useMemo(() => {
+    let inStock = 0;
+    let lowStock = 0;
+    let outStock = 0;
+    products.forEach((p) => {
+      const st = getProductStock(p);
+      if (st > 10) inStock++;
+      else if (st > 0 && st <= 10) lowStock++;
+      else outStock++;
+    });
+    return {
+      all: products.length,
+      in_stock: inStock,
+      low_stock: lowStock,
+      out_of_stock: outStock,
+    };
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    let res = [...products];
+
+    // Filter by category
+    if (productCategoryFilter !== 'all') {
+      res = res.filter((p) => (p.categoryId === productCategoryFilter || p.category?.id === productCategoryFilter));
+    }
+
+    // Filter by stock
+    if (productStockFilter === 'in_stock') {
+      res = res.filter((p) => getProductStock(p) > 0);
+    } else if (productStockFilter === 'low_stock') {
+      res = res.filter((p) => {
+        const st = getProductStock(p);
+        return st > 0 && st <= 10;
+      });
+    } else if (productStockFilter === 'out_of_stock') {
+      res = res.filter((p) => getProductStock(p) <= 0);
+    }
+
+    // Search query
+    if (productSearch.trim()) {
+      const q = productSearch.toLowerCase().trim();
+      res = res.filter((p) => {
+        const name = (p.name || '').toLowerCase();
+        const sku = (p.sku || '').toLowerCase();
+        const barcode = (p.barcode || '').toLowerCase();
+        const cat = getProductCategoryName(p).toLowerCase();
+        return name.includes(q) || sku.includes(q) || barcode.includes(q) || cat.includes(q);
+      });
+    }
+
+    // Sorting
+    res.sort((a, b) => {
+      let comparison = 0;
+      switch (productSortField) {
+        case 'name':
+          comparison = (a.name || '').localeCompare(b.name || '', 'ru', { sensitivity: 'base' });
+          break;
+        case 'sku':
+          comparison = (a.sku || '').localeCompare(b.sku || '', 'ru', { numeric: true });
+          break;
+        case 'price':
+          comparison = (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
+          break;
+        case 'stock':
+          comparison = getProductStock(a) - getProductStock(b);
+          break;
+        case 'unit':
+          comparison = (a.unit || '').localeCompare(b.unit || '');
+          break;
+        case 'category':
+          comparison = getProductCategoryName(a).localeCompare(getProductCategoryName(b), 'ru');
+          break;
+      }
+      return productSortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return res;
+  }, [products, productCategoryFilter, productStockFilter, productSearch, productSortField, productSortDirection, categories]);
+
+  const toggleProductSort = (field: 'name' | 'sku' | 'price' | 'unit' | 'stock' | 'category') => {
+    if (productSortField === field) {
+      setProductSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setProductSortField(field);
+      setProductSortDirection('asc');
+    }
+  };
+
+  const handleToggleSelectAllProducts = () => {
+    if (selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(filteredProducts.map((p) => p.id));
+    }
+  };
+
+  const handleToggleSelectProduct = (id: string) => {
+    setSelectedProductIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleExportProductsToExcel = (targetProducts?: any[]) => {
+    const listToExport = targetProducts && targetProducts.length > 0
+      ? targetProducts
+      : selectedProductIds.length > 0
+      ? products.filter((p) => selectedProductIds.includes(p.id))
+      : filteredProducts;
+
+    if (listToExport.length === 0) {
+      alert('Нет товаров для экспорта');
+      return;
+    }
+
+    const header = [
+      ['№', 'Артикул (SKU)', 'Наименование товара', 'Категория', 'Ед. изм.', 'Цена (TJS)', 'Общий остаток']
+    ];
+
+    const dataRows = listToExport.map((p, idx) => [
+      idx + 1,
+      p.sku || '—',
+      p.name || '—',
+      getProductCategoryName(p),
+      p.unit || 'pcs',
+      parseFloat(p.price || 0),
+      getProductStock(p)
+    ]);
+
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...dataRows]);
+    ws['!cols'] = [
+      { wch: 6 },
+      { wch: 16 },
+      { wch: 38 },
+      { wch: 22 },
+      { wch: 10 },
+      { wch: 14 },
+      { wch: 15 },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Каталог товаров');
+    const timestamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `smartsale_catalog_${timestamp}.xlsx`);
+  };
+
+  const handleBulkDeleteProducts = async () => {
+    if (selectedProductIds.length === 0) return;
+    if (!window.confirm(`Вы уверены, что хотите удалить выбранные товары (${selectedProductIds.length} шт.)?`)) return;
+    try {
+      await Promise.all(selectedProductIds.map((id) => api.delete(`/catalog/products/${id}`)));
+      setSelectedProductIds([]);
+      loadCatalog();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при массовом удалении товаров');
+    }
+  };
 
   const loadCatalog = async () => {
     try {
@@ -726,66 +908,373 @@ export default function Catalog() {
 
       {/* Tabs Content */}
       {activeTab === 'products' && (
-        <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm">
-          <h4 className="font-bold text-[#1d1d1f] text-sm mb-4 flex items-center gap-1.5">
-            <Package className="w-4 h-4 text-[#5f6368]" />
-            Каталог товаров ({products.length})
-          </h4>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#e3e3e8] bg-[#f8f9fa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
-                  <th className="p-3">Фото</th>
-                  <th className="p-3">Товар</th>
-                  <th className="p-3">SKU</th>
-                  <th className="p-3">Ед. изм.</th>
-                  <th className="p-3">Цена</th>
-                  <th className="p-3 text-right">Действия</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#e3e3e8]/60 text-xs">
-                {products.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50">
-                    <td className="p-3">
-                      {p.imageUrl ? (
-                        <img 
-                          src={p.imageUrl} 
-                          alt={p.name} 
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200" 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#f8f9fa] border border-[#e3e3e8] flex items-center justify-center text-[10px] text-slate-400 font-bold">Фото нет</div>
-                      )}
-                    </td>
-                    <td className="p-3 font-bold text-[#1d1d1f]">{p.name}</td>
-                    <td className="p-3 text-[#5f6368] font-mono">{p.sku}</td>
-                    <td className="p-3 text-[#5f6368]">{p.unit}</td>
-                    <td className="p-3 font-bold text-[#1d1d1f]">{parseFloat(p.price || 0).toFixed(2)} TJS</td>
-                    <td className="p-3 text-right">
-                      <div className="flex justify-end gap-1.5">
-                        <button
-                          onClick={() => handleOpenEditProduct(p)}
-                          className="p-2 rounded-xl border border-[#e3e3e8] hover:bg-[#f8f9fa] text-[#5f6368]"
-                          title="Редактировать"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(p.id)}
-                          className="p-2 rounded-xl border border-[#e3e3e8] hover:bg-rose-50 text-rose-600 hover:border-rose-200"
-                          title="Удалить"
-                        >
-                          <Trash className="w-4 h-4" />
-                        </button>
+        <div className="space-y-4">
+          {/* Smart Toolbar: Search, Filters, Category, Export */}
+          <div className="bg-white p-4 border border-[#e3e3e8] rounded-2xl shadow-sm flex flex-col gap-3">
+            <div className="flex flex-col md:flex-row gap-3 justify-between items-stretch md:items-center">
+              {/* Multi-field Live Search */}
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Поиск по названию, артикулу (SKU), штрихкоду, категории..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="w-full bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl pl-9 pr-9 py-2 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f] transition-colors"
+                />
+                {productSearch && (
+                  <button
+                    onClick={() => setProductSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    title="Очистить поиск"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Category Dropdown */}
+              <div className="flex gap-2 items-center">
+                <select
+                  value={productCategoryFilter}
+                  onChange={(e) => setProductCategoryFilter(e.target.value)}
+                  className="bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl px-3 py-2 text-xs font-semibold text-[#1d1d1f] focus:outline-none focus:border-[#0b57d0]"
+                >
+                  <option value="all">Все категории ({categories.length})</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Export full/filtered catalog to Excel */}
+                <button
+                  onClick={() => handleExportProductsToExcel()}
+                  className="flex items-center gap-1.5 px-3 py-2 border border-[#e3e3e8] hover:bg-[#f8f9fa] text-[#1d1d1f] rounded-xl font-semibold text-xs whitespace-nowrap shadow-sm transition-colors"
+                  title="Экспорт отфильтрованного списка в Excel"
+                >
+                  <Download className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Экспорт в Excel</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Filter Badges (All, In Stock, Low Stock, Out of Stock) */}
+            <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100 items-center">
+              <span className="text-[11px] font-bold text-[#86868b] mr-1">Наличие:</span>
+              <button
+                onClick={() => setProductStockFilter('all')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  productStockFilter === 'all'
+                    ? 'bg-[#1d1d1f] text-white shadow-sm'
+                    : 'bg-slate-100 hover:bg-slate-200 text-[#5f6368]'
+                }`}
+              >
+                Все товары ({stockCounts.all})
+              </button>
+              <button
+                onClick={() => setProductStockFilter('in_stock')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  productStockFilter === 'in_stock'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/50'
+                }`}
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                В наличии ({stockCounts.in_stock})
+              </button>
+              <button
+                onClick={() => setProductStockFilter('low_stock')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  productStockFilter === 'low_stock'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/50'
+                }`}
+              >
+                <AlertTriangle className="w-3 h-3" />
+                Заканчивается ({stockCounts.low_stock})
+              </button>
+              <button
+                onClick={() => setProductStockFilter('out_of_stock')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  productStockFilter === 'out_of_stock'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/50'
+                }`}
+              >
+                Нет на складе ({stockCounts.out_of_stock})
+              </button>
+
+              {(productSearch || productStockFilter !== 'all' || productCategoryFilter !== 'all') && (
+                <button
+                  onClick={() => {
+                    setProductSearch('');
+                    setProductStockFilter('all');
+                    setProductCategoryFilter('all');
+                  }}
+                  className="ml-auto text-xs text-[#0b57d0] hover:underline flex items-center gap-1 font-semibold"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Сбросить фильтры
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Bulk Selection Floating/Sticky Toolbar */}
+          {selectedProductIds.length > 0 && (
+            <div className="bg-[#0b57d0] text-white p-3 px-4 rounded-xl flex items-center justify-between shadow-md transition-all">
+              <div className="flex items-center gap-2 text-xs font-semibold">
+                <Check className="w-4 h-4 bg-white/20 rounded p-0.5" />
+                <span>Выбрано товаров: <b>{selectedProductIds.length}</b> из {filteredProducts.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleExportProductsToExcel()}
+                  className="px-3 py-1.5 bg-white text-[#0b57d0] rounded-lg text-xs font-bold hover:bg-white/90 flex items-center gap-1 shadow-sm transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Выгрузить ({selectedProductIds.length}) в Excel</span>
+                </button>
+                <button
+                  onClick={handleBulkDeleteProducts}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
+                >
+                  <Trash className="w-3.5 h-3.5" />
+                  <span>Удалить ({selectedProductIds.length})</span>
+                </button>
+                <button
+                  onClick={() => setSelectedProductIds([])}
+                  className="text-xs text-white/80 hover:text-white px-2 py-1"
+                >
+                  Снять выбор
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Main Products Table */}
+          <div className="bg-white border border-[#e3e3e8] rounded-2xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#e3e3e8] flex justify-between items-center bg-[#fcfcfd]">
+              <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                <Package className="w-4 h-4 text-[#0b57d0]" />
+                <span>Номенклатура товаров</span>
+                <span className="text-xs font-normal text-slate-500">
+                  (Показано {filteredProducts.length} из {products.length})
+                </span>
+              </h4>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#e3e3e8] bg-[#f8f9fa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider select-none">
+                    <th className="p-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={filteredProducts.length > 0 && selectedProductIds.length === filteredProducts.length}
+                        onChange={handleToggleSelectAllProducts}
+                        className="rounded border-slate-300 text-[#0b57d0] focus:ring-[#0b57d0] cursor-pointer"
+                        title="Выбрать все"
+                      />
+                    </th>
+                    <th className="p-3 w-16">Фото</th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('name')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Товар</span>
+                        {productSortField === 'name' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
                       </div>
-                    </td>
+                    </th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('sku')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Артикул (SKU)</span>
+                        {productSortField === 'sku' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('category')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Категория</span>
+                        {productSortField === 'category' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('unit')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Ед. изм.</span>
+                        {productSortField === 'unit' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('stock')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Остаток</span>
+                        {productSortField === 'stock' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
+                      </div>
+                    </th>
+                    <th
+                      className="p-3 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+                      onClick={() => toggleProductSort('price')}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span>Цена (TJS)</span>
+                        {productSortField === 'price' ? (
+                          productSortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0b57d0]" /> : <ArrowDown className="w-3 h-3 text-[#0b57d0]" />
+                        ) : (
+                          <ArrowUpDown className="w-3 h-3 opacity-30" />
+                        )}
+                      </div>
+                    </th>
+                    <th className="p-3 text-right">Действия</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#e3e3e8]/60 text-xs">
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-12 text-center">
+                        <div className="flex flex-col items-center justify-center max-w-sm mx-auto space-y-3">
+                          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                            <Search className="w-6 h-6" />
+                          </div>
+                          <div className="text-sm font-bold text-[#1d1d1f]">Товары не найдены</div>
+                          <p className="text-xs text-slate-500">
+                            По запросу ничего не найдено. Попробуйте сбросить фильтры или ввести другой поисковый запрос.
+                          </p>
+                          <button
+                            onClick={() => {
+                              setProductSearch('');
+                              setProductStockFilter('all');
+                              setProductCategoryFilter('all');
+                            }}
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-[#1d1d1f] rounded-xl text-xs font-semibold transition-colors"
+                          >
+                            Сбросить фильтры
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProducts.map((p) => {
+                      const stockVal = getProductStock(p);
+                      const isSelected = selectedProductIds.includes(p.id);
+                      return (
+                        <tr
+                          key={p.id}
+                          className={`hover:bg-slate-50 transition-colors ${
+                            isSelected ? 'bg-blue-50/50' : ''
+                          }`}
+                        >
+                          <td className="p-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectProduct(p.id)}
+                              className="rounded border-slate-300 text-[#0b57d0] focus:ring-[#0b57d0] cursor-pointer"
+                            />
+                          </td>
+                          <td className="p-3">
+                            {p.imageUrl ? (
+                              <img 
+                                src={p.imageUrl} 
+                                alt={p.name} 
+                                className="w-10 h-10 rounded-lg object-cover border border-slate-200" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-lg bg-[#f8f9fa] border border-[#e3e3e8] flex items-center justify-center text-[10px] text-slate-400 font-bold">Фото нет</div>
+                            )}
+                          </td>
+                          <td className="p-3">
+                            <div className="font-bold text-[#1d1d1f]">{p.name}</div>
+                            {p.barcode && (
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">Штрихкод: {p.barcode}</div>
+                            )}
+                          </td>
+                          <td className="p-3 text-[#5f6368] font-mono">{p.sku || '—'}</td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[11px] font-medium border border-slate-200/60">
+                              {getProductCategoryName(p)}
+                            </span>
+                          </td>
+                          <td className="p-3 text-[#5f6368]">{p.unit || 'pcs'}</td>
+                          <td className="p-3">
+                            {stockVal > 10 ? (
+                              <span className="font-mono bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full font-bold border border-emerald-200 text-[11px]">
+                                {stockVal} {p.unit || 'шт'}
+                              </span>
+                            ) : stockVal > 0 ? (
+                              <span className="font-mono bg-amber-50 text-amber-700 px-2.5 py-0.5 rounded-full font-bold border border-amber-200 text-[11px]">
+                                {stockVal} {p.unit || 'шт'}
+                              </span>
+                            ) : (
+                              <span className="font-mono bg-rose-50 text-rose-700 px-2.5 py-0.5 rounded-full font-bold border border-rose-200 text-[11px]">
+                                0 {p.unit || 'шт'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 font-bold text-[#1d1d1f] font-mono">
+                            {parseFloat(p.price || 0).toFixed(2)} TJS
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditProduct(p)}
+                                className="p-2 rounded-xl border border-[#e3e3e8] hover:bg-[#f8f9fa] text-[#5f6368]"
+                                title="Редактировать"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProduct(p.id)}
+                                className="p-2 rounded-xl border border-[#e3e3e8] hover:bg-rose-50 text-rose-600 hover:border-rose-200"
+                                title="Удалить"
+                              >
+                                <Trash className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

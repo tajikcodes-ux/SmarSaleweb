@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import api from '../services/api';
 import { 
   Plus, Navigation, Wallet, Edit, Trash, X, FileText, 
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle,
-  Sparkles
-} from 'lucide-react';
+  Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 
@@ -19,7 +18,15 @@ L.Icon.Default.mergeOptions({
 export default function Clients() {
   const [clients, setClients] = useState<any[]>([]);
   const [priceCategories, setPriceCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Search, filter, sorting and selection states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debtFilter, setDebtFilter] = useState<'all' | 'debtors' | 'overlimit' | 'nodebt'>('all');
+  const [selectedPriceCategory, setSelectedPriceCategory] = useState<string>('all');
+  const [sortField, setSortField] = useState<'name' | 'currentDebt' | 'creditLimit' | 'phone' | 'address'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const handlePrintReconciliation = async (clientId: string) => {
@@ -389,6 +396,139 @@ export default function Clients() {
     }
   };
 
+    // Calculate dynamic stats
+  const totalDebtSum = useMemo(() => {
+    return clients.reduce((acc, c) => acc + (parseFloat(c.currentDebt || 0) > 0 ? parseFloat(c.currentDebt || 0) : 0), 0);
+  }, [clients]);
+
+  const debtorClientsCount = useMemo(() => {
+    return clients.filter(c => parseFloat(c.currentDebt || 0) > 0).length;
+  }, [clients]);
+
+  const overlimitClientsCount = useMemo(() => {
+    return clients.filter(c => {
+      const debt = parseFloat(c.currentDebt || 0);
+      const limit = parseFloat(c.creditLimit || 0);
+      return limit > 0 && debt > limit;
+    }).length;
+  }, [clients]);
+
+  // Filtered and sorted clients
+  const filteredAndSortedClients = useMemo(() => {
+    return clients
+      .filter((client) => {
+        // Text search across name, phone, tin, address, legalName
+        if (searchTerm.trim()) {
+          const q = searchTerm.toLowerCase().trim();
+          const matchesName = (client.name || '').toLowerCase().includes(q);
+          const matchesPhone = (client.phone || '').toLowerCase().includes(q);
+          const matchesTin = (client.tin || '').toLowerCase().includes(q);
+          const matchesAddress = (client.address || '').toLowerCase().includes(q);
+          const matchesLegal = (client.legalName || '').toLowerCase().includes(q);
+          if (!matchesName && !matchesPhone && !matchesTin && !matchesAddress && !matchesLegal) {
+            return false;
+          }
+        }
+
+        // Debt filter
+        const debt = parseFloat(client.currentDebt || 0);
+        const limit = parseFloat(client.creditLimit || 0);
+        if (debtFilter === 'debtors' && debt <= 0) return false;
+        if (debtFilter === 'overlimit' && (limit <= 0 || debt <= limit)) return false;
+        if (debtFilter === 'nodebt' && debt > 0) return false;
+
+        // Price category filter
+        if (selectedPriceCategory !== 'all') {
+          if (client.priceCategoryId !== selectedPriceCategory) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        let valA = a[sortField];
+        let valB = b[sortField];
+
+        if (sortField === 'currentDebt' || sortField === 'creditLimit') {
+          valA = parseFloat(valA || 0);
+          valB = parseFloat(valB || 0);
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+
+        valA = (valA || '').toString().toLowerCase();
+        valB = (valB || '').toString().toLowerCase();
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+  }, [clients, searchTerm, debtFilter, selectedPriceCategory, sortField, sortDirection]);
+
+  const toggleSort = (field: 'name' | 'currentDebt' | 'creditLimit' | 'phone' | 'address') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'currentDebt' ? 'desc' : 'asc');
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedClientIds.length === filteredAndSortedClients.length) {
+      setSelectedClientIds([]);
+    } else {
+      setSelectedClientIds(filteredAndSortedClients.map(c => c.id));
+    }
+  };
+
+  const toggleSelectClient = (id: string) => {
+    setSelectedClientIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleExportFilteredExcel = (onlySelected = false) => {
+    const dataToExport = onlySelected 
+      ? filteredAndSortedClients.filter(c => selectedClientIds.includes(c.id))
+      : filteredAndSortedClients;
+    
+    if (dataToExport.length === 0) {
+      alert('Нет клиентов для выгрузки');
+      return;
+    }
+
+    const headers = ['Название точки', 'Юр. лицо', 'ИНН', 'Телефон', 'Адрес', 'Координаты', 'Долг (TJS)', 'Лимит (TJS)', 'Ценовая категория'];
+    const rows = dataToExport.map(c => [
+      c.name,
+      c.legalName || '—',
+      c.tin || '—',
+      c.phone,
+      c.address,
+      `${parseFloat(c.latitude || 0).toFixed(4)}, ${parseFloat(c.longitude || 0).toFixed(4)}`,
+      parseFloat(c.currentDebt || 0),
+      parseFloat(c.creditLimit || 0),
+      priceCategories.find(p => p.id === c.priceCategoryId)?.name || 'Базовая розница'
+    ]);
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 30 }, { wch: 22 }, { wch: 15 }, { wch: 15 }, { wch: 22 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Реестр клиентов');
+    XLSX.writeFile(wb, `smartsale_clients_${new Date().toISOString().substring(0, 10)}.xlsx`);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedClientIds.length === 0) return;
+    if (!window.confirm(`Вы уверены, что хотите удалить выбранных клиентов (${selectedClientIds.length} точек)?`)) return;
+    try {
+      for (const id of selectedClientIds) {
+        await api.delete(`/clients/${id}`);
+      }
+      setSelectedClientIds([]);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при массовом удалении');
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
@@ -700,65 +840,333 @@ export default function Clients() {
         </div>
       )}
 
+            {/* Smart Search, Filter Chips & Bulk Action Toolbar */}
+      <div className="space-y-3">
+        {/* Search & Top Action Bar */}
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-white p-3.5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Поиск магазина по названию, телефону, ИНН, адресу или юр. лицу..."
+              className="w-full pl-9 pr-8 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#1d1d1f] placeholder:text-slate-400 focus:outline-none focus:border-[#0071e3] transition-colors"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-2.5 p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Очистить поиск"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Price Category Dropdown */}
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPriceCategory}
+              onChange={(e) => setSelectedPriceCategory(e.target.value)}
+              className="px-3 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f] focus:outline-none focus:border-[#0071e3] font-medium"
+            >
+              <option value="all">Все ценовые категории</option>
+              {priceCategories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => handleExportFilteredExcel(false)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-[#1d1d1f] rounded-lg text-xs font-semibold transition-colors"
+              title="Выгрузить отфильтрованный список в Excel"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <span>Excel</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Filter Badges / Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setDebtFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                debtFilter === 'all'
+                  ? 'bg-[#1d1d1f] text-white shadow-sm'
+                  : 'bg-white hover:bg-slate-100 text-slate-600 border border-[#e9e9e7]'
+              }`}
+            >
+              Все точки ({clients.length})
+            </button>
+
+            <button
+              onClick={() => setDebtFilter('debtors')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                debtFilter === 'debtors'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-rose-50 text-rose-600 border border-rose-200'
+              }`}
+            >
+              <span>Должники</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold ml-0.5">
+                {debtorClientsCount} ({totalDebtSum > 0 ? totalDebtSum.toFixed(0) + ' TJS' : '0 TJS'})
+              </span>
+            </button>
+
+            <button
+              onClick={() => setDebtFilter('overlimit')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                debtFilter === 'overlimit'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-amber-50 text-amber-700 border border-amber-200'
+              }`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              <span>Превышен лимит</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold ml-0.5">
+                {overlimitClientsCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setDebtFilter('nodebt')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                debtFilter === 'nodebt'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200'
+              }`}
+            >
+              Без долга ({clients.length - debtorClientsCount})
+            </button>
+          </div>
+
+          <div className="text-[11px] text-[#86868b] font-medium">
+            Показано: <span className="font-bold text-[#1d1d1f]">{filteredAndSortedClients.length}</span> из {clients.length}
+          </div>
+        </div>
+
+        {/* Bulk Action Bar (Shows when rows are checked) */}
+        {selectedClientIds.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-slate-900 text-white rounded-xl shadow-md animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <span className="px-2 py-0.5 bg-white/20 text-xs font-bold rounded-md">
+                {selectedClientIds.length}
+              </span>
+              <span className="text-xs font-medium">клиентов выбрано</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleExportFilteredExcel(true)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Выгрузить ({selectedClientIds.length}) в Excel</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-1 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-colors"
+              >
+                <Trash className="w-3.5 h-3.5" />
+                <span>Удалить выбранных</span>
+              </button>
+              <button
+                onClick={() => setSelectedClientIds([])}
+                className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors"
+              >
+                Снять выбор
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white border border-[#e9e9e7] rounded-xl overflow-x-auto shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-[#e9e9e7] bg-[#fbfbfa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
-              <th className="p-3.5">Название точки</th>
+            <tr className="border-b border-[#e9e9e7] bg-[#fbfbfa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider select-none">
+              <th className="p-3.5 w-10 text-center">
+                <input
+                  type="checkbox"
+                  checked={filteredAndSortedClients.length > 0 && selectedClientIds.length === filteredAndSortedClients.length}
+                  onChange={toggleSelectAll}
+                  className="rounded border-slate-300 text-[#0071e3] focus:ring-0 cursor-pointer"
+                  title="Выбрать всех на экране"
+                />
+              </th>
+              <th 
+                onClick={() => toggleSort('name')} 
+                className="p-3.5 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Название точки</span>
+                  {sortField === 'name' ? (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-[#0071e3]" /> : <ArrowDown className="w-3.5 h-3.5 text-[#0071e3]" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-slate-300" />
+                  )}
+                </div>
+              </th>
               <th className="p-3.5">ИНН</th>
-              <th className="p-3.5">Контакты</th>
-              <th className="p-3.5">Адрес</th>
+              <th 
+                onClick={() => toggleSort('phone')} 
+                className="p-3.5 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Контакты</span>
+                  {sortField === 'phone' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-[#0071e3]" /> : <ArrowDown className="w-3.5 h-3.5 text-[#0071e3]" />)}
+                </div>
+              </th>
+              <th 
+                onClick={() => toggleSort('address')} 
+                className="p-3.5 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Адрес</span>
+                  {sortField === 'address' && (sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-[#0071e3]" /> : <ArrowDown className="w-3.5 h-3.5 text-[#0071e3]" />)}
+                </div>
+              </th>
               <th className="p-3.5">Координаты</th>
-              <th className="p-3.5">Дебет</th>
-              <th className="p-3.5">Лимит</th>
+              <th 
+                onClick={() => toggleSort('currentDebt')} 
+                className="p-3.5 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+              >
+                <div className="flex items-center gap-1.5 text-rose-600">
+                  <span>Дебет (Долг)</span>
+                  {sortField === 'currentDebt' ? (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-rose-600" /> : <ArrowDown className="w-3.5 h-3.5 text-rose-600" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-rose-300" />
+                  )}
+                </div>
+              </th>
+              <th 
+                onClick={() => toggleSort('creditLimit')} 
+                className="p-3.5 cursor-pointer hover:text-[#1d1d1f] transition-colors"
+              >
+                <div className="flex items-center gap-1.5 text-emerald-700">
+                  <span>Лимит</span>
+                  {sortField === 'creditLimit' ? (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5 text-emerald-700" /> : <ArrowDown className="w-3.5 h-3.5 text-emerald-700" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-emerald-300" />
+                  )}
+                </div>
+              </th>
               <th className="p-3.5 text-right">Действия</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#e9e9e7]/60 text-xs">
-            {clients.map((item) => (
-              <tr key={item.id} className="hover:bg-[#fbfbfa] transition-colors">
-                <td className="p-3.5 font-bold text-[#37352f]">{item.name}</td>
-                <td className="p-3.5 text-[#6a6a65] font-mono">{item.tin || '—'}</td>
-                <td className="p-3.5 text-[#37352f]">{item.phone}</td>
-                <td className="p-3.5 text-[#37352f] max-w-[200px] truncate">{item.address}</td>
-                <td className="p-3.5 text-[#86868b] font-mono flex items-center gap-1">
-                  <Navigation className="w-3.5 h-3.5 text-[#0071e3]" />
-                  <span>{parseFloat(item.latitude || 0).toFixed(4)}, {parseFloat(item.longitude || 0).toFixed(4)}</span>
-                </td>
-                <td className="p-3.5 text-rose-600 font-bold font-mono">
-                  {parseFloat(item.currentDebt || 0).toFixed(2)} TJS
-                </td>
-                <td className="p-3.5 text-emerald-700 font-bold font-mono flex items-center gap-1">
-                  <Wallet className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{parseFloat(item.creditLimit || 0).toFixed(2)} TJS</span>
-                </td>
-                <td className="p-3.5 text-right">
-                  <div className="flex justify-end gap-1.5">
-                    <button
-                      onClick={() => handlePrintReconciliation(item.id)}
-                      className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-blue-50 text-[#0071e3] hover:border-blue-200"
-                      title="Акт сверки взаиморасчетов"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(item)}
-                      className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-[#f8f9fa] text-[#5f6368]"
-                      title="Редактировать"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteClient(item.id)}
-                      className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-rose-50 text-rose-600 hover:border-rose-200"
-                      title="Удалить"
-                    >
-                      <Trash className="w-3.5 h-3.5" />
-                    </button>
+            {filteredAndSortedClients.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="p-12 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                      <Search className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-sm font-bold text-[#1d1d1f]">Ничего не найдено</div>
+                      <div className="text-xs text-[#86868b]">Попробуйте изменить поисковый запрос или сбросить фильтры</div>
+                    </div>
+                    {(searchTerm || debtFilter !== 'all' || selectedPriceCategory !== 'all') && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setDebtFilter('all');
+                          setSelectedPriceCategory('all');
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg text-xs font-semibold transition-colors mt-2"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Сбросить все фильтры</span>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
-            ))}
+            ) : (
+              filteredAndSortedClients.map((item) => {
+                const isChecked = selectedClientIds.includes(item.id);
+                const debt = parseFloat(item.currentDebt || 0);
+                const limit = parseFloat(item.creditLimit || 0);
+                const isOverlimit = limit > 0 && debt > limit;
+
+                return (
+                  <tr 
+                    key={item.id} 
+                    className={`transition-colors ${
+                      isChecked ? 'bg-blue-50/60' : 'hover:bg-[#fbfbfa]'
+                    }`}
+                  >
+                    <td className="p-3.5 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleSelectClient(item.id)}
+                        className="rounded border-slate-300 text-[#0071e3] focus:ring-0 cursor-pointer"
+                      />
+                    </td>
+                    <td className="p-3.5">
+                      <div className="font-bold text-[#37352f] flex items-center gap-1.5">
+                        <span>{item.name}</span>
+                        {isOverlimit && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800" title="Превышен кредитный лимит">
+                            Лимит!
+                          </span>
+                        )}
+                      </div>
+                      {item.legalName && (
+                        <div className="text-[10px] text-[#86868b] truncate max-w-[180px]">{item.legalName}</div>
+                      )}
+                    </td>
+                    <td className="p-3.5 text-[#6a6a65] font-mono">{item.tin || '—'}</td>
+                    <td className="p-3.5 text-[#37352f] font-mono">{item.phone}</td>
+                    <td className="p-3.5 text-[#37352f] max-w-[200px] truncate" title={item.address}>{item.address}</td>
+                    <td className="p-3.5 text-[#86868b] font-mono flex items-center gap-1">
+                      <Navigation className="w-3.5 h-3.5 text-[#0071e3]" />
+                      <span>{parseFloat(item.latitude || 0).toFixed(4)}, {parseFloat(item.longitude || 0).toFixed(4)}</span>
+                    </td>
+                    <td className="p-3.5 text-rose-600 font-bold font-mono">
+                      {debt > 0 ? `${debt.toFixed(2)} TJS` : '0.00 TJS'}
+                    </td>
+                    <td className="p-3.5 text-emerald-700 font-bold font-mono">
+                      <div className="flex items-center gap-1">
+                        <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{limit.toFixed(2)} TJS</span>
+                      </div>
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <button
+                          onClick={() => handlePrintReconciliation(item.id)}
+                          className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-blue-50 text-[#0071e3] hover:border-blue-200 transition-colors"
+                          title="Акт сверки взаиморасчетов"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-slate-50 text-[#6a6a65] hover:text-[#1d1d1f] transition-colors"
+                          title="Редактировать точку"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClient(item.id)}
+                          className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-rose-50 text-[#6a6a65] hover:text-rose-600 hover:border-rose-200 transition-colors"
+                          title="Удалить"
+                        >
+                          <Trash className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
       </div>

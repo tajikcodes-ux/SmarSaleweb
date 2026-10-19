@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
-import { ShoppingCart, Calendar, CreditCard, Plus, Filter, FileText, Scale, Droplet, Printer } from 'lucide-react';
+import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function Orders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -8,6 +8,16 @@ export default function Orders() {
   const [products, setProducts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Smart Filter, Search, Sort & Selection States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'today' | 'on_hold' | 'unpaid' | 'paid' | 'delivered' | 'pending'>('all');
+  const [datePreset, setDatePreset] = useState<'all' | 'today' | 'yesterday' | 'week' | 'month' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [sortField, setSortField] = useState<'id' | 'client' | 'salesRep' | 'totalAmount' | 'deliveryDate' | 'createdAt' | 'status'>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
   // Filter states
   const [selectedZone, setSelectedZone] = useState('all');
@@ -261,13 +271,131 @@ export default function Orders() {
   const defaultPresets = ['Сино', 'Фирдавси', 'И. Сомони', 'Шохмансур', 'Худжанд'];
   const allZones = Array.from(new Set([...defaultPresets, ...dynamicZones]));
 
-  // Apply filters dynamically
-  const filteredOrders = processedOrders.filter((o) => {
-    const matchZone = selectedZone === 'all' || o.workZone === selectedZone;
-    const matchRep = selectedRep === 'all' || o.salesRepId === selectedRep;
-    const matchPayment = selectedPayment === 'all' || o.paymentStatus === selectedPayment;
-    return matchZone && matchRep && matchPayment;
-  });
+  // Dynamic counts for status chips
+  const todayStr = new Date().toISOString().substring(0, 10);
+  const onHoldCount = useMemo(() => processedOrders.filter(o => o.status === 'on_hold' || o.status === 'hold').length, [processedOrders]);
+  const unpaidCount = useMemo(() => processedOrders.filter(o => o.paymentStatus !== 'paid').length, [processedOrders]);
+  const deliveredCount = useMemo(() => processedOrders.filter(o => o.status === 'delivered').length, [processedOrders]);
+  const todayCount = useMemo(() => processedOrders.filter(o => (o.createdAt || '').substring(0, 10) === todayStr).length, [processedOrders, todayStr]);
+
+  // Apply filters & search dynamically with useMemo
+  const filteredOrders = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterday = today - 86400000;
+    const weekAgo = today - 7 * 86400000;
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+    return processedOrders.filter((o) => {
+      // 1. Text Search
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase().trim();
+        const idMatch = (o.id || '').toLowerCase().includes(q);
+        const clientMatch = (o.client?.name || '').toLowerCase().includes(q);
+        const phoneMatch = (o.client?.phone || '').toLowerCase().includes(q);
+        const addressMatch = (o.client?.address || '').toLowerCase().includes(q);
+        const repMatch = `${o.salesRep?.firstName || ''} ${o.salesRep?.lastName || ''}`.toLowerCase().includes(q);
+        const notesMatch = (o.userNotes || o.notes || '').toLowerCase().includes(q);
+        const zoneMatch = (o.workZone || '').toLowerCase().includes(q);
+
+        if (!idMatch && !clientMatch && !phoneMatch && !addressMatch && !repMatch && !notesMatch && !zoneMatch) {
+          return false;
+        }
+      }
+
+      // 2. Status Chip Filter
+      if (statusFilter === 'today') {
+        if ((o.createdAt || '').substring(0, 10) !== todayStr) return false;
+      } else if (statusFilter === 'on_hold') {
+        if (o.status !== 'on_hold' && o.status !== 'hold') return false;
+      } else if (statusFilter === 'unpaid') {
+        if (o.paymentStatus === 'paid') return false;
+      } else if (statusFilter === 'paid') {
+        if (o.paymentStatus !== 'paid') return false;
+      } else if (statusFilter === 'delivered') {
+        if (o.status !== 'delivered') return false;
+      } else if (statusFilter === 'pending') {
+        if (o.status !== 'pending' && o.status !== 'approved') return false;
+      }
+
+      // 3. Date Presets Filter
+      if (datePreset !== 'all') {
+        const orderTime = new Date(o.createdAt || o.deliveryDate).getTime();
+        if (datePreset === 'today') {
+          if (orderTime < today) return false;
+        } else if (datePreset === 'yesterday') {
+          if (orderTime < yesterday || orderTime >= today) return false;
+        } else if (datePreset === 'week') {
+          if (orderTime < weekAgo) return false;
+        } else if (datePreset === 'month') {
+          if (orderTime < monthStart) return false;
+        } else if (datePreset === 'custom') {
+          if (customStartDate && (o.createdAt || '').substring(0, 10) < customStartDate) return false;
+          if (customEndDate && (o.createdAt || '').substring(0, 10) > customEndDate) return false;
+        }
+      }
+
+      // 4. Dropdown Filters
+      const matchZone = selectedZone === 'all' || o.workZone === selectedZone;
+      const matchRep = selectedRep === 'all' || o.salesRepId === selectedRep;
+      const matchPayment = selectedPayment === 'all' || o.paymentStatus === selectedPayment;
+
+      return matchZone && matchRep && matchPayment;
+    }).sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
+
+      if (sortField === 'totalAmount') {
+        valA = parseFloat(valA || 0);
+        valB = parseFloat(valB || 0);
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      }
+
+      if (sortField === 'deliveryDate' || sortField === 'createdAt') {
+        valA = new Date(valA || 0).getTime();
+        valB = new Date(valB || 0).getTime();
+        return sortDirection === 'asc' ? valA - valB : valB - valA;
+      }
+
+      if (sortField === 'client') {
+        valA = (a.client?.name || '').toLowerCase();
+        valB = (b.client?.name || '').toLowerCase();
+      } else if (sortField === 'salesRep') {
+        valA = `${a.salesRep?.firstName || ''} ${a.salesRep?.lastName || ''}`.toLowerCase();
+        valB = `${b.salesRep?.firstName || ''} ${b.salesRep?.lastName || ''}`.toLowerCase();
+      } else {
+        valA = (valA || '').toString().toLowerCase();
+        valB = (valB || '').toString().toLowerCase();
+      }
+
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [processedOrders, searchTerm, statusFilter, datePreset, customStartDate, customEndDate, selectedZone, selectedRep, selectedPayment, sortField, sortDirection, todayStr]);
+
+  const toggleOrderSort = (field: 'id' | 'client' | 'salesRep' | 'totalAmount' | 'deliveryDate' | 'createdAt' | 'status') => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection(field === 'totalAmount' || field === 'createdAt' ? 'desc' : 'asc');
+    }
+  };
+
+  const toggleSelectAllOrders = () => {
+    if (selectedOrderIds.length === filteredOrders.length) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(filteredOrders.map(o => o.id));
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrderIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
   const totalAmountSum = filteredOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount.toString()), 0);
   const totalDeals = filteredOrders.length;
@@ -383,58 +511,218 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white border border-[#e9e9e7] p-4 rounded-xl flex flex-wrap gap-4 items-center shadow-sm">
-        <div className="flex items-center gap-1.5 text-xs text-[#86868b] font-bold">
-          <Filter className="w-3.5 h-3.5" />
-          <span>ФИЛЬТРЫ:</span>
+      {/* Smart Search & Filter Control Center */}
+      <div className="space-y-3 no-print">
+        {/* Search & Top Action Bar */}
+        <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-white p-3.5 border border-[#e9e9e7] rounded-xl shadow-sm">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Поиск заказа по номеру, клиенту, телефону, адресу, агенту или примечанию..."
+              className="w-full pl-9 pr-8 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#1d1d1f] placeholder:text-slate-400 focus:outline-none focus:border-[#0071e3] transition-colors"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-2.5 p-0.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                title="Очистить поиск"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Dropdown Filters Group */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Zone Filter */}
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              className="px-2.5 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f] focus:outline-none focus:border-[#0071e3]"
+            >
+              <option value="all">Все зоны</option>
+              {allZones.map((zone) => (
+                <option key={zone} value={zone}>{zone}</option>
+              ))}
+            </select>
+
+            {/* Rep Filter */}
+            <select
+              value={selectedRep}
+              onChange={(e) => setSelectedRep(e.target.value)}
+              className="px-2.5 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f] focus:outline-none focus:border-[#0071e3]"
+            >
+              <option value="all">Все агенты</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
+              ))}
+            </select>
+
+            {/* Date Preset Selector */}
+            <select
+              value={datePreset}
+              onChange={(e) => setDatePreset(e.target.value as any)}
+              className="px-2.5 py-2 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f] focus:outline-none focus:border-[#0071e3] font-medium"
+            >
+              <option value="all">За все время</option>
+              <option value="today">За сегодня</option>
+              <option value="yesterday">За вчера</option>
+              <option value="week">За 7 дней</option>
+              <option value="month">За этот месяц</option>
+              <option value="custom">Указать даты...</option>
+            </select>
+
+            {datePreset === 'custom' && (
+              <div className="flex items-center gap-1.5 animate-fadeIn">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-2 py-1.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f]"
+                />
+                <span className="text-xs text-slate-400">—</span>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-2 py-1.5 bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg text-xs text-[#37352f]"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Dynamic Zone Filter */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[9px] uppercase font-bold text-[#86868b]">Рабочая зона</label>
-          <select
-            value={selectedZone}
-            onChange={(e) => setSelectedZone(e.target.value)}
-            className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none text-[#37352f] cursor-pointer"
-          >
-            <option value="all">Все зоны</option>
-            {allZones.map((zone) => (
-              <option key={zone} value={zone}>{zone}</option>
-            ))}
-          </select>
+        {/* Status Filter Badges (Chips) */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === 'all'
+                  ? 'bg-[#1d1d1f] text-white shadow-sm'
+                  : 'bg-white hover:bg-slate-100 text-slate-600 border border-[#e9e9e7]'
+              }`}
+            >
+              Все заказы ({processedOrders.length})
+            </button>
+
+            <button
+              onClick={() => setStatusFilter('today')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === 'today'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-blue-50 text-blue-600 border border-blue-200'
+              }`}
+            >
+              <Clock className="w-3 h-3" />
+              <span>Сегодня</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-700 font-bold ml-0.5">
+                {todayCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter('on_hold')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === 'on_hold'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-amber-50 text-amber-700 border border-amber-200'
+              }`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              <span>На удержании (Hold)</span>
+              {onHoldCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-amber-100 text-amber-800 font-bold ml-0.5">
+                  {onHoldCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => setStatusFilter('unpaid')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === 'unpaid'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'bg-white hover:bg-rose-50 text-rose-600 border border-rose-200'
+              }`}
+            >
+              <CreditCard className="w-3 h-3" />
+              <span>Неоплаченные</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-100 text-rose-700 font-bold ml-0.5">
+                {unpaidCount}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setStatusFilter('delivered')}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                statusFilter === 'delivered'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200'
+              }`}
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              <span>Доставленные ({deliveredCount})</span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-[#86868b] font-medium">
+            Найдено: <span className="font-bold text-[#1d1d1f]">{filteredOrders.length}</span> из {processedOrders.length}
+          </div>
         </div>
 
-        {/* Dynamic Rep Filter */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[9px] uppercase font-bold text-[#86868b]">Сотрудник (Агент)</label>
-          <select
-            value={selectedRep}
-            onChange={(e) => setSelectedRep(e.target.value)}
-            className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none text-[#37352f] cursor-pointer"
-          >
-            <option value="all">Все сотрудники</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.firstName} {u.lastName} ({u.role})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Payment Filter */}
-        <div className="flex flex-col gap-1">
-          <label className="text-[9px] uppercase font-bold text-[#86868b]">Статус оплаты</label>
-          <select
-            value={selectedPayment}
-            onChange={(e) => setSelectedPayment(e.target.value)}
-            className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none text-[#37352f] cursor-pointer"
-          >
-            <option value="all">Любой статус</option>
-            <option value="paid">Оплачен</option>
-            <option value="unpaid">Не оплачен</option>
-          </select>
-        </div>
+        {/* Bulk Actions Bar for Orders */}
+        {selectedOrderIds.length > 0 && (
+          <div className="flex items-center justify-between p-3 bg-slate-900 text-white rounded-xl shadow-md animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <span className="px-2 py-0.5 bg-white/20 text-xs font-bold rounded-md">
+                {selectedOrderIds.length}
+              </span>
+              <span className="text-xs font-medium">заказов выбрано</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const selectedItems = filteredOrders.filter(o => selectedOrderIds.includes(o.id));
+                  const headers = ['ID Заказа', 'Клиент', 'Агент', 'Рабочая зона', 'Договор', 'Сумма (TJS)', 'Дата доставки', 'Оплата', 'Статус'];
+                  const rows = selectedItems.map(o => [
+                    o.id.slice(0, 8).toUpperCase(),
+                    o.client?.name || '—',
+                    `${o.salesRep?.firstName || ''} ${o.salesRep?.lastName || ''}`,
+                    o.workZone || '—',
+                    o.contract || '—',
+                    o.totalAmount,
+                    o.deliveryDate ? o.deliveryDate.substring(0, 10) : '—',
+                    o.paymentStatus === 'paid' ? 'Оплачен' : 'Не оплачен',
+                    o.status
+                  ]);
+                  const csvContent = "data:text/csv;charset=utf-8,﻿" + [headers.join(';'), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))].join('\n');
+                  const encodedUri = encodeURI(csvContent);
+                  const link = document.createElement("a");
+                  link.setAttribute("href", encodedUri);
+                  link.setAttribute("download", `selected_orders_${new Date().toISOString().substring(0, 10)}.csv`);
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Выгрузить ({selectedOrderIds.length}) в Excel</span>
+              </button>
+              <button
+                onClick={() => setSelectedOrderIds([])}
+                className="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-semibold transition-colors"
+              >
+                Снять выбор
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Creation Wizard */}
@@ -635,20 +923,79 @@ export default function Orders() {
       <div className="bg-white border border-[#e9e9e7] rounded-xl overflow-x-auto shadow-sm">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className={`border-b border-[#e9e9e7] bg-[#fbfbfa] font-bold text-[#86868b] uppercase tracking-wider ${
+            <tr className={`border-b border-[#e9e9e7] bg-[#fbfbfa] font-bold text-[#86868b] uppercase tracking-wider select-none ${
               tableDensity === 'compact' ? 'text-[9px]' : 'text-[10px]'
             }`}>
-              {visibleColumns.includes('id') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>ID Заказа</th>}
-              {visibleColumns.includes('client') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Клиент</th>}
-              {visibleColumns.includes('salesRep') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Агент</th>}
+              <th className="p-3 w-8 text-center no-print">
+                <input
+                  type="checkbox"
+                  checked={filteredOrders.length > 0 && selectedOrderIds.length === filteredOrders.length}
+                  onChange={toggleSelectAllOrders}
+                  className="rounded border-slate-300 text-[#0071e3] focus:ring-0 cursor-pointer"
+                  title="Выбрать все заказы"
+                />
+              </th>
+              {visibleColumns.includes('id') && (
+                <th onClick={() => toggleOrderSort('id')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1">
+                    <span>ID</span>
+                    {sortField === 'id' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0071e3]" /> : <ArrowDown className="w-3 h-3 text-[#0071e3]" />)}
+                  </div>
+                </th>
+              )}
+              {visibleColumns.includes('client') && (
+                <th onClick={() => toggleOrderSort('client')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1">
+                    <span>Клиент</span>
+                    {sortField === 'client' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0071e3]" /> : <ArrowDown className="w-3 h-3 text-[#0071e3]" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-slate-300" />
+                    )}
+                  </div>
+                </th>
+              )}
+              {visibleColumns.includes('salesRep') && (
+                <th onClick={() => toggleOrderSort('salesRep')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1">
+                    <span>Агент</span>
+                    {sortField === 'salesRep' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0071e3]" /> : <ArrowDown className="w-3 h-3 text-[#0071e3]" />)}
+                  </div>
+                </th>
+              )}
               {visibleColumns.includes('workZone') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Рабочая зона</th>}
               {visibleColumns.includes('contract') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Договор</th>}
-              {visibleColumns.includes('totalAmount') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Сумма</th>}
-              {visibleColumns.includes('deliveryDate') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Дата доставки</th>}
+              {visibleColumns.includes('totalAmount') && (
+                <th onClick={() => toggleOrderSort('totalAmount')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1 text-emerald-700">
+                    <span>Сумма</span>
+                    {sortField === 'totalAmount' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-emerald-700" /> : <ArrowDown className="w-3 h-3 text-emerald-700" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-emerald-300" />
+                    )}
+                  </div>
+                </th>
+              )}
+              {visibleColumns.includes('deliveryDate') && (
+                <th onClick={() => toggleOrderSort('deliveryDate')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1">
+                    <span>Доставка</span>
+                    {sortField === 'deliveryDate' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0071e3]" /> : <ArrowDown className="w-3 h-3 text-[#0071e3]" />)}
+                  </div>
+                </th>
+              )}
               {visibleColumns.includes('paymentStatus') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Оплата</th>}
-              {visibleColumns.includes('status') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Статус</th>}
+              {visibleColumns.includes('status') && (
+                <th onClick={() => toggleOrderSort('status')} className={`${tableDensity === 'compact' ? 'py-2 px-2' : 'p-3'} cursor-pointer hover:text-[#1d1d1f] transition-colors`}>
+                  <div className="flex items-center gap-1">
+                    <span>Статус</span>
+                    {sortField === 'status' && (sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-[#0071e3]" /> : <ArrowDown className="w-3 h-3 text-[#0071e3]" />)}
+                  </div>
+                </th>
+              )}
               {visibleColumns.includes('deliveryDriverId') && <th className={tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'}>Водитель</th>}
-              <th className={`${tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'} text-right`}>Действия</th>
+              <th className={`${tableDensity === 'compact' ? 'py-2 px-2.5' : 'p-3.5'} text-right no-print`}>Действия</th>
             </tr>
           </thead>
           <tbody className={`divide-y divide-[#e9e9e7]/60 ${tableDensity === 'compact' ? 'text-[11px]' : 'text-xs'}`}>
@@ -667,13 +1014,47 @@ export default function Orders() {
               ))
             ) : filteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length + 1} className="p-8 text-center text-xs text-[#86868b] italic">
-                  Нет заказов, соответствующих заданным фильтрам.
+                <td colSpan={visibleColumns.length + 2} className="p-12 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                      <Search className="w-6 h-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-sm font-bold text-[#1d1d1f]">Заказы не найдены</div>
+                      <div className="text-xs text-[#86868b]">Попробуйте изменить поисковый запрос, статус или диапазон дат</div>
+                    </div>
+                    {(searchTerm || statusFilter !== 'all' || datePreset !== 'all' || selectedZone !== 'all' || selectedRep !== 'all' || selectedPayment !== 'all') && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setStatusFilter('all');
+                          setDatePreset('all');
+                          setSelectedZone('all');
+                          setSelectedRep('all');
+                          setSelectedPayment('all');
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg text-xs font-semibold transition-colors mt-2"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Сбросить все фильтры</span>
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ) : (
-              filteredOrders.map((item) => (
-                <tr key={item.id} className="hover:bg-[#fbfbfa] transition-colors">
+              filteredOrders.map((item) => {
+                const isOrderChecked = selectedOrderIds.includes(item.id);
+                return (
+                <tr key={item.id} className={`transition-colors ${isOrderChecked ? 'bg-blue-50/60' : 'hover:bg-[#fbfbfa]'}`}>
+                  <td className="p-3 text-center no-print">
+                    <input
+                      type="checkbox"
+                      checked={isOrderChecked}
+                      onChange={() => toggleSelectOrder(item.id)}
+                      className="rounded border-slate-300 text-[#0071e3] focus:ring-0 cursor-pointer"
+                    />
+                  </td>
                   {visibleColumns.includes('id') && (
                     <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} font-bold text-[#6a6a65] font-mono`}>
                       {item.id.slice(0, 8).toUpperCase()}
@@ -823,7 +1204,8 @@ export default function Orders() {
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
