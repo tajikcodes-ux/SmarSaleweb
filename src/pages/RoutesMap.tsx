@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
-import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass } from 'lucide-react';
+import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass, Maximize2, Minimize2 } from 'lucide-react';
 import MapLibreView from '../components/MapLibreView';
 
 // Fix for default Leaflet icon paths in React production bundles
@@ -71,7 +71,12 @@ export default function RoutesMap() {
   const [mobileTab, setMobileTab] = useState<'map' | 'list'>('map');
   const [showLegend, setShowLegend] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  const [showMobileLayers, setShowMobileLayers] = useState(false);
+  const [showTimelineScrubber, setShowTimelineScrubber] = useState(false);
+  const [isFullscreenMap, setIsFullscreenMap] = useState(false);
+  const [showMobileFilterModal, setShowMobileFilterModal] = useState(false);
+  const [showMobileLegendModal, setShowMobileLegendModal] = useState(false);
 
   // Advanced Filtering & Timeline playback states
   const [mapFilter, setMapFilter] = useState<'ALL' | 'SALES_REP' | 'DELIVERY' | 'SUPERVISOR' | 'VISITS' | 'DEBT' | 'STORES'>('ALL');
@@ -1578,81 +1583,85 @@ export default function RoutesMap() {
   }
 
   return (
-    <div className="space-y-4 flex flex-col h-[calc(100vh-140px)] animate-fadeIn text-[#37352f]">
+    <div className={`space-y-4 flex flex-col ${isFullscreenMap ? 'fixed inset-0 z-[9999] bg-white dark:bg-[#191919] p-0' : 'h-[calc(100vh-140px)]'} animate-fadeIn text-[#37352f]`}>
       {/* Top Controls Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-sm">
-        <div>
-          <h3 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-[#0071e3]" />
-            Мониторинг маршрутов (GPS)
-          </h3>
-          <p className="text-[11px] text-[#86868b] mt-0.5">
-            Отслеживание перемещения торговых агентов, последовательности обхода точек и чекинов
-          </p>
-        </div>
+      {!isFullscreenMap && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-sm">
+          <div>
+            <h3 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-[#0071e3]" />
+              Мониторинг маршрутов (GPS)
+            </h3>
+            <p className="text-[11px] text-[#86868b] mt-0.5">
+              Отслеживание перемещения торговых агентов, последовательности обхода точек и чекинов
+            </p>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-bold transition-all shadow-sm ${
-              isSidebarCollapsed
-                ? 'bg-[#0071e3] text-white border-[#0071e3] hover:bg-[#0077ed]'
-                : 'bg-[#f1f1f0] dark:bg-slate-800 border-[#e9e9e7] dark:border-slate-700 text-[#37352f] dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-            title={isSidebarCollapsed ? "Развернуть панель мониторинга агентов" : "Свернуть панель мониторинга агентов (развернуть карту)"}
-          >
-            {isSidebarCollapsed ? (
-              <>
-                <PanelRightOpen className="w-4 h-4" />
-                <span>Показать агентов</span>
-              </>
-            ) : (
-              <>
-                <PanelRightClose className="w-4 h-4" />
-                <span>Свернуть панель</span>
-              </>
-            )}
-          </button>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs text-[#37352f] focus:outline-none"
-          />
-          <button
-            onClick={loadData}
-            className="p-1.5 bg-[#f1f1f0] border border-[#e9e9e7] hover:bg-slate-100 rounded-lg text-[#37352f] transition-all shadow-sm"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-bold transition-all shadow-sm ${
+                isSidebarCollapsed
+                  ? 'bg-[#0071e3] text-white border-[#0071e3] hover:bg-[#0077ed]'
+                  : 'bg-[#f1f1f0] dark:bg-slate-800 border-[#e9e9e7] dark:border-slate-700 text-[#37352f] dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              title={isSidebarCollapsed ? "Развернуть панель мониторинга агентов" : "Свернуть панель мониторинга агентов (развернуть карту)"}
+            >
+              {isSidebarCollapsed ? (
+                <>
+                  <PanelRightOpen className="w-4 h-4" />
+                  <span>Показать агентов</span>
+                </>
+              ) : (
+                <>
+                  <PanelRightClose className="w-4 h-4" />
+                  <span>Свернуть панель</span>
+                </>
+              )}
+            </button>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs text-[#37352f] focus:outline-none"
+            />
+            <button
+              onClick={loadData}
+              className="p-1.5 bg-[#f1f1f0] border border-[#e9e9e7] hover:bg-slate-100 rounded-lg text-[#37352f] transition-all shadow-sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Tab Switcher */}
-      <div className="flex lg:hidden bg-white p-1 rounded-xl border border-[#e9e9e7] shadow-sm">
-        <button
-          onClick={() => setMobileTab('map')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all ${
-            mobileTab === 'map' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-[#5f6368] hover:bg-slate-50'
-          }`}
-        >
-          Карта
-        </button>
-        <button
-          onClick={() => setMobileTab('list')}
-          className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all ${
-            mobileTab === 'list' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-[#5f6368] hover:bg-slate-50'
-          }`}
-        >
-          Агенты и Маршруты
-        </button>
-      </div>
+      {!isFullscreenMap && (
+        <div className="flex lg:hidden bg-white p-1 rounded-xl border border-[#e9e9e7] shadow-sm">
+          <button
+            onClick={() => setMobileTab('map')}
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all ${
+              mobileTab === 'map' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-[#5f6368] hover:bg-slate-50'
+            }`}
+          >
+            Карта
+          </button>
+          <button
+            onClick={() => setMobileTab('list')}
+            className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all ${
+              mobileTab === 'list' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-[#5f6368] hover:bg-slate-50'
+            }`}
+          >
+            Агенты и Маршруты
+          </button>
+        </div>
+      )}
 
       {/* Main interactive split view */}
       <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
         {/* Left column: Map view (Dual Engine: MapLibre 3D + Leaflet 2D) */}
-        <div className={`flex-1 bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-xl overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
+        <div className={`${isFullscreenMap ? 'h-full w-full rounded-none border-0' : 'flex-1 h-[calc(100vh-215px)] min-h-[460px] lg:h-full lg:min-h-0 rounded-xl border border-[#e9e9e7] dark:border-[#2e2e2e]'} bg-white dark:bg-[#191919] overflow-hidden shadow-sm relative ${mobileTab === 'map' ? 'block' : 'hidden lg:block'}`}>
           {/* MapLibre 3D Vector Engine */}
           <div
             className="w-full h-full absolute inset-0 z-0"
@@ -1688,8 +1697,225 @@ export default function RoutesMap() {
             style={{ display: mapEngine === 'leaflet' ? 'block' : 'none' }}
           />
 
-          {/* Top Center Floating Search Bar & GIS Layer Toggles */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex flex-col items-center gap-2 w-[92%] sm:w-auto max-w-lg pointer-events-auto">
+          {/* Mobile Unified Top Control Bar */}
+          <div className="sm:hidden absolute top-2.5 left-2.5 right-2.5 z-[400] flex flex-col gap-1.5 pointer-events-auto">
+            <div className="flex items-center gap-1.5 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-2 py-1.5 shadow-lg">
+              {/* Filter Button */}
+              <button
+                type="button"
+                onClick={() => setShowMobileFilterModal(true)}
+                className={`p-1.5 rounded-lg text-white shrink-0 shadow-xs transition-all ${
+                  mapFilter === 'ALL' ? 'bg-[#0071e3]' :
+                  mapFilter === 'SALES_REP' ? 'bg-emerald-600' :
+                  mapFilter === 'DELIVERY' ? 'bg-blue-600' :
+                  mapFilter === 'SUPERVISOR' ? 'bg-purple-600' :
+                  mapFilter === 'VISITS' ? 'bg-amber-500' :
+                  mapFilter === 'DEBT' ? 'bg-rose-600' : 'bg-slate-700'
+                }`}
+                title="Фильтр ролей"
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+
+              {/* Search Bar */}
+              <div className="relative flex-1 flex items-center min-w-0">
+                <Search className="w-3.5 h-3.5 text-slate-400 shrink-0 mr-1.5" />
+                <input
+                  type="text"
+                  placeholder="Поиск по 81 000 адресам..."
+                  value={mapSearchQuery}
+                  onChange={(e) => setMapSearchQuery(e.target.value)}
+                  onFocus={() => { if (mapSearchResults.length > 0) setShowMapSearchDropdown(true); }}
+                  className="w-full bg-transparent text-xs text-[#37352f] dark:text-slate-100 placeholder-slate-400 outline-none truncate"
+                />
+                {mapSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => { setMapSearchQuery(''); setMapSearchResults([]); setShowMapSearchDropdown(false); }}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {isSearchingMap && (
+                  <RefreshCw className="w-3.5 h-3.5 text-[#0071e3] animate-spin shrink-0 ml-1" />
+                )}
+              </div>
+
+              <div className="h-4 w-[1px] bg-slate-200 dark:bg-slate-700 shrink-0" />
+
+              {/* Toggle Layers Pill Bar */}
+              <button
+                type="button"
+                onClick={() => setShowMobileLayers(!showMobileLayers)}
+                className={`p-1.5 rounded-lg shrink-0 transition-all ${
+                  showMobileLayers 
+                    ? 'bg-[#0071e3] text-white shadow-xs' 
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Слои карты"
+              >
+                <Layers className="w-4 h-4" />
+              </button>
+
+              {/* Toggle Timeline Scrubber */}
+              <button
+                type="button"
+                onClick={() => setShowTimelineScrubber(!showTimelineScrubber)}
+                className={`p-1.5 rounded-lg shrink-0 transition-all ${
+                  showTimelineScrubber || isPlayingTimeline
+                    ? 'bg-amber-500 text-white shadow-xs' 
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+                title="Таймлайн перемещений"
+              >
+                <Clock className="w-4 h-4" />
+              </button>
+
+              {/* Fullscreen Map Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsFullscreenMap(!isFullscreenMap)}
+                className="p-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 transition-all"
+                title={isFullscreenMap ? 'Свернуть полноэкранный режим' : 'Во весь экран'}
+              >
+                {isFullscreenMap ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Mobile Autocomplete Search Results Dropdown */}
+            {showMapSearchDropdown && mapSearchResults.length > 0 && (
+              <div className="bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl shadow-2xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto">
+                {mapSearchResults.map((item, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleSelectSearchResult(item)}
+                    className="w-full text-left px-3 py-2 hover:bg-blue-50/70 dark:hover:bg-blue-950/40 transition-colors flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-sm shrink-0">{item.icon || '📍'}</span>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                          {item.name}
+                        </div>
+                        <div className="text-[10px] text-slate-500 truncate">{item.category || item.layer || ''}</div>
+                      </div>
+                    </div>
+                    <span className="shrink-0 text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">
+                      {item.city || 'Согд'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile Horizontal Scrollable Layers Strip */}
+            {showMobileLayers && (
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-2 bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl shadow-lg text-[11px] animate-fadeIn">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMapEngine('maplibre');
+                    localStorage.setItem('smartsale_map_engine', 'maplibre');
+                  }}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    mapEngine === 'maplibre' ? 'bg-[#0071e3] text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>3D Вектор</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMapEngine('leaflet');
+                    localStorage.setItem('smartsale_map_engine', 'leaflet');
+                    setTimeout(() => mapRef.current?.invalidateSize(), 50);
+                  }}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    mapEngine === 'leaflet' ? 'bg-[#0071e3] text-white font-bold' : 'text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <Layers className="w-3 h-3" />
+                  <span>Растр 2D</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRoadRoutes(!showRoadRoutes)}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    showRoadRoutes ? 'bg-blue-50 text-[#0071e3] dark:bg-blue-950/50 dark:text-blue-300 font-semibold' : 'text-slate-500'
+                  }`}
+                >
+                  <Navigation className="w-3 h-3" />
+                  <span>Дороги</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowLiveAgents(!showLiveAgents)}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    showLiveAgents ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 font-semibold' : 'text-slate-500'
+                  }`}
+                >
+                  <Users className="w-3 h-3" />
+                  <span>Агенты</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowClients(!showClients)}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    showClients ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 font-semibold' : 'text-slate-500'
+                  }`}
+                >
+                  <Store className="w-3 h-3" />
+                  <span>Клиенты</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !showLandmarks;
+                    setShowLandmarks(next);
+                    showLandmarksRef.current = next;
+                    if (!next) {
+                      poiLayerRef.current?.clearLayers();
+                      housesLayerRef.current?.clearLayers();
+                    } else {
+                      refreshViewportGIS();
+                    }
+                  }}
+                  className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg transition-all ${
+                    showLandmarks ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 font-semibold' : 'text-slate-500'
+                  }`}
+                >
+                  <Compass className="w-3 h-3" />
+                  <span>Ориентиры</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !showMarketLeads;
+                    setShowMarketLeads(next);
+                    showMarketLeadsRef.current = next;
+                    if (next && mapRef.current) {
+                      fetchMarketLeadsForBounds(mapRef.current.getBounds(), leadsCategory);
+                    } else {
+                      setMarketLeads([]);
+                      leadsGroupRef.current?.clearLayers();
+                    }
+                  }}
+                  className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
+                    showMarketLeads ? 'bg-gradient-to-r from-amber-500 to-violet-600 text-white font-bold' : 'text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <Zap className="w-3 h-3" />
+                  <span>Белые пятна</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Top Center Floating Search Bar & GIS Layer Toggles */}
+          <div className="hidden sm:flex absolute top-4 left-1/2 -translate-x-1/2 z-[400] flex-col items-center gap-2 w-auto max-w-lg pointer-events-auto">
             {/* Search Bar for 81k landmarks */}
             <div className="relative w-full sm:w-96 shadow-lg rounded-xl">
               <div className="flex items-center bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#0071e3] transition-all">
@@ -1934,137 +2160,139 @@ export default function RoutesMap() {
             )}
           </div>
 
-          {/* Left Vertical Role/Type Floating Toolbar */}
-          {isFiltersCollapsed ? (
-            <div className="absolute top-4 left-4 z-[400] transition-all">
-              <button
-                type="button"
-                onClick={() => setIsFiltersCollapsed(false)}
-                className="bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] hover:border-[#0071e3] rounded-xl px-3 py-2 shadow-xl flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-all group"
-                title="Развернуть фильтры карты"
-              >
-                <div className={`p-1 rounded-md text-white ${
-                  mapFilter === 'ALL' ? 'bg-[#0071e3]' :
-                  mapFilter === 'SALES_REP' ? 'bg-emerald-600' :
-                  mapFilter === 'DELIVERY' ? 'bg-blue-600' :
-                  mapFilter === 'SUPERVISOR' ? 'bg-purple-600' :
-                  mapFilter === 'VISITS' ? 'bg-amber-500' :
-                  mapFilter === 'DEBT' ? 'bg-rose-600' : 'bg-slate-700'
-                }`}>
-                  <Filter className="w-3.5 h-3.5" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[9px] text-slate-400 uppercase tracking-wider leading-none">Фильтр</span>
-                  <span className="text-[11px] font-bold leading-tight mt-0.5">
-                    {mapFilter === 'ALL' && 'Все категории'}
-                    {mapFilter === 'SALES_REP' && 'Торговые агенты'}
-                    {mapFilter === 'DELIVERY' && 'Доставка'}
-                    {mapFilter === 'SUPERVISOR' && 'Супервайзеры'}
-                    {mapFilter === 'VISITS' && 'Визиты'}
-                    {mapFilter === 'DEBT' && 'Должники'}
-                    {mapFilter === 'STORES' && 'Магазины'}
-                  </span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0071e3] ml-1 transition-colors" />
-              </button>
-            </div>
-          ) : (
-            <div className="absolute top-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-1.5 shadow-xl flex flex-col gap-1.5 transition-all">
-              <div className="flex items-center justify-between px-1.5 py-0.5 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Фильтры</span>
+          {/* Left Vertical Role/Type Floating Toolbar (Desktop only) */}
+          <div className="hidden sm:block">
+            {isFiltersCollapsed ? (
+              <div className="absolute top-4 left-4 z-[400] transition-all">
                 <button
                   type="button"
-                  onClick={() => setIsFiltersCollapsed(true)}
-                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                  title="Свернуть фильтры карты"
+                  onClick={() => setIsFiltersCollapsed(false)}
+                  className="bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] hover:border-[#0071e3] rounded-xl px-3 py-2 shadow-xl flex items-center gap-2 text-slate-700 dark:text-slate-200 transition-all group"
+                  title="Развернуть фильтры карты"
                 >
-                  <ChevronUp className="w-3.5 h-3.5" />
+                  <div className={`p-1 rounded-md text-white ${
+                    mapFilter === 'ALL' ? 'bg-[#0071e3]' :
+                    mapFilter === 'SALES_REP' ? 'bg-emerald-600' :
+                    mapFilter === 'DELIVERY' ? 'bg-blue-600' :
+                    mapFilter === 'SUPERVISOR' ? 'bg-purple-600' :
+                    mapFilter === 'VISITS' ? 'bg-amber-500' :
+                    mapFilter === 'DEBT' ? 'bg-rose-600' : 'bg-slate-700'
+                  }`}>
+                    <Filter className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider leading-none">Фильтр</span>
+                    <span className="text-[11px] font-bold leading-tight mt-0.5">
+                      {mapFilter === 'ALL' && 'Все категории'}
+                      {mapFilter === 'SALES_REP' && 'Торговые агенты'}
+                      {mapFilter === 'DELIVERY' && 'Доставка'}
+                      {mapFilter === 'SUPERVISOR' && 'Супервайзеры'}
+                      {mapFilter === 'VISITS' && 'Визиты'}
+                      {mapFilter === 'DEBT' && 'Должники'}
+                      {mapFilter === 'STORES' && 'Магазины'}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0071e3] ml-1 transition-colors" />
                 </button>
               </div>
-              <button
-                type="button"
-                title="Все категории"
-                onClick={() => setMapFilter('ALL')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'ALL' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Layers className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Все</span>
-              </button>
-              <button
-                type="button"
-                title="Торговые представители"
-                onClick={() => setMapFilter('SALES_REP')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'SALES_REP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Торговые</span>
-              </button>
-              <button
-                type="button"
-                title="Доставка / Экспедиторы"
-                onClick={() => setMapFilter('DELIVERY')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'DELIVERY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Truck className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Доставка</span>
-              </button>
-              <button
-                type="button"
-                title="Супервайзеры"
-                onClick={() => setMapFilter('SUPERVISOR')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'SUPERVISOR' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Супервайзеры</span>
-              </button>
-              <div className="h-[1px] bg-slate-200 dark:bg-slate-800 my-0.5" />
-              <button
-                type="button"
-                title="Запланированные визиты"
-                onClick={() => setMapFilter('VISITS')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'VISITS' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <MapPin className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Визиты</span>
-              </button>
-              <button
-                type="button"
-                title="Клиенты с превышением лимита задолженности"
-                onClick={() => setMapFilter('DEBT')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'DEBT' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <CreditCard className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Должники</span>
-              </button>
-              <button
-                type="button"
-                title="Все магазины (Клиенты)"
-                onClick={() => setMapFilter('STORES')}
-                className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                  mapFilter === 'STORES' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <Store className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">Магазины</span>
-              </button>
-            </div>
-          )}
+            ) : (
+              <div className="absolute top-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-1.5 shadow-xl flex flex-col gap-1.5 transition-all">
+                <div className="flex items-center justify-between px-1.5 py-0.5 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Фильтры</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsFiltersCollapsed(true)}
+                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                    title="Свернуть фильтры карты"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  title="Все категории"
+                  onClick={() => setMapFilter('ALL')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'ALL' ? 'bg-[#0071e3] text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Layers className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Все</span>
+                </button>
+                <button
+                  type="button"
+                  title="Торговые представители"
+                  onClick={() => setMapFilter('SALES_REP')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'SALES_REP' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Торговые</span>
+                </button>
+                <button
+                  type="button"
+                  title="Доставка / Экспедиторы"
+                  onClick={() => setMapFilter('DELIVERY')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'DELIVERY' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Truck className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Доставка</span>
+                </button>
+                <button
+                  type="button"
+                  title="Супервайзеры"
+                  onClick={() => setMapFilter('SUPERVISOR')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'SUPERVISOR' ? 'bg-purple-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Супервайзеры</span>
+                </button>
+                <div className="h-[1px] bg-slate-200 dark:bg-slate-800 my-0.5" />
+                <button
+                  type="button"
+                  title="Запланированные визиты"
+                  onClick={() => setMapFilter('VISITS')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'VISITS' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Визиты</span>
+                </button>
+                <button
+                  type="button"
+                  title="Клиенты с превышением лимита задолженности"
+                  onClick={() => setMapFilter('DEBT')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'DEBT' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Должники</span>
+                </button>
+                <button
+                  type="button"
+                  title="Все магазины (Клиенты)"
+                  onClick={() => setMapFilter('STORES')}
+                  className={`p-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                    mapFilter === 'STORES' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <Store className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[11px]">Магазины</span>
+                </button>
+              </div>
+            )}
+          </div>
 
-          {/* Top Right Shift Metrics Summary Widget */}
+          {/* Top Right Shift Metrics Summary Widget (Desktop only) */}
           {selectedAgentId && (
-            <div className="absolute top-4 right-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3.5 py-2 shadow-xl flex items-center gap-3 text-[#37352f] dark:text-slate-200 transition-all">
+            <div className="hidden sm:flex absolute top-4 right-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3.5 py-2 shadow-xl items-center gap-3 text-[#37352f] dark:text-slate-200 transition-all">
               <div className="flex items-center gap-1.5">
                 <Truck className="w-3.5 h-3.5 text-[#0071e3]" />
                 <span className="text-[11px] font-bold">
@@ -2088,8 +2316,8 @@ export default function RoutesMap() {
             </div>
           )}
 
-          {/* Bottom Timeline History Scrubber / Playback Player */}
-          <div className="absolute top-4 right-4 sm:top-auto sm:bottom-4 left-24 sm:left-72 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-2 shadow-xl flex items-center gap-2.5 transition-all max-w-[380px] sm:max-w-none">
+          {/* Desktop Bottom Timeline History Scrubber / Playback Player */}
+          <div className="hidden sm:flex absolute bottom-4 left-72 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-3 py-2 shadow-xl items-center gap-2.5 transition-all">
             <button
               type="button"
               onClick={() => setIsPlayingTimeline(!isPlayingTimeline)}
@@ -2132,8 +2360,61 @@ export default function RoutesMap() {
             </div>
           </div>
 
-          {/* Map Legend Overlay (Обозначения меток) */}
-          <div className="absolute bottom-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-3 shadow-xl max-w-[270px] text-[#37352f] dark:text-slate-200 transition-all">
+          {/* Mobile Bottom Timeline History Scrubber */}
+          {showTimelineScrubber && (
+            <div className="sm:hidden absolute bottom-14 left-2.5 right-2.5 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-2.5 shadow-2xl flex flex-col gap-2 animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-[#0071e3]" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 font-mono">
+                    Таймлайн: {formatMinutesToTime(timelineTime)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 5].map((speed) => (
+                    <button
+                      key={speed}
+                      type="button"
+                      onClick={() => setTimelineSpeed(speed)}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold transition-all ${
+                        timelineSpeed === speed ? 'bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900' : 'text-slate-500 bg-slate-100 dark:bg-slate-800'
+                      }`}
+                    >
+                      {speed}x
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowTimelineScrubber(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPlayingTimeline(!isPlayingTimeline)}
+                  className="p-2 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg transition-all shadow-sm flex items-center justify-center shrink-0"
+                >
+                  {isPlayingTimeline ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={1435}
+                  step={5}
+                  value={timelineTime}
+                  onChange={(e) => setTimelineTime(Number(e.target.value))}
+                  className="flex-1 accent-[#0071e3] cursor-pointer h-2 bg-slate-200 dark:bg-slate-700 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Map Legend Overlay (Обозначения меток) */}
+          <div className="hidden sm:block absolute bottom-4 left-4 z-[400] bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl p-3 shadow-xl max-w-[270px] text-[#37352f] dark:text-slate-200 transition-all">
             <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
               <span className="text-[11px] font-bold tracking-tight flex items-center gap-1.5 text-slate-800 dark:text-slate-100">
                 <Info className="w-3.5 h-3.5 text-[#0071e3]" />
@@ -2203,6 +2484,18 @@ export default function RoutesMap() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Mobile Legend Floating Button */}
+          <div className="sm:hidden absolute bottom-3 left-3 z-[400]">
+            <button
+              type="button"
+              onClick={() => setShowMobileLegendModal(true)}
+              className="bg-white/95 dark:bg-[#222]/95 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] rounded-xl px-2.5 py-1.5 shadow-lg flex items-center gap-1.5 text-slate-700 dark:text-slate-200 text-xs font-bold"
+            >
+              <Info className="w-3.5 h-3.5 text-[#0071e3]" />
+              <span>Легенда</span>
+            </button>
           </div>
 
           {/* Desktop floating handle to expand agents sidebar */}
@@ -2702,6 +2995,141 @@ export default function RoutesMap() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Role Filter Bottom Sheet Modal */}
+      {showMobileFilterModal && (
+        <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-xs flex items-end sm:hidden animate-fadeIn">
+          <div className="w-full bg-white dark:bg-[#1e1e1e] rounded-t-2xl max-h-[85vh] flex flex-col p-4 shadow-2xl border-t border-[#e9e9e7] dark:border-[#333] animate-slideUp">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-[#0071e3]" />
+                <span className="font-bold text-sm text-slate-900 dark:text-white">Фильтр объектов на карте</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilterModal(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto py-3 space-y-2">
+              {[
+                { id: 'ALL', label: 'Все категории', desc: 'Показать все объекты', icon: Layers, color: 'bg-[#0071e3]' },
+                { id: 'SALES_REP', label: 'Торговые агенты', desc: 'GPS трекинг агентов', icon: Users, color: 'bg-emerald-600' },
+                { id: 'DELIVERY', label: 'Доставка / Экспедиторы', desc: 'Машины и доставки', icon: Truck, color: 'bg-blue-600' },
+                { id: 'SUPERVISOR', label: 'Супервайзеры', desc: 'Контроль на местах', icon: ShieldCheck, color: 'bg-purple-600' },
+                { id: 'VISITS', label: 'Запланированные визиты', desc: 'Точки сегодняшнего маршрута', icon: MapPin, color: 'bg-amber-500' },
+                { id: 'DEBT', label: 'Должники (лимит превышен)', desc: 'Клиенты с просрочкой', icon: CreditCard, color: 'bg-rose-600' },
+                { id: 'STORES', label: 'Все магазины (Клиенты)', desc: 'Все торговые точки сети', icon: Store, color: 'bg-slate-700' },
+              ].map((item) => {
+                const Icon = item.icon;
+                const isSelected = mapFilter === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setMapFilter(item.id as any);
+                      setShowMobileFilterModal(false);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all border ${
+                      isSelected 
+                        ? 'bg-blue-50/70 dark:bg-blue-950/40 border-[#0071e3] text-[#0071e3] dark:text-blue-300 font-bold shadow-xs' 
+                        : 'border-[#e9e9e7] dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg text-white ${item.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-xs font-bold leading-tight">{item.label}</span>
+                        <span className="text-[10px] text-slate-400 font-normal mt-0.5">{item.desc}</span>
+                      </div>
+                    </div>
+                    {isSelected && <CheckCircle2 className="w-5 h-5 text-[#0071e3] shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Legend Bottom Sheet Modal */}
+      {showMobileLegendModal && (
+        <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-xs flex items-end sm:hidden animate-fadeIn">
+          <div className="w-full bg-white dark:bg-[#1e1e1e] rounded-t-2xl max-h-[85vh] flex flex-col p-4 shadow-2xl border-t border-[#e9e9e7] dark:border-[#333] animate-slideUp">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Info className="w-4 h-4 text-[#0071e3]" />
+                <span className="font-bold text-sm text-slate-900 dark:text-white">Обозначения на карте</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileLegendModal(false)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="overflow-y-auto py-3 space-y-3 text-xs">
+              <div className="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider">Торговые агенты</div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">A</div>
+                <span className="text-slate-700 dark:text-slate-300">Агент на смене (онлайн / GPS активен)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-[#0071e3] text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">★</div>
+                <span className="text-slate-700 dark:text-slate-300">Выбранный агент (активный трек)</span>
+              </div>
+
+              <div className="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800">Торговые точки</div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">✓</div>
+                <span className="text-slate-700 dark:text-slate-300">Посещенная точка (Визит завершен)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">📍</div>
+                <span className="text-slate-700 dark:text-slate-300">Запланирована в маршруте</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-rose-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">$</div>
+                <span className="text-slate-700 dark:text-slate-300">Превышен лимит задолженности (Долг)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-[#86868b] text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">S</div>
+                <span className="text-slate-700 dark:text-slate-300">Обычный клиент (Вне маршрута)</span>
+              </div>
+
+              <div className="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800">Линии на карте</div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-1 bg-[#0071e3] shrink-0 rounded"></div>
+                <span className="text-slate-700 dark:text-slate-300">План маршрута обхода</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-0.5 border-t-2 border-dashed border-emerald-500 shrink-0"></div>
+                <span className="text-slate-700 dark:text-slate-300">Трек движения (GPS история)</span>
+              </div>
+
+              <div className="font-bold text-slate-400 dark:text-slate-500 text-[10px] uppercase tracking-wider pt-2 border-t border-slate-100 dark:border-slate-800">Белые пятна (Лиды)</div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">🏪</div>
+                <span className="text-slate-700 dark:text-slate-300">Магазин (Потенциал)</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">☕</div>
+                <span className="text-slate-700 dark:text-slate-300">Кафе / Общепит</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow-sm shrink-0">💊</div>
+                <span className="text-slate-700 dark:text-slate-300">Аптека</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -939,7 +939,7 @@ export default function MapLibreView({
       <div ref={containerRef} className="w-full h-full" />
 
       {/* Floating 3D / 2D Perspective Toggle Button (Bottom-Right) */}
-      <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-2">
+      <div className="absolute bottom-3 right-3 sm:bottom-6 sm:right-4 z-10 flex flex-col gap-2">
         <button
           type="button"
           onClick={onToggle3D}
@@ -956,7 +956,7 @@ export default function MapLibreView({
       </div>
 
       {/* Engine Badge (Bottom-Left) */}
-      <div className="absolute bottom-6 left-4 z-10 pointer-events-none">
+      <div className="hidden sm:flex absolute bottom-6 left-4 z-10 pointer-events-none">
         <div className="bg-white/90 dark:bg-[#1a1a1a]/90 backdrop-blur-md border border-[#e9e9e7] dark:border-[#333] px-2.5 py-1 rounded-lg shadow-sm text-[10px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>MapLibre GL GPU WebGL</span>
