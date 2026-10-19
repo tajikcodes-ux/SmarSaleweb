@@ -267,7 +267,7 @@ export default function MapLibreView({
                 ${props.statusLabel}
               </span>
             </div>
-            <h4 style="font-weight: 700; font-size: 13px; margin: 4px 0 2px 0;">${props.name}</h4>
+            <h4 style="font-weight: 700; font-size: 13px; margin: 4px 0 2px 0; color: #0f172a;">${props.name}</h4>
             <p style="font-size: 11px; color: #64748b; margin: 0 0 6px 0;">${props.address || 'Адрес не указан'}</p>
             <div style="font-size: 11px; margin-bottom: 8px; padding-top: 4px; border-top: 1px solid #f1f5f9;">
               ${debtBadge}
@@ -381,19 +381,21 @@ export default function MapLibreView({
         onSelectAgent(props.userId);
 
         const popupHtml = `
-          <div style="font-family: inherit; padding: 6px; min-width: 170px; color: #1e293b;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0071e3;">
-                ${props.role === 'SALES_REP' ? 'Торговый представитель' : props.role}
+          <div style="font-family: inherit; padding: 6px; min-width: 180px; color: #0f172a;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
+              <span style="font-size: 10px; font-weight: 800; color: #0071e3;">
+                ${props.roleTitle || 'Сотрудник'}
               </span>
               <span style="font-size: 9px; padding: 2px 6px; border-radius: 9999px; background: ${props.onShift ? '#dcfce7' : '#f1f5f9'}; color: ${props.onShift ? '#15803d' : '#64748b'}; font-weight: bold;">
                 ${props.onShift ? 'В смене' : 'Не в смене'}
               </span>
             </div>
-            <h4 style="font-weight: 700; font-size: 13px; margin: 4px 0 2px 0;">${props.name}</h4>
-            <div style="font-size: 10px; margin-top: 6px; padding-top: 4px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
-              <span>🔋 Заряд: <strong>${props.batteryLevel}%</strong></span>
-              <span>🚀 Скорость: <strong>${props.speed} км/ч</strong></span>
+            <h4 style="font-weight: 700; font-size: 13px; margin: 0 0 6px 0; color: #0f172a;">
+              ${props.name || 'Сотрудник'}
+            </h4>
+            <div style="font-size: 10px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #475569;">
+              <span>🔋 Заряд: <strong style="color: #0f172a;">${props.batteryLevel}%</strong></span>
+              <span>🚀 Скорость: <strong style="color: #0f172a;">${props.speed} км/ч</strong></span>
             </div>
           </div>
         `;
@@ -474,7 +476,7 @@ export default function MapLibreView({
         const popupHtml = `
           <div style="font-family: inherit; padding: 6px; min-width: 170px; color: #1e293b;">
             <span style="font-size: 9px; font-weight: 800; color: #d97706; text-transform: uppercase;">Потенциальный клиент</span>
-            <h4 style="font-weight: 700; font-size: 12px; margin: 2px 0 2px 0;">${props.name}</h4>
+            <h4 style="font-weight: 700; font-size: 12px; margin: 2px 0 2px 0; color: #0f172a;">${props.name}</h4>
             <p style="font-size: 10px; color: #64748b; margin: 0 0 6px 0;">${props.address || ''}</p>
             <button id="btn-convert-lead-${props.id}" style="width: 100%; padding: 5px 8px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer;">
               ⚡ Сделать клиентом
@@ -638,6 +640,21 @@ export default function MapLibreView({
     }
   }, [clients, routes, showClients, mapFilter]);
 
+  // Helper to extract human-readable role title from string or relation object
+  const getAgentRoleTitle = (role: any): string => {
+    let r = '';
+    if (typeof role === 'string') {
+      r = role.toUpperCase();
+    } else if (role && typeof role === 'object') {
+      r = (role.name || role.code || role.title || role.role || '').toString().toUpperCase();
+    }
+    if (r.includes('SUPERVISOR')) return '🛡️ Супервайзер';
+    if (r.includes('DELIVER') || r.includes('DRIVER') || r.includes('EXPEDITOR')) return '🚚 Экспедитор';
+    if (r.includes('OWNER') || r.includes('ADMIN')) return '👑 Администратор';
+    if (r.includes('MERCHANDISER') || r.includes('MERCH')) return '📦 Мерчендайзер';
+    return '💼 Торговый представитель';
+  };
+
   // 5. Update Live Agents GeoJSON (GPU Zero-Lag)
   const updateAgentsData = (map: maplibregl.Map) => {
     const source = map.getSource('agents-source') as maplibregl.GeoJSONSource;
@@ -655,6 +672,8 @@ export default function MapLibreView({
         const lon = parseFloat(agent.longitude);
         const isSelected = selectedAgentId === agent.userId;
         const initials = ((agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '')).toUpperCase();
+        const fullName = `${agent.firstName || ''} ${agent.lastName || ''}`.trim() || 'Сотрудник';
+        const roleTitle = getAgentRoleTitle(agent.role);
 
         return {
           type: 'Feature',
@@ -664,9 +683,10 @@ export default function MapLibreView({
           },
           properties: {
             userId: agent.userId,
-            name: `${agent.firstName || ''} ${agent.lastName || ''}`.trim(),
+            name: fullName,
             initials: isSelected ? '★' : initials,
-            role: agent.role,
+            roleTitle: roleTitle,
+            role: roleTitle,
             speed: agent.speed || 0,
             batteryLevel: agent.batteryLevel || 100,
             onShift: !!agent.onShift,
