@@ -7,5 +7,18 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-maps': ['maplibre-gl'],
+          'vendor-icons': ['lucide-react'],
+          'vendor-excel': ['xlsx', 'xlsx-js-style'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 })
