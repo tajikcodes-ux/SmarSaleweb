@@ -1056,7 +1056,7 @@ export default function Catalog() {
 
           {/* Main Products Table */}
           <div className="bg-white border border-[#e3e3e8] rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-[#e3e3e8] flex justify-between items-center bg-[#fcfcfd]">
+            <div className="p-4 border-b border-[#e3e3e8] dark:border-[#1a1a1a] flex justify-between items-center bg-[#f8f9fa] dark:bg-[#0a0a0a]">
               <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
                 <Package className="w-4 h-4 text-[#0b57d0]" />
                 <span>Номенклатура товаров</span>

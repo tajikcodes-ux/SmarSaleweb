@@ -819,3 +819,8 @@ h1, h2, h3, h4, h5, h6 {
   background-color: rgba(59, 130, 246, 0.22) !important;
   color: #93c5fd !important;
 }
+
+.dark .bg-\[\#fcfcfd\] {
+  background-color: #0a0a0a !important;
+  border-color: var(--border-color) !important;
+}
