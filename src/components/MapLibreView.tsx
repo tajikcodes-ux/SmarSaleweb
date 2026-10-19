@@ -55,8 +55,6 @@ export default function MapLibreView({
 }: MapLibreViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const agentMarkersRef = useRef<maplibregl.Marker[]>([]);
-  const leadMarkersRef = useRef<maplibregl.Marker[]>([]);
   const searchMarkerRef = useRef<maplibregl.Marker | null>(null);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -114,17 +112,17 @@ export default function MapLibreView({
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-    map.on('load', () => {
-      setup3DBuildings(map, isDarkMode);
-      initLayersAndSources(map);
-    });
-
-    map.on('style.load', () => {
+    const setupAll = () => {
       setup3DBuildings(map, isDarkMode);
       initLayersAndSources(map);
       updateClientData(map);
+      updateAgentsData(map);
+      updateLeadsData(map);
       updateRouteData(map);
-    });
+    };
+
+    map.on('load', setupAll);
+    map.on('style.load', setupAll);
 
     mapRef.current = map;
 
@@ -189,13 +187,16 @@ export default function MapLibreView({
 
   // 3. Initialize Custom GeoJSON Sources & Layers
   const initLayersAndSources = (map: maplibregl.Map) => {
+    // ----------------------------------------------------
+    // A. Clients Source & Layers (GPU WebGL)
+    // ----------------------------------------------------
     if (!map.getSource('clients-source')) {
       map.addSource('clients-source', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
       });
 
-      // Outer halo
+      // Outer soft halo
       map.addLayer({
         id: 'clients-halo',
         type: 'circle',
@@ -208,7 +209,7 @@ export default function MapLibreView({
         },
       });
 
-      // Inner circle point
+      // Inner crisp circle
       map.addLayer({
         id: 'clients-circle',
         type: 'circle',
@@ -299,6 +300,212 @@ export default function MapLibreView({
       });
     }
 
+    // ----------------------------------------------------
+    // B. Live Agents Source & Layers (GPU WebGL Zero-Lag)
+    // ----------------------------------------------------
+    if (!map.getSource('agents-source')) {
+      map.addSource('agents-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      // Agent Outer Aura / Halo
+      map.addLayer({
+        id: 'agents-halo',
+        type: 'circle',
+        source: 'agents-source',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 14, 16, 20],
+          'circle-color': ['get', 'haloColor'],
+          'circle-opacity': 0.35,
+        },
+      });
+
+      // Agent Core Circle
+      map.addLayer({
+        id: 'agents-circle',
+        type: 'circle',
+        source: 'agents-source',
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 10, 10, 16, 14],
+          'circle-color': ['get', 'bgColor'],
+          'circle-stroke-width': 2.5,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 1,
+        },
+      });
+
+      // Agent Initials centered
+      map.addLayer({
+        id: 'agents-initials',
+        type: 'symbol',
+        source: 'agents-source',
+        layout: {
+          'text-field': ['get', 'initials'],
+          'text-size': 11,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+        paint: {
+          'text-color': '#ffffff',
+        },
+      });
+
+      // Agent Name under circle (zoom >= 12.5)
+      map.addLayer({
+        id: 'agents-name',
+        type: 'symbol',
+        source: 'agents-source',
+        minzoom: 12.5,
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 11,
+          'text-offset': [0, 1.8],
+          'text-anchor': 'top',
+          'text-allow-overlap': false,
+        },
+        paint: {
+          'text-color': isDarkMode ? '#f8fafc' : '#0f172a',
+          'text-halo-color': isDarkMode ? '#0f172a' : '#ffffff',
+          'text-halo-width': 2,
+        },
+      });
+
+      // Click event for agent popup
+      map.on('click', 'agents-circle', (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const props = (feature.properties || {}) as any;
+        const coordinates = (feature.geometry as any).coordinates.slice();
+
+        onSelectAgent(props.userId);
+
+        const popupHtml = `
+          <div style="font-family: inherit; padding: 6px; min-width: 170px; color: #1e293b;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0071e3;">
+                ${props.role === 'SALES_REP' ? 'Торговый представитель' : props.role}
+              </span>
+              <span style="font-size: 9px; padding: 2px 6px; border-radius: 9999px; background: ${props.onShift ? '#dcfce7' : '#f1f5f9'}; color: ${props.onShift ? '#15803d' : '#64748b'}; font-weight: bold;">
+                ${props.onShift ? 'В смене' : 'Не в смене'}
+              </span>
+            </div>
+            <h4 style="font-weight: 700; font-size: 13px; margin: 4px 0 2px 0;">${props.name}</h4>
+            <div style="font-size: 10px; margin-top: 6px; padding-top: 4px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+              <span>🔋 Заряд: <strong>${props.batteryLevel}%</strong></span>
+              <span>🚀 Скорость: <strong>${props.speed} км/ч</strong></span>
+            </div>
+          </div>
+        `;
+
+        new maplibregl.Popup({ offset: 14 })
+          .setLngLat(coordinates)
+          .setHTML(popupHtml)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'agents-circle', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'agents-circle', () => {
+        map.getCanvas().style.cursor = '';
+      });
+    }
+
+    // ----------------------------------------------------
+    // C. Market Leads Source & Layers (GPU WebGL Zero-Lag)
+    // ----------------------------------------------------
+    if (!map.getSource('market-leads-source')) {
+      map.addSource('market-leads-source', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: [] },
+      });
+
+      map.addLayer({
+        id: 'market-leads-circle',
+        type: 'circle',
+        source: 'market-leads-source',
+        paint: {
+          'circle-radius': 11,
+          'circle-color': ['get', 'bgColor'],
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff',
+        },
+      });
+
+      map.addLayer({
+        id: 'market-leads-icon',
+        type: 'symbol',
+        source: 'market-leads-source',
+        layout: {
+          'text-field': ['get', 'icon'],
+          'text-size': 11,
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+        },
+      });
+
+      map.addLayer({
+        id: 'market-leads-label',
+        type: 'symbol',
+        source: 'market-leads-source',
+        minzoom: 14,
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 10,
+          'text-offset': [0, 1.4],
+          'text-anchor': 'top',
+          'text-optional': true,
+          'text-allow-overlap': false,
+        },
+        paint: {
+          'text-color': isDarkMode ? '#f8fafc' : '#1e293b',
+          'text-halo-color': isDarkMode ? '#0f172a' : '#ffffff',
+          'text-halo-width': 1.6,
+        },
+      });
+
+      map.on('click', 'market-leads-circle', (e) => {
+        if (!e.features || e.features.length === 0) return;
+        const feature = e.features[0];
+        const props = (feature.properties || {}) as any;
+        const coordinates = (feature.geometry as any).coordinates.slice();
+
+        const popupHtml = `
+          <div style="font-family: inherit; padding: 6px; min-width: 170px; color: #1e293b;">
+            <span style="font-size: 9px; font-weight: 800; color: #d97706; text-transform: uppercase;">Потенциальный клиент</span>
+            <h4 style="font-weight: 700; font-size: 12px; margin: 2px 0 2px 0;">${props.name}</h4>
+            <p style="font-size: 10px; color: #64748b; margin: 0 0 6px 0;">${props.address || ''}</p>
+            <button id="btn-convert-lead-${props.id}" style="width: 100%; padding: 5px 8px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer;">
+              ⚡ Сделать клиентом
+            </button>
+          </div>
+        `;
+
+        new maplibregl.Popup({ offset: 14 })
+          .setLngLat(coordinates)
+          .setHTML(popupHtml)
+          .addTo(map);
+
+        setTimeout(() => {
+          const btn = document.getElementById(`btn-convert-lead-${props.id}`);
+          if (btn) {
+            btn.onclick = () => onConvertLead(props);
+          }
+        }, 100);
+      });
+
+      map.on('mouseenter', 'market-leads-circle', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'market-leads-circle', () => {
+        map.getCanvas().style.cursor = '';
+      });
+    }
+
+    // ----------------------------------------------------
+    // D. Routes and GPS History Paths
+    // ----------------------------------------------------
     if (!map.getSource('route-source')) {
       map.addSource('route-source', {
         type: 'geojson',
@@ -345,7 +552,7 @@ export default function MapLibreView({
     }
   };
 
-  // 4. Update Client Points GeoJSON
+  // 4. Update Client Points GeoJSON (GPU)
   const updateClientData = (map: maplibregl.Map) => {
     const source = map.getSource('clients-source') as maplibregl.GeoJSONSource;
     if (!source) return;
@@ -431,7 +638,112 @@ export default function MapLibreView({
     }
   }, [clients, routes, showClients, mapFilter]);
 
-  // 5. Update Route Lines & History Track
+  // 5. Update Live Agents GeoJSON (GPU Zero-Lag)
+  const updateAgentsData = (map: maplibregl.Map) => {
+    const source = map.getSource('agents-source') as maplibregl.GeoJSONSource;
+    if (!source) return;
+
+    if (!showLiveAgents) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
+    const features = agents
+      .filter((agent) => agent.latitude && agent.longitude)
+      .map((agent) => {
+        const lat = parseFloat(agent.latitude);
+        const lon = parseFloat(agent.longitude);
+        const isSelected = selectedAgentId === agent.userId;
+        const initials = ((agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '')).toUpperCase();
+
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [lon, lat],
+          },
+          properties: {
+            userId: agent.userId,
+            name: `${agent.firstName || ''} ${agent.lastName || ''}`.trim(),
+            initials: isSelected ? '★' : initials,
+            role: agent.role,
+            speed: agent.speed || 0,
+            batteryLevel: agent.batteryLevel || 100,
+            onShift: !!agent.onShift,
+            bgColor: isSelected ? '#0071e3' : '#10b981',
+            haloColor: isSelected ? '#3b82f6' : '#34d399',
+          },
+        };
+      });
+
+    source.setData({
+      type: 'FeatureCollection',
+      features: features as any,
+    });
+  };
+
+  useEffect(() => {
+    if (mapRef.current && mapRef.current.isStyleLoaded()) {
+      updateAgentsData(mapRef.current);
+    }
+  }, [agents, selectedAgentId, showLiveAgents]);
+
+  // 6. Update Market Leads GeoJSON (GPU Zero-Lag)
+  const updateLeadsData = (map: maplibregl.Map) => {
+    const source = map.getSource('market-leads-source') as maplibregl.GeoJSONSource;
+    if (!source) return;
+
+    if (!showMarketLeads || marketLeads.length === 0) {
+      source.setData({ type: 'FeatureCollection', features: [] });
+      return;
+    }
+
+    const features = marketLeads
+      .filter((lead) => lead.latitude && lead.longitude)
+      .map((lead) => {
+        const lat = parseFloat(lead.latitude);
+        const lon = parseFloat(lead.longitude);
+
+        let icon = '🏪';
+        let bgColor = '#f59e0b';
+        if (lead.category === 'CAFE') {
+          icon = '☕';
+          bgColor = '#9333ea';
+        } else if (lead.category === 'PHARMACY') {
+          icon = '💊';
+          bgColor = '#0d9488';
+        }
+
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [lon, lat],
+          },
+          properties: {
+            id: lead.id || lat,
+            name: lead.name,
+            address: lead.address || '',
+            category: lead.category,
+            icon,
+            bgColor,
+          },
+        };
+      });
+
+    source.setData({
+      type: 'FeatureCollection',
+      features: features as any,
+    });
+  };
+
+  useEffect(() => {
+    if (mapRef.current && mapRef.current.isStyleLoaded()) {
+      updateLeadsData(mapRef.current);
+    }
+  }, [marketLeads, showMarketLeads]);
+
+  // 7. Update Route Lines & History Track
   const updateRouteData = (map: maplibregl.Map) => {
     const routeSource = map.getSource('route-source') as maplibregl.GeoJSONSource;
     const historySource = map.getSource('history-track-source') as maplibregl.GeoJSONSource;
@@ -508,114 +820,6 @@ export default function MapLibreView({
       updateRouteData(mapRef.current);
     }
   }, [routes, selectedAgentId, showRoadRoutes, historyTrack]);
-
-  // 6. Live Agents HTML Markers
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const map = mapRef.current;
-
-    agentMarkersRef.current.forEach((m) => m.remove());
-    agentMarkersRef.current = [];
-
-    if (!showLiveAgents) return;
-
-    agents.forEach((agent) => {
-      if (!agent.latitude || !agent.longitude) return;
-      const lat = parseFloat(agent.latitude);
-      const lon = parseFloat(agent.longitude);
-      if (isNaN(lat) || isNaN(lon)) return;
-
-      const isSelected = selectedAgentId === agent.userId;
-      const initials = (agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '');
-
-      const el = document.createElement('div');
-      el.className = 'agent-maplibre-marker cursor-pointer transition-transform hover:scale-110';
-      el.innerHTML = `
-        <div class="relative flex items-center justify-center">
-          ${isSelected ? '<span class="absolute -inset-1 rounded-full bg-blue-500 opacity-60 animate-ping"></span>' : ''}
-          <div class="w-8 h-8 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-xs font-bold text-white ${
-            isSelected ? 'bg-[#0071e3] ring-2 ring-blue-400' : 'bg-emerald-600'
-          }">
-            ${initials}
-          </div>
-          <div class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
-            agent.onShift ? 'bg-emerald-500' : 'bg-slate-400'
-          }"></div>
-        </div>
-      `;
-
-      el.onclick = () => {
-        onSelectAgent(agent.userId);
-      };
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([lon, lat])
-        .addTo(map);
-
-      agentMarkersRef.current.push(marker);
-    });
-  }, [agents, selectedAgentId, showLiveAgents]);
-
-  // 7. Market Leads Markers
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const map = mapRef.current;
-
-    leadMarkersRef.current.forEach((m) => m.remove());
-    leadMarkersRef.current = [];
-
-    if (!showMarketLeads || marketLeads.length === 0) return;
-
-    marketLeads.forEach((lead) => {
-      if (!lead.latitude || !lead.longitude) return;
-      const lat = parseFloat(lead.latitude);
-      const lon = parseFloat(lead.longitude);
-      if (isNaN(lat) || isNaN(lon)) return;
-
-      let iconChar = '🏪';
-      let bgClass = 'bg-amber-500';
-      if (lead.category === 'CAFE') {
-        iconChar = '☕';
-        bgClass = 'bg-purple-600';
-      } else if (lead.category === 'PHARMACY') {
-        iconChar = '💊';
-        bgClass = 'bg-teal-600';
-      }
-
-      const el = document.createElement('div');
-      el.className = 'market-lead-maplibre cursor-pointer transform hover:scale-125 transition-transform';
-      el.innerHTML = `
-        <div class="w-7 h-7 ${bgClass} text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white text-xs">
-          ${iconChar}
-        </div>
-      `;
-
-      const popup = new maplibregl.Popup({ offset: 14 }).setHTML(`
-        <div style="font-family: inherit; padding: 6px; min-width: 170px; color: #1e293b;">
-          <span style="font-size: 9px; font-weight: 800; color: #d97706; text-transform: uppercase;">Потенциальный клиент</span>
-          <h4 style="font-weight: 700; font-size: 12px; margin: 2px 0 2px 0;">${lead.name}</h4>
-          <p style="font-size: 10px; color: #64748b; margin: 0 0 6px 0;">${lead.address || ''}</p>
-          <button id="btn-convert-lead-${lead.id || lat}" style="width: 100%; padding: 5px 8px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer;">
-            ⚡ Сделать клиентом
-          </button>
-        </div>
-      `);
-
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([lon, lat])
-        .setPopup(popup)
-        .addTo(map);
-
-      leadMarkersRef.current.push(marker);
-
-      popup.on('open', () => {
-        const btn = document.getElementById(`btn-convert-lead-${lead.id || lat}`);
-        if (btn) {
-          btn.onclick = () => onConvertLead(lead);
-        }
-      });
-    });
-  }, [marketLeads, showMarketLeads]);
 
   // 8. Focus on Searched Landmark
   useEffect(() => {

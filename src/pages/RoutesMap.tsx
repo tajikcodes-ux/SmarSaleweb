@@ -817,9 +817,9 @@ export default function RoutesMap() {
     };
   }, [loading]);
 
-  // Sync market leads markers on map
+  // Sync market leads markers on map (Leaflet only)
   useEffect(() => {
-    if (!leadsGroupRef.current) return;
+    if (!leadsGroupRef.current || mapEngine !== 'leaflet') return;
     leadsGroupRef.current.clearLayers();
 
     if (!showMarketLeads || marketLeads.length === 0) return;
@@ -900,9 +900,9 @@ export default function RoutesMap() {
     return { isViolation: false, text: `✓ В геозоне (${distMeters}м)` };
   };
 
-  // Plot Map Elements (Agents, Clients, Polyline paths)
+  // Plot Map Elements (Agents, Clients, Polyline paths - Leaflet only)
   useEffect(() => {
-    if (!mapRef.current || !markersGroupRef.current) return;
+    if (!mapRef.current || !markersGroupRef.current || mapEngine !== 'leaflet') return;
 
     const markersGroup = markersGroupRef.current;
     markersGroup.clearLayers();
@@ -1484,7 +1484,7 @@ export default function RoutesMap() {
     }
 
     // Auto-fit bounds disabled to show all Tajikistan by default
-  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes, agentStatusFilter]);
+  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes, agentStatusFilter, mapEngine]);
 
   const selectedAgentDetails = agents.find((a) => a.userId === selectedAgentId);
   const selectedAgentRoutes = routes
