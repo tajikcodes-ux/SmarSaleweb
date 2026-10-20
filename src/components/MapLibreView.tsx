@@ -58,20 +58,20 @@ export default function MapLibreView({
   const mapRef = useRef<maplibregl.Map | null>(null);
   const searchMarkerRef = useRef<maplibregl.Marker | null>(null);
 
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    return document.documentElement.classList.contains('dark') ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
+  const getIsDark = () => {
+    return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+  };
+
+  const [isDarkMode, setIsDarkMode] = useState(getIsDark);
 
   const [currentStyle, setCurrentStyle] = useState<'liberty' | 'dark' | 'bright'>(() => {
-    const isDark = document.documentElement.classList.contains('dark');
-    return isDark ? 'dark' : 'liberty';
+    return getIsDark() ? 'dark' : 'liberty';
   });
 
   // Track system or classList dark mode changes
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const dark = document.documentElement.classList.contains('dark');
+      const dark = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
       setIsDarkMode(dark);
       const targetStyle = dark ? 'dark' : 'liberty';
       if (currentStyle !== targetStyle && mapRef.current) {
@@ -96,7 +96,8 @@ export default function MapLibreView({
     const initialLng = 69.6210;
     const initialLat = 40.2825;
 
-    const styleUrl = isDarkMode
+    const initialDark = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+    const styleUrl = initialDark
       ? 'https://tiles.openfreemap.org/styles/dark'
       : 'https://tiles.openfreemap.org/styles/liberty';
 
@@ -114,7 +115,8 @@ export default function MapLibreView({
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
     const setupAll = () => {
-      setup3DBuildings(map, isDarkMode);
+      const darkNow = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+      setup3DBuildings(map, darkNow);
       initLayersAndSources(map);
       updateClientData(map);
       updateAgentsData(map);
