@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft } from 'lucide-react';
+import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
 
 export default function Warehouse() {
-  const [activeTab, setActiveTab] = useState<'management' | 'picking' | 'audits'>('management');
+  const [activeTab, setActiveTab] = useState<'management' | 'picking' | 'audits' | 'auto_order'>('management');
 
   // Warehouses state
   const [warehouses, setWarehouses] = useState<any[]>([]);
@@ -30,6 +30,20 @@ export default function Warehouse() {
   const [auditActuals, setAuditActuals] = useState<Record<string, number>>({});
   const [savingAudit, setSavingAudit] = useState(false);
   const [committingAudit, setCommittingAudit] = useState(false);
+
+  // Auto-order and suggestions states
+  const [reorderData, setReorderData] = useState<{ totalDeficitCount: number; totalWarningCount: number; suggestions: any[] }>({
+    totalDeficitCount: 0,
+    totalWarningCount: 0,
+    suggestions: [],
+  });
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [showAutoOrderModal, setShowAutoOrderModal] = useState(false);
+  const [autoOrderSupplierId, setAutoOrderSupplierId] = useState('');
+  const [autoOrderWarehouseId, setAutoOrderWarehouseId] = useState('');
+  const [autoOrderQuantities, setAutoOrderQuantities] = useState<Record<string, number>>({});
+  const [submittingAutoOrder, setSubmittingAutoOrder] = useState(false);
 
   const loadWarehouses = async () => {
     try {
@@ -268,10 +282,74 @@ export default function Warehouse() {
     printWindow.document.close();
   };
 
+  const loadSuggestions = async () => {
+    try {
+      setLoadingSuggestions(true);
+      const [sugRes, supRes] = await Promise.all([
+        api.get('/procurements/suggestions'),
+        api.get('/procurements/suppliers').catch(() => ({ data: [] })),
+      ]);
+      setReorderData(sugRes.data || { totalDeficitCount: 0, totalWarningCount: 0, suggestions: [] });
+      setSuppliers(Array.isArray(supRes.data) ? supRes.data : []);
+      // Initialize reorder quantities from suggestions
+      const initialQtys: Record<string, number> = {};
+      (sugRes.data?.suggestions || []).forEach((s: any) => {
+        initialQtys[s.product.id] = s.suggestedReorder;
+      });
+      setAutoOrderQuantities(initialQtys);
+    } catch (err) {
+      console.error('Failed to load reorder suggestions', err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleCreateAutoOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!autoOrderSupplierId) {
+      alert('Пожалуйста, выберите поставщика');
+      return;
+    }
+    if (!autoOrderWarehouseId) {
+      alert('Пожалуйста, выберите склад назначения');
+      return;
+    }
+    const items = (reorderData.suggestions || [])
+      .filter(s => (autoOrderQuantities[s.product.id] || 0) > 0)
+      .map(s => ({
+        productId: s.product.id,
+        quantity: Number(autoOrderQuantities[s.product.id]),
+        price: Number(s.product.costPrice || Number(s.product.price) * 0.7),
+      }));
+
+    if (items.length === 0) {
+      alert('Нет позиций с количеством для заказа больше 0');
+      return;
+    }
+
+    try {
+      setSubmittingAutoOrder(true);
+      await api.post('/procurements/auto-order', {
+        supplierId: autoOrderSupplierId,
+        warehouseId: autoOrderWarehouseId,
+        items,
+      });
+      alert('Заказ поставщику успешно сформирован в статусе "pending"!');
+      setShowAutoOrderModal(false);
+      loadSuggestions();
+    } catch (err: any) {
+      console.error('Failed to submit auto order', err);
+      alert(err.response?.data?.message || 'Ошибка формирования заказа поставщику');
+    } finally {
+      setSubmittingAutoOrder(false);
+    }
+  };
+
   useEffect(() => {
     loadWarehouses();
     loadOrders();
     loadAudits();
+    loadSuggestions();
   }, []);
 
   const handleCreateWarehouse = async (e: React.FormEvent) => {
@@ -436,6 +514,24 @@ export default function Warehouse() {
               <span>Новая инвентаризация</span>
             </button>
           )}
+          {activeTab === 'auto_order' && (
+            <button
+              onClick={() => {
+                if (suppliers.length > 0 && !autoOrderSupplierId) {
+                  setAutoOrderSupplierId(suppliers[0].id);
+                }
+                if (warehouses.length > 0 && !autoOrderWarehouseId) {
+                  setAutoOrderWarehouseId(warehouses[0].id);
+                }
+                setShowAutoOrderModal(true);
+              }}
+              disabled={reorderData.suggestions.length === 0}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white rounded-lg font-semibold text-xs transition-all shadow-sm"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span>Сформировать заказ ({Object.values(autoOrderQuantities).filter((q) => Number(q) > 0).length})</span>
+            </button>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -481,6 +577,20 @@ export default function Warehouse() {
           >
             <ClipboardCheck className="w-4 h-4" />
             <span>Инвентаризация и сличительная ведомость ({audits.length})</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('auto_order');
+              setActiveAudit(null);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'auto_order'
+                ? 'bg-[#37352f] text-white shadow-sm'
+                : 'bg-[#fbfbfa] text-[#6a6a65] hover:bg-slate-100'
+            }`}
+          >
+            <AlertTriangle className={`w-4 h-4 ${reorderData.suggestions.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+            <span>Автозаказ и дефицит ({reorderData.suggestions.length})</span>
           </button>
         </div>
       </div>
@@ -1124,6 +1234,371 @@ export default function Warehouse() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 4: Auto-Order & Safety Stock Deficit */}
+      {activeTab === 'auto_order' && (
+        <div className="space-y-6">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#86868b]">Критический дефицит</span>
+                <div className="p-2 bg-rose-50 rounded-lg">
+                  <ShieldAlert className="w-4 h-4 text-rose-500" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-[#1d1d1f]">
+                  {reorderData.totalDeficitCount}
+                </span>
+                <span className="text-xs text-rose-600 font-medium">позиций</span>
+              </div>
+              <p className="text-[11px] text-[#86868b] mt-1">Остаток 0 или хватит &lt; 3 дней</p>
+            </div>
+
+            <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#86868b]">Требует пополнения</span>
+                <div className="p-2 bg-amber-50 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-[#1d1d1f]">
+                  {reorderData.totalWarningCount}
+                </span>
+                <span className="text-xs text-amber-600 font-medium">позиций</span>
+              </div>
+              <p className="text-[11px] text-[#86868b] mt-1">Ниже неснижаемого остатка</p>
+            </div>
+
+            <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#86868b]">Позиций к заказу</span>
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <ShoppingCart className="w-4 h-4 text-[#0071e3]" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-[#1d1d1f]">
+                  {reorderData.suggestions.filter((s) => (autoOrderQuantities[s.product.id] || 0) > 0).length}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">из {reorderData.suggestions.length}</span>
+              </div>
+              <p className="text-[11px] text-[#86868b] mt-1">Готовы к отправке поставщику</p>
+            </div>
+
+            <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-2xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#86868b]">Оценка закупки</span>
+                <div className="p-2 bg-emerald-50 rounded-lg">
+                  <Truck className="w-4 h-4 text-emerald-600" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-2xl font-bold text-[#1d1d1f]">
+                  {reorderData.suggestions
+                    .reduce((acc, s) => {
+                      const qty = autoOrderQuantities[s.product.id] || 0;
+                      const cost = Number(s.product.costPrice || Number(s.product.price) * 0.7);
+                      return acc + qty * cost;
+                    }, 0)
+                    .toLocaleString('ru-RU', { maximumFractionDigits: 2 })}
+                </span>
+                <span className="text-xs text-[#86868b]">TJS</span>
+              </div>
+              <p className="text-[11px] text-[#86868b] mt-1">Расчет по себестоимости</p>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="bg-white border border-[#e9e9e7] rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#e9e9e7] flex flex-wrap justify-between items-center gap-3 bg-[#fafaf9]">
+              <div>
+                <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                  <TrendingDown className="w-4 h-4 text-[#0071e3]" />
+                  Рекомендации по дозаказу товаров (30-дневный анализ продаж)
+                </h4>
+                <p className="text-[11px] text-[#86868b] mt-0.5">
+                  Система анализирует средний темп реализации за 30 дней и неснижаемый буфер (minStock), прогнозируя дефицит на 14 дней вперёд.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={loadSuggestions}
+                  disabled={loadingSuggestions}
+                  className="px-3 py-1.5 border border-[#e9e9e7] hover:bg-white text-xs font-semibold text-[#6a6a65] rounded-lg transition-all"
+                >
+                  {loadingSuggestions ? 'Анализ...' : 'Обновить анализ'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (suppliers.length > 0 && !autoOrderSupplierId) {
+                      setAutoOrderSupplierId(suppliers[0].id);
+                    }
+                    if (warehouses.length > 0 && !autoOrderWarehouseId) {
+                      setAutoOrderWarehouseId(warehouses[0].id);
+                    }
+                    setShowAutoOrderModal(true);
+                  }}
+                  disabled={reorderData.suggestions.length === 0}
+                  className="px-4 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Сформировать заказ</span>
+                </button>
+              </div>
+            </div>
+
+            {loadingSuggestions ? (
+              <div className="p-12 text-center text-slate-400 text-xs">
+                Расчёт скорости продаж и проверка остатков...
+              </div>
+            ) : reorderData.suggestions.length === 0 ? (
+              <div className="p-12 text-center space-y-2">
+                <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+                <h5 className="font-bold text-[#1d1d1f] text-sm">Складские запасы в идеальном состоянии!</h5>
+                <p className="text-xs text-[#86868b] max-w-md mx-auto">
+                  Ни по одной товарной позиции нет дефицита ниже неснижаемого остатка или риска обнуления в ближайшие недели.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-[#e9e9e7] text-[10px] font-bold text-[#86868b] uppercase tracking-wider bg-white">
+                      <th className="p-3">Товар</th>
+                      <th className="p-3 text-right">Текущий ост.</th>
+                      <th className="p-3 text-right">Мин. буфер</th>
+                      <th className="p-3 text-right">Темп (в день)</th>
+                      <th className="p-3 text-center">Хватит на</th>
+                      <th className="p-3 text-center">Статус</th>
+                      <th className="p-3 text-right">Рекомендовано</th>
+                      <th className="p-3 text-right">К заказу</th>
+                      <th className="p-3 text-right">Сумма TJS</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e9e9e7]">
+                    {reorderData.suggestions.map((s: any) => {
+                      const cost = Number(s.product.costPrice || Number(s.product.price) * 0.7);
+                      const currentOrderQty = autoOrderQuantities[s.product.id] !== undefined
+                        ? autoOrderQuantities[s.product.id]
+                        : s.suggestedReorder;
+                      const lineCost = currentOrderQty * cost;
+                      const dailyRate = Number(s.dailySalesRate || s.avgDailySales || 0);
+                      const daysRemaining = typeof s.daysRemainingNum === 'number'
+                        ? s.daysRemainingNum
+                        : (typeof s.daysLeft === 'number' ? s.daysLeft : (s.daysRemaining === '∞' ? 999 : parseInt(s.daysRemaining, 10) || 0));
+                      const categoryName = typeof s.product.category === 'object' ? s.product.category?.name : s.product.category;
+
+                      return (
+                        <tr key={s.product.id} className="hover:bg-[#fbfbfa] transition-colors">
+                          <td className="p-3">
+                            <span className="font-bold text-[#1d1d1f] block">{s.product.name}</span>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                              <span className="font-mono">{s.product.sku || '—'}</span>
+                              {categoryName && <span>• {categoryName}</span>}
+                            </div>
+                          </td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-900">
+                            {Number(s.currentStock).toFixed(0)} {s.product.unit || 'шт'}
+                          </td>
+                          <td className="p-3 text-right font-mono text-slate-500">
+                            {Number(s.minStock).toFixed(0)} {s.product.unit || 'шт'}
+                          </td>
+                          <td className="p-3 text-right font-mono text-slate-600">
+                            {dailyRate.toFixed(1)} /дн
+                          </td>
+                          <td className="p-3 text-center font-mono">
+                            {daysRemaining >= 999 ? (
+                              <span className="text-slate-400 font-bold">∞</span>
+                            ) : (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  daysRemaining <= 3
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                }`}
+                              >
+                                {daysRemaining} дн.
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-center">
+                            {s.urgency === 'critical' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                <ShieldAlert className="w-3 h-3 text-rose-500" />
+                                Критично
+                              </span>
+                            ) : s.urgency === 'warning' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                                Дефицит
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                                Норма
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-right font-mono text-slate-600">
+                            {s.suggestedReorder} {s.product.unit || 'шт'}
+                          </td>
+                          <td className="p-3 text-right">
+                            <input
+                              type="number"
+                              min="0"
+                              value={currentOrderQty}
+                              onChange={(e) => {
+                                const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+                                setAutoOrderQuantities((prev) => ({ ...prev, [s.product.id]: val }));
+                              }}
+                              className="w-20 text-right bg-white border border-[#e9e9e7] rounded-lg px-2 py-1 font-mono font-bold text-xs focus:outline-none focus:border-[#0071e3] shadow-2xs"
+                            />
+                          </td>
+                          <td className="p-3 text-right font-mono font-bold text-slate-800">
+                            {lineCost.toFixed(2)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Create Auto-Order to Supplier */}
+      {showAutoOrderModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <form
+            onSubmit={handleCreateAutoOrder}
+            className="bg-white border border-[#e9e9e7] rounded-xl max-w-xl w-full p-5 space-y-4 shadow-xl animate-fadeIn"
+          >
+            <div className="flex justify-between items-center border-b border-[#e9e9e7] pb-3">
+              <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                <ShoppingCart className="w-4 h-4 text-[#0071e3]" />
+                Формирование заказа поставщику
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowAutoOrderModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-[#6a6a65]">Поставщик*</label>
+                  {suppliers.length > 0 ? (
+                    <select
+                      required
+                      value={autoOrderSupplierId}
+                      onChange={(e) => setAutoOrderSupplierId(e.target.value)}
+                      className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2 text-xs focus:outline-none focus:border-[#0071e3]"
+                    >
+                      <option value="">Выберите поставщика</option>
+                      {suppliers.map((sup: any) => (
+                        <option key={sup.id} value={sup.id}>
+                          {sup.name} {sup.phone ? `(${sup.phone})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="p-2 border border-dashed border-amber-300 bg-amber-50/50 rounded-lg text-[11px] text-amber-800">
+                      Поставщики не заведены в модуле закупок. Заказ будет направлен основному поставщику.
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-[#6a6a65]">Склад назначения*</label>
+                  <select
+                    required
+                    value={autoOrderWarehouseId}
+                    onChange={(e) => setAutoOrderWarehouseId(e.target.value)}
+                    className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2 text-xs focus:outline-none focus:border-[#0071e3]"
+                  >
+                    <option value="">Выберите склад</option>
+                    {warehouses.map((w: any) => (
+                      <option key={w.id} value={w.id}>
+                        {w.name} {w.address ? `(${w.address})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-[#6a6a65] block mb-1.5">
+                  Позиции в заказе (
+                  {reorderData.suggestions.filter((s) => (autoOrderQuantities[s.product.id] || 0) > 0).length} поз.)
+                </label>
+                <div className="max-h-56 overflow-y-auto border border-[#e9e9e7] rounded-lg divide-y divide-[#e9e9e7]">
+                  {reorderData.suggestions
+                    .filter((s) => (autoOrderQuantities[s.product.id] || 0) > 0)
+                    .map((s) => {
+                      const qty = autoOrderQuantities[s.product.id];
+                      const cost = Number(s.product.costPrice || Number(s.product.price) * 0.7);
+                      return (
+                        <div key={s.product.id} className="p-2.5 flex justify-between items-center bg-[#fafaf9]">
+                          <div>
+                            <span className="font-semibold text-slate-800 block">{s.product.name}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {qty} {s.product.unit || 'шт'} &times; {cost.toFixed(2)} TJS
+                            </span>
+                          </div>
+                          <span className="font-mono font-bold text-slate-900">
+                            {(qty * cost).toFixed(2)} TJS
+                          </span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs">
+                <span className="font-bold text-slate-700">Итоговая сумма заказа:</span>
+                <span className="text-base font-bold text-[#1d1d1f] font-mono">
+                  {reorderData.suggestions
+                    .reduce((acc, s) => {
+                      const qty = autoOrderQuantities[s.product.id] || 0;
+                      const cost = Number(s.product.costPrice || Number(s.product.price) * 0.7);
+                      return acc + qty * cost;
+                    }, 0)
+                    .toFixed(2)}{' '}
+                  TJS
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#e9e9e7]">
+              <button
+                type="button"
+                onClick={() => setShowAutoOrderModal(false)}
+                className="px-3.5 py-1.5 border border-[#e9e9e7] rounded-lg text-xs font-semibold text-[#6a6a65] hover:bg-[#fbfbfa]"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={submittingAutoOrder}
+                className="px-4 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+              >
+                {submittingAutoOrder ? 'Создание...' : 'Подтвердить и отправить заказ'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

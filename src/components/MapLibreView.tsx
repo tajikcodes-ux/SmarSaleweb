@@ -68,6 +68,40 @@ export default function MapLibreView({
     return getIsDark() ? 'dark' : 'liberty';
   });
 
+  // Helper to fetch and sanitize OpenFreeMap style (fixes road shields null warning & font mappings)
+  const fetchAndSanitizeStyle = async (styleName: 'liberty' | 'dark' | 'bright') => {
+    try {
+      const res = await fetch(`https://tiles.openfreemap.org/styles/${styleName}`);
+      const styleJson = await res.json();
+      if (Array.isArray(styleJson.layers)) {
+        styleJson.layers.forEach((layer: any) => {
+          // Fix highway-shield null ref_length comparison warning
+          if (
+            ['highway-shield-non-us', 'highway-shield-us-interstate', 'road_shield_us'].includes(layer.id) &&
+            Array.isArray(layer.filter)
+          ) {
+            layer.filter = layer.filter.map((expr: any) => {
+              if (
+                Array.isArray(expr) &&
+                expr[0] === '<=' &&
+                Array.isArray(expr[1]) &&
+                expr[1][0] === 'get' &&
+                expr[1][1] === 'ref_length'
+              ) {
+                return ['all', ['has', 'ref_length'], ['<=', ['get', 'ref_length'], expr[2]]];
+              }
+              return expr;
+            });
+          }
+        });
+      }
+      return styleJson;
+    } catch (e) {
+      console.warn('Failed to fetch/sanitize map style, using direct URL', e);
+      return `https://tiles.openfreemap.org/styles/${styleName}`;
+    }
+  };
+
   // Track system or classList dark mode changes
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -76,7 +110,9 @@ export default function MapLibreView({
       const targetStyle = dark ? 'dark' : 'liberty';
       if (currentStyle !== targetStyle && mapRef.current) {
         setCurrentStyle(targetStyle);
-        mapRef.current.setStyle(`https://tiles.openfreemap.org/styles/${targetStyle}`);
+        fetchAndSanitizeStyle(targetStyle).then((styleObj) => {
+          mapRef.current?.setStyle(styleObj);
+        });
       }
     });
 
@@ -92,46 +128,68 @@ export default function MapLibreView({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
+    let isCancelled = false;
+
     // Sughd / Khujand center coordinates
     const initialLng = 69.6210;
     const initialLat = 40.2825;
 
     const initialDark = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
-    const styleUrl = initialDark
-      ? 'https://tiles.openfreemap.org/styles/dark'
-      : 'https://tiles.openfreemap.org/styles/liberty';
+    const initialStyleName = initialDark ? 'dark' : 'liberty';
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: styleUrl,
-      center: [initialLng, initialLat],
-      zoom: 12.8,
-      pitch: is3D ? 58 : 0,
-      bearing: 0,
-      attributionControl: false,
+    fetchAndSanitizeStyle(initialStyleName).then((styleObj) => {
+      if (isCancelled || !containerRef.current || mapRef.current) return;
+
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: styleObj,
+        center: [initialLng, initialLat],
+        zoom: 12.8,
+        pitch: is3D ? 58 : 0,
+        bearing: 0,
+        attributionControl: false,
+        transformRequest: (url: string, resourceType?: string) => {
+          if (resourceType === 'Glyphs' && url.includes('tiles.openfreemap.org/fonts/')) {
+            // OpenFreeMap provides Noto Sans with full Cyrillic (Tajik/Russian) ranges (0-255, 1024-1279).
+            // Rewrite fallback/composite font requests to available Noto Sans fonts.
+            const isBold = /bold/i.test(url);
+            const isItalic = /italic/i.test(url);
+            const targetFont = isBold ? 'Noto Sans Bold' : (isItalic ? 'Noto Sans Italic' : 'Noto Sans Regular');
+            const cleanUrl = url.replace(
+              /tiles\.openfreemap\.org\/fonts\/[^/]+/,
+              `tiles.openfreemap.org/fonts/${encodeURIComponent(targetFont)}`
+            );
+            return { url: cleanUrl };
+          }
+          return { url };
+        },
+      });
+
+      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+
+      const setupAll = () => {
+        const darkNow = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
+        setup3DBuildings(map, darkNow);
+        initLayersAndSources(map);
+        updateClientData(map);
+        updateAgentsData(map);
+        updateLeadsData(map);
+        updateRouteData(map);
+      };
+
+      map.on('load', setupAll);
+      map.on('style.load', setupAll);
+
+      mapRef.current = map;
     });
 
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
-
-    const setupAll = () => {
-      const darkNow = document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
-      setup3DBuildings(map, darkNow);
-      initLayersAndSources(map);
-      updateClientData(map);
-      updateAgentsData(map);
-      updateLeadsData(map);
-      updateRouteData(map);
-    };
-
-    map.on('load', setupAll);
-    map.on('style.load', setupAll);
-
-    mapRef.current = map;
-
     return () => {
-      map.remove();
-      mapRef.current = null;
+      isCancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
     };
   }, []);
 
@@ -235,6 +293,7 @@ export default function MapLibreView({
         minzoom: 15.5,
         layout: {
           'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
           'text-size': 11,
           'text-offset': [0, 1.2],
           'text-anchor': 'top',
@@ -345,6 +404,7 @@ export default function MapLibreView({
         source: 'agents-source',
         layout: {
           'text-field': ['get', 'initials'],
+          'text-font': ['Noto Sans Bold'],
           'text-size': 11,
           'text-allow-overlap': true,
           'text-ignore-placement': true,
@@ -362,6 +422,7 @@ export default function MapLibreView({
         minzoom: 12.5,
         layout: {
           'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
           'text-size': 11,
           'text-offset': [0, 1.8],
           'text-anchor': 'top',
@@ -444,6 +505,7 @@ export default function MapLibreView({
         source: 'market-leads-source',
         layout: {
           'text-field': ['get', 'icon'],
+          'text-font': ['Noto Sans Regular'],
           'text-size': 11,
           'text-allow-overlap': true,
           'text-ignore-placement': true,
@@ -457,6 +519,7 @@ export default function MapLibreView({
         minzoom: 14,
         layout: {
           'text-field': ['get', 'name'],
+          'text-font': ['Noto Sans Regular'],
           'text-size': 10,
           'text-offset': [0, 1.4],
           'text-anchor': 'top',

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save, Target, Plus, Edit2, Sparkles } from 'lucide-react';
+import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save, Target, Plus, Edit2, Sparkles, Printer, Download, CreditCard, FileText, X } from 'lucide-react';
 
 export default function Salary() {
   const [activeTab, setActiveTab] = useState<'sheet' | 'settings' | 'targets'>('sheet');
@@ -15,6 +15,10 @@ export default function Salary() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const [recalculating, setRecalculating] = useState(false);
+
+  // Payslip modal states
+  const [showPayslipModal, setShowPayslipModal] = useState(false);
+  const [activePayslip, setActivePayslip] = useState<any>(null);
 
   // Sales target modal states
   const [showTargetModal, setShowTargetModal] = useState(false);
@@ -114,6 +118,75 @@ export default function Salary() {
     } finally {
       setRecalculating(false);
     }
+  };
+
+  const handleOpenPayslip = async (calcId: string) => {
+    try {
+      const res = await api.get(`/salary/calculations/${calcId}/payslip`);
+      setActivePayslip(res.data);
+      setShowPayslipModal(true);
+    } catch (err) {
+      console.error('Failed to load payslip', err);
+      alert('Не удалось загрузить расчетный листок');
+    }
+  };
+
+  const handleMarkPaid = async (calcId: string) => {
+    if (!window.confirm('Отметить заработную плату как выплаченную сотруднику?')) return;
+    try {
+      await api.post(`/salary/calculations/${calcId}/mark-paid`);
+      fetchCalculations();
+      alert('Выплата заработной платы зафиксирована!');
+    } catch (err) {
+      console.error('Failed to mark paid', err);
+      alert('Ошибка подтверждения выплаты');
+    }
+  };
+
+  const handleExportExcel = () => {
+    if (calculations.length === 0) {
+      alert('Ведомость начислений пуста');
+      return;
+    }
+    const headers = [
+      'Сотрудник',
+      'Логин',
+      'Роль',
+      'Базовый оклад (TJS)',
+      'Визиты (%)',
+      'Личные продажи (TJS)',
+      'Комиссия с продаж (TJS)',
+      'Бонус за план продаж (TJS)',
+      'Штрафы (TJS)',
+      'Причина штрафа',
+      'Итого к выплате (TJS)',
+      'Статус выплаты',
+      'Дата выплаты',
+    ];
+    const rows = calculations.map((c: any) => [
+      `"${c.user?.firstName || ''} ${c.user?.lastName || ''}"`,
+      `"${c.user?.username || ''}"`,
+      `"${c.user?.role?.name || c.user?.role || ''}"`,
+      parseFloat(c.baseSalary || 0).toFixed(2),
+      Math.round(Number(c.visitRate || 0) * 100) + '%',
+      parseFloat(c.salesVolume || 0).toFixed(2),
+      parseFloat(c.bonusEarned || 0).toFixed(2),
+      parseFloat(c.targetBonus || 0).toFixed(2),
+      parseFloat(c.penaltyAmount || 0).toFixed(2),
+      `"${c.penaltyReason || ''}"`,
+      parseFloat(c.totalSalary || 0).toFixed(2),
+      c.status === 'paid' ? 'Выплачено' : 'Рассчитано',
+      c.paidAt ? new Date(c.paidAt).toLocaleDateString('ru-RU') : '—',
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `smartsale_payroll_${month}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -284,14 +357,24 @@ export default function Salary() {
           )}
 
           {activeTab === 'sheet' && (
-            <button
-              onClick={handleRecalculate}
-              disabled={recalculating}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#f1f1f0] border border-[#e9e9e7] hover:bg-slate-100 text-[#37352f] disabled:opacity-50 rounded-lg font-bold text-xs transition-all shadow-sm"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${recalculating ? 'animate-spin' : ''}`} />
-              <span>Пересчитать</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportExcel}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition-all shadow-sm"
+                title="Скачать ведомость начислений в Excel"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Экспорт в Excel</span>
+              </button>
+              <button
+                onClick={handleRecalculate}
+                disabled={recalculating}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#f1f1f0] border border-[#e9e9e7] hover:bg-slate-100 text-[#37352f] disabled:opacity-50 rounded-lg font-bold text-xs transition-all shadow-sm"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${recalculating ? 'animate-spin' : ''}`} />
+                <span>Пересчитать</span>
+              </button>
+            </div>
           )}
 
           {activeTab === 'targets' && (
@@ -406,10 +489,12 @@ export default function Salary() {
                   <th className="p-3.5">Оклад</th>
                   <th className="p-3.5">Посещения (KPI)</th>
                   <th className="p-3.5">Личные продажи</th>
-                  <th className="p-3.5">Бонус</th>
+                  <th className="p-3.5">Комиссия (%)</th>
+                  <th className="p-3.5">Бонус за план</th>
                   <th className="p-3.5 text-rose-600">Штрафы</th>
                   <th className="p-3.5">Итого к выплате</th>
-                  <th className="p-3.5 text-center">Условие KPI</th>
+                  <th className="p-3.5 text-center">Статус</th>
+                  <th className="p-3.5 text-right">Действия</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e9e9e7]/60 text-xs">
@@ -421,6 +506,7 @@ export default function Salary() {
                   const rule = settingsList.find((s: any) => s.role === userRoleName);
                   const minRequired = rule ? parseFloat(rule.minVisitRate) : (userRoleName === 'SUPERVISOR' ? 90 : 85);
                   const kpiPassed = visitRatePercent >= minRequired;
+                  const targetBonusNum = Number(item.targetBonus || 0);
 
                   return (
                     <tr key={item.id} className="hover:bg-[#fbfbfa] transition-colors">
@@ -450,6 +536,16 @@ export default function Salary() {
                       <td className="p-3.5 font-mono font-bold text-emerald-700">
                         {parseFloat(item.bonusEarned).toFixed(2)} TJS
                       </td>
+                      <td className="p-3.5 font-mono font-bold">
+                        {targetBonusNum > 0 ? (
+                          <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 inline-flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 text-emerald-600" />
+                            +{targetBonusNum.toFixed(2)} TJS
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-normal">0.00 TJS</span>
+                        )}
+                      </td>
                       <td className="p-3.5 font-mono font-bold text-rose-600">
                         {item.penaltyAmount && parseFloat(item.penaltyAmount) > 0 ? (
                           <div>
@@ -466,17 +562,37 @@ export default function Salary() {
                         {parseFloat(item.totalSalary).toFixed(2)} TJS
                       </td>
                       <td className="p-3.5 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {kpiPassed ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full text-[9px] border border-emerald-100">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Выполнен
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full text-[9px] border border-amber-100">
-                              <AlertCircle className="w-3 h-3" />
-                              Недостаточно
-                            </span>
+                        {item.status === 'paid' ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full text-[10px] border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Выплачено
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full text-[10px] border border-amber-200">
+                            <AlertCircle className="w-3 h-3" />
+                            К выплате
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenPayslip(item.id)}
+                            title="Открыть и распечатать расчетный листок (Payslip)"
+                            className="px-2 py-1 bg-blue-50 text-[#0071e3] border border-blue-200 hover:bg-blue-100 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Листок
+                          </button>
+                          {item.status !== 'paid' && (
+                            <button
+                              onClick={() => handleMarkPaid(item.id)}
+                              title="Зафиксировать факт выплаты"
+                              className="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 text-[10px] font-bold rounded-lg transition-colors flex items-center gap-1"
+                            >
+                              <CreditCard className="w-3 h-3" />
+                              Выплатить
+                            </button>
                           )}
                           <button
                             onClick={() => {
@@ -964,6 +1080,190 @@ export default function Salary() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Payslip Modal */}
+      {showPayslipModal && activePayslip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-[#0071e3]" />
+                <h3 className="font-bold text-sm text-[#1d1d1f]">
+                  Расчетный листок за {month}
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowPayslipModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Print container */}
+            <div id="printable-payslip" className="space-y-4 p-5 border border-slate-200 rounded-xl bg-slate-50/50 text-xs">
+              <div className="flex justify-between items-start border-b border-slate-200 pb-3">
+                <div>
+                  <h4 className="font-bold text-sm text-slate-900 uppercase tracking-wide">
+                    {activePayslip.company?.name || 'SmartSale FMCG Distribution'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500">Система мотивации и оплаты труда торгового персонала</p>
+                </div>
+                <div className="text-right">
+                  <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
+                    activePayslip.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {activePayslip.status === 'paid' ? 'ВЫПЛАЧЕНО' : 'К ВЫПЛАТЕ'}
+                  </span>
+                  {activePayslip.paidAt && (
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {new Date(activePayslip.paidAt).toLocaleDateString('ru-RU')}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Employee info */}
+              <div className="grid grid-cols-2 gap-3 bg-white p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Сотрудник</span>
+                  <strong className="text-slate-900 text-xs">
+                    {activePayslip.user?.firstName} {activePayslip.user?.lastName}
+                  </strong>
+                  <span className="text-slate-500 text-[10px] block">@{activePayslip.user?.username} ({activePayslip.user?.phone || '—'})</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">Должность и период</span>
+                  <strong className="text-slate-900 text-xs">
+                    {activePayslip.user?.role?.name || activePayslip.user?.role || 'Сотрудник'}
+                  </strong>
+                  <span className="text-slate-500 text-[10px] block">Период: {activePayslip.calculationMonth}</span>
+                </div>
+              </div>
+
+              {/* Earnings table */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  1. Начисления
+                </span>
+                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                  <div className="p-2.5 flex justify-between">
+                    <span className="text-slate-600">Базовый оклад по регламенту роли</span>
+                    <strong className="font-mono text-slate-900">{parseFloat(activePayslip.baseSalary).toFixed(2)} TJS</strong>
+                  </div>
+                  <div className="p-2.5 flex justify-between">
+                    <div>
+                      <span className="text-slate-600">Комиссия от личных продаж (выручки)</span>
+                      <span className="text-[10px] text-slate-400 block font-normal">
+                        (Личный оборот: {parseFloat(activePayslip.salesVolume).toFixed(2)} TJS)
+                      </span>
+                    </div>
+                    <strong className="font-mono text-emerald-700 font-bold">+{parseFloat(activePayslip.bonusEarned).toFixed(2)} TJS</strong>
+                  </div>
+                  {activePayslip.targetBonus && parseFloat(activePayslip.targetBonus) > 0 && (
+                    <div className="p-2.5 flex justify-between bg-emerald-50/50">
+                      <div>
+                        <span className="text-emerald-900 font-bold flex items-center gap-1">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                          Премия за выполнение плана продаж (KPI)
+                        </span>
+                        {activePayslip.salesTarget && (
+                          <span className="text-[10px] text-emerald-600 block">
+                            План {activePayslip.salesTarget.targetRevenue.toLocaleString('ru-RU')} TJS (Выполнение: {activePayslip.targetAchieved || 100}%)
+                          </span>
+                        )}
+                      </div>
+                      <strong className="font-mono text-emerald-700 font-bold">+{parseFloat(activePayslip.targetBonus).toFixed(2)} TJS</strong>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Deductions table */}
+              <div>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                  2. Удержания и дисциплинарные штрафы
+                </span>
+                <div className="bg-white rounded-lg border border-slate-200 overflow-hidden divide-y divide-slate-100">
+                  <div className="p-2.5 flex justify-between">
+                    <div>
+                      <span className="text-slate-600">Штрафы за нарушения / дисциплину</span>
+                      {activePayslip.penaltyReason && (
+                        <span className="text-[10px] text-rose-500 block italic">{activePayslip.penaltyReason}</span>
+                      )}
+                    </div>
+                    <strong className="font-mono text-rose-600">
+                      -{parseFloat(activePayslip.penaltyAmount || 0).toFixed(2)} TJS
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Net Payout */}
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl flex justify-between items-center">
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-blue-700 block">ИТОГО К ВЫПЛАТЕ НА РУКИ:</span>
+                  <span className="text-[10px] text-blue-500">Сумма после всех премий, комиссий и удержаний</span>
+                </div>
+                <strong className="font-mono text-xl text-[#0071e3] font-extrabold">
+                  {parseFloat(activePayslip.totalSalary).toFixed(2)} TJS
+                </strong>
+              </div>
+
+              {/* Signatures */}
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 text-[10px] text-slate-600">
+                <div>
+                  <span>Главный бухгалтер: ________________</span>
+                </div>
+                <div>
+                  <span>Сотрудник получил: ________________</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal actions */}
+            <div className="flex justify-between items-center pt-2">
+              <button
+                onClick={() => {
+                  const printContent = document.getElementById('printable-payslip');
+                  if (!printContent) return;
+                  const win = window.open('', '', 'width=800,height=900');
+                  if (!win) return;
+                  win.document.write(`
+                    <html>
+                      <head>
+                        <title>Расчетный листок - ${activePayslip.user?.firstName} ${activePayslip.user?.lastName}</title>
+                        <style>
+                          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; color: #1e293b; font-size: 12px; }
+                          strong { font-weight: 700; }
+                          .font-mono { font-family: monospace; }
+                          table { width: 100%; border-collapse: collapse; }
+                        </style>
+                      </head>
+                      <body>
+                        ${printContent.innerHTML}
+                        <script>window.onload = function() { window.print(); }</script>
+                      </body>
+                    </html>
+                  `);
+                  win.document.close();
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Распечатать расчетный листок (А4)</span>
+              </button>
+
+              <button
+                onClick={() => setShowPayslipModal(false)}
+                className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                Закрыть
+              </button>
+            </div>
           </div>
         </div>
       )}
