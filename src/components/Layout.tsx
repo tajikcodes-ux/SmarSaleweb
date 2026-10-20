@@ -264,13 +264,13 @@ export default function Layout({ children }: LayoutProps) {
       {isMobileMenuOpen && (
         <div
           onClick={() => setIsMobileMenuOpen(false)}
-          className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[1200] lg:hidden"
         />
       )}
 
       {/* Sidebar - Modern light sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col justify-between p-4 bg-white border-r border-[#e3e3e8] flex-shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-[1300] flex flex-col justify-between p-4 bg-white border-r border-[#e3e3e8] flex-shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:z-auto ${
           isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
       >
@@ -436,7 +436,7 @@ export default function Layout({ children }: LayoutProps) {
         )}
 
         {/* Header - Premium clean bar */}
-        <header className="h-16 bg-white border-b border-[#e3e3e8] flex items-center justify-between px-4 lg:px-8 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-[#e3e3e8] flex items-center justify-between px-4 lg:px-8 flex-shrink-0 relative z-30">
           <div className="flex items-center gap-2 lg:gap-4">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -494,7 +494,7 @@ export default function Layout({ children }: LayoutProps) {
 
               {/* Notifications Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e3e3e8] rounded-2xl shadow-xl z-50 overflow-hidden animate-fadeIn">
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-[#e3e3e8] rounded-2xl shadow-xl z-[1100] overflow-hidden animate-fadeIn">
                   <div className="p-4 border-b border-[#e3e3e8] flex justify-between items-center">
                     <span className="text-xs font-bold text-[#1d1d1f]">Уведомления</span>
                     <button
