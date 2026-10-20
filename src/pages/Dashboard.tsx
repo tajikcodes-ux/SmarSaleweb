@@ -19,6 +19,7 @@ import {
   Sparkles,
   Trophy,
   Send,
+  Target,
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -57,12 +58,14 @@ export default function Dashboard() {
     debtorsCount: 0,
     clients: [],
   });
+  const [monthlyTargets, setMonthlyTargets] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes, debtRes] = await Promise.all([
+        const targetMonth = today.substring(0, 7);
+        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes, debtRes, targetsRes] = await Promise.all([
           api.get('/users').catch(() => ({ data: [] })),
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes', { params: { date: today } }).catch(() => ({ data: [] })),
@@ -72,8 +75,12 @@ export default function Dashboard() {
           api.get('/ai/predictions/sales').catch(() => ({ data: [] })),
           api.get('/smm/leaderboard').catch(() => ({ data: [] })),
           api.get('/clients/debt-aging').catch(() => ({ data: { totalDebt: 0, buckets: { days0_7: 0, days8_15: 0, days16_30: 0, over30: 0 }, debtorsCount: 0, clients: [] } })),
+          api.get('/salary/targets', { params: { month: targetMonth } }).catch(() => ({ data: [] })),
         ]);
 
+        if (targetsRes?.data) {
+          setMonthlyTargets(targetsRes.data);
+        }
         if (debtRes?.data) {
           setDebtAging(debtRes.data);
         }
@@ -272,6 +279,10 @@ export default function Dashboard() {
     };
   }, []);
 
+  const totalTargetRevenue = monthlyTargets.reduce((s, t) => s + Number(t.targetRevenue || 0), 0);
+  const totalActualRevenue = monthlyTargets.reduce((s, t) => s + Number(t.actualRevenue || 0), 0);
+  const revenueProgress = totalTargetRevenue > 0 ? Math.round((totalActualRevenue / totalTargetRevenue) * 100) : 0;
+
   const kpis = [
     {
       title: 'Выручка сегодня',
@@ -310,13 +321,15 @@ export default function Dashboard() {
       trendUp: true,
     },
     {
-      title: 'Выполнение плана',
-      value: stats.visitRate,
-      change: stats.totalVisits > 0 ? '+14%' : '0%',
-      subText: 'по сравнению с вчера',
-      icon: Users,
-      color: 'bg-amber-50 border-amber-100 text-amber-600',
-      trendUp: true,
+      title: totalTargetRevenue > 0 ? 'План выручки (МЕС)' : 'Выполнение плана',
+      value: totalTargetRevenue > 0 ? `${revenueProgress}%` : stats.visitRate,
+      change: totalTargetRevenue > 0 ? `${Math.round(totalActualRevenue).toLocaleString('ru-RU')} / ${Math.round(totalTargetRevenue).toLocaleString('ru-RU')} TJS` : (stats.totalVisits > 0 ? '+14%' : '0%'),
+      subText: totalTargetRevenue > 0 ? 'Квота продаж отдела' : 'по сравнению с вчера',
+      icon: totalTargetRevenue > 0 ? Target : Users,
+      color: totalTargetRevenue > 0
+        ? (revenueProgress >= 100 ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : revenueProgress >= 70 ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-amber-50 border-amber-100 text-amber-600')
+        : 'bg-amber-50 border-amber-100 text-amber-600',
+      trendUp: totalTargetRevenue > 0 ? revenueProgress >= 70 : true,
     },
     {
       title: 'АКБ / ОКБ (МЕС)',

@@ -1,13 +1,29 @@
 import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
-import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle, Truck, DollarSign, ArrowRight } from 'lucide-react';
 
 export default function Orders() {
+  const [activeTab, setActiveTab] = useState<'orders' | 'dispatch'>('orders');
   const [orders, setOrders] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Delivery Dispatch & Runs State
+  const [deliveryRuns, setDeliveryRuns] = useState<any[]>([]);
+  const [loadingRuns, setLoadingRuns] = useState(false);
+  const [showCreateRunModal, setShowCreateRunModal] = useState(false);
+  const [selectedDriverForRun, setSelectedDriverForRun] = useState('');
+  const [runNotes, setRunNotes] = useState('');
+  const [creatingRun, setCreatingRun] = useState(false);
+
+  // Cash Handover State
+  const [showHandoverModal, setShowHandoverModal] = useState(false);
+  const [handoverRun, setHandoverRun] = useState<any>(null);
+  const [cashHandedOver, setCashHandedOver] = useState('');
+  const [handoverNotes, setHandoverNotes] = useState('');
+  const [submittingHandover, setSubmittingHandover] = useState(false);
 
   // Smart Filter, Search, Sort & Selection States
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +125,18 @@ export default function Orders() {
     return Object.values(totals);
   };
 
+  const loadDeliveryRuns = async () => {
+    try {
+      setLoadingRuns(true);
+      const res = await api.get('/orders/dispatch/runs');
+      setDeliveryRuns(res.data || []);
+    } catch (err) {
+      console.error('Failed to load delivery runs', err);
+    } finally {
+      setLoadingRuns(false);
+    }
+  };
+
   const loadData = async () => {
     try {
       const [ordRes, cliRes, prodRes, userRes] = await Promise.all([
@@ -121,10 +149,225 @@ export default function Orders() {
       setClients(cliRes.data);
       setProducts(prodRes.data);
       setUsers(userRes.data);
+      loadDeliveryRuns();
     } catch (err) {
       console.error('Failed to load orders data', err);
     } finally {
+      setLoadingRuns(false);
       setLoading(false);
+    }
+  };
+
+  const handleCreateDeliveryRun = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDriverForRun) {
+      alert('Пожалуйста, выберите водителя-экспедитора');
+      return;
+    }
+    if (selectedOrderIds.length === 0) {
+      alert('Выберите хотя бы один заказ для включения в рейс');
+      return;
+    }
+    try {
+      setCreatingRun(true);
+      const res = await api.post('/orders/dispatch/runs', {
+        driverId: selectedDriverForRun,
+        orderIds: selectedOrderIds,
+        notes: runNotes || undefined,
+      });
+      alert('Рейс доставки успешно сформирован!');
+      setShowCreateRunModal(false);
+      setSelectedOrderIds([]);
+      setRunNotes('');
+      await loadDeliveryRuns();
+      await loadData();
+      printWaybill(res.data.id);
+    } catch (err: any) {
+      console.error('Failed to create run', err);
+      alert(err.response?.data?.message || 'Ошибка создания рейса доставки');
+    } finally {
+      setCreatingRun(false);
+    }
+  };
+
+  const handleConfirmHandover = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!handoverRun) return;
+    try {
+      setSubmittingHandover(true);
+      await api.post(`/orders/dispatch/runs/${handoverRun.id}/handover`, {
+        cashHandedOver: parseFloat(cashHandedOver) || 0,
+        notes: handoverNotes || undefined,
+      });
+      alert('Инкассация рейса успешно принята! Все наличные заказы рейса закрыты и оприходованы.');
+      setShowHandoverModal(false);
+      setHandoverRun(null);
+      setCashHandedOver('');
+      setHandoverNotes('');
+      await loadDeliveryRuns();
+      await loadData();
+    } catch (err: any) {
+      console.error('Failed to handover cash', err);
+      alert(err.response?.data?.message || 'Ошибка приема инкассации');
+    } finally {
+      setSubmittingHandover(false);
+    }
+  };
+
+  const printWaybill = async (runId: string) => {
+    try {
+      const res = await api.get(`/orders/dispatch/runs/${runId}`);
+      const run = res.data;
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      const orderRows = (run.orders || []).map((o: any, idx: number) => {
+        const client = o.client || {};
+        const isCash = client.paymentType === 'CASH' || !client.paymentType;
+        const totalItemsCount = (o.items || []).reduce((sum: number, it: any) => sum + Number(it.quantity || 0), 0);
+
+        return `
+          <tr>
+            <td style="text-align: center; border: 1px solid #94a3b8; padding: 6px;">${idx + 1}</td>
+            <td style="border: 1px solid #94a3b8; padding: 6px;">
+              <strong>${client.name || '—'}</strong><br/>
+              <span style="font-size: 11px; color: #475569;">${client.address || '—'} (тел: ${client.phone || '—'})</span>
+            </td>
+            <td style="text-align: center; border: 1px solid #94a3b8; padding: 6px; font-family: monospace;">#${o.id.slice(0, 8).toUpperCase()}</td>
+            <td style="text-align: center; border: 1px solid #94a3b8; padding: 6px; font-weight: bold;">${totalItemsCount}</td>
+            <td style="text-align: center; border: 1px solid #94a3b8; padding: 6px;">
+              ${isCash ? '<span style="font-weight: bold; color: #15803d;">НАЛИЧНЫЕ</span>' : '<span style="color: #2563eb;">БЕЗНАЛ / ДОЛГ</span>'}
+            </td>
+            <td style="text-align: right; border: 1px solid #94a3b8; padding: 6px; font-weight: bold; font-family: monospace;">
+              ${Number(o.totalAmount).toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
+            </td>
+            <td style="border: 1px solid #94a3b8; padding: 6px; width: 140px; text-align: center; font-size: 10px; color: #94a3b8;">
+              Подпись клиента &nbsp; / &nbsp; Печать
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Aggregate products to pack/load for truck
+      const itemMap: { [key: string]: { name: string; sku: string; unit: string; qty: number } } = {};
+      (run.orders || []).forEach((o: any) => {
+        (o.items || []).forEach((it: any) => {
+          const p = it.product || {};
+          const key = p.id || it.productId;
+          if (itemMap[key]) {
+            itemMap[key].qty += Number(it.quantity || 0);
+          } else {
+            itemMap[key] = {
+              name: p.name || 'Товар',
+              sku: p.sku || '—',
+              unit: p.unit || 'шт',
+              qty: Number(it.quantity || 0),
+            };
+          }
+        });
+      });
+
+      const loadingRows = Object.values(itemMap).map((it, idx) => `
+        <tr>
+          <td style="text-align: center; border: 1px solid #cbd5e1; padding: 5px;">${idx + 1}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 5px; font-family: monospace;">${it.sku}</td>
+          <td style="border: 1px solid #cbd5e1; padding: 5px;">${it.name}</td>
+          <td style="text-align: center; border: 1px solid #cbd5e1; padding: 5px;">${it.unit}</td>
+          <td style="text-align: right; border: 1px solid #cbd5e1; padding: 5px; font-weight: bold;">${it.qty}</td>
+        </tr>
+      `).join('');
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Маршрутный лист экспедитора № ${run.id.slice(0, 8).toUpperCase()}</title>
+            <style>
+              body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #0f172a; font-size: 12px; line-height: 1.4; }
+              .header-box { display: flex; justify-content: space-between; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 16px; }
+              h1 { margin: 0 0 4px 0; font-size: 17px; text-transform: uppercase; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th { background: #f1f5f9; padding: 6px; border: 1px solid #64748b; font-size: 10px; text-transform: uppercase; }
+              .kpi-row { display: flex; gap: 20px; margin-top: 14px; font-size: 13px; font-weight: bold; justify-content: flex-end; }
+              .signatures { margin-top: 36px; display: flex; justify-content: space-between; font-size: 11px; }
+              .sig-line { border-bottom: 1px solid #000; width: 160px; display: inline-block; }
+            </style>
+          </head>
+          <body>
+            <div class="header-box">
+              <div>
+                <h1>БОРТОВОЙ МАРШРУТНЫЙ ЛИСТ ЭКСПЕДИТОРА</h1>
+                <p style="margin: 2px 0;"><strong>Рейс №:</strong> ${run.id.toUpperCase()}</p>
+                <p style="margin: 2px 0;"><strong>Экспедитор:</strong> ${run.driver ? run.driver.firstName + ' ' + (run.driver.lastName || '') + ' (тел: ' + (run.driver.phone || '—') + ')' : 'Не назначен'}</p>
+                <p style="margin: 2px 0;"><strong>Дата доставки:</strong> ${new Date(run.runDate || run.createdAt).toLocaleDateString('ru-RU')}</p>
+              </div>
+              <div style="text-align: right;">
+                <p style="margin: 2px 0;"><strong>Компания:</strong> SmartSale FMCG Distribution</p>
+                <p style="margin: 2px 0;"><strong>Всего точек доставки:</strong> ${run.orders?.length || 0} торговых точек</p>
+                <p style="margin: 2px 0;"><strong>Ожидаемый нал к сдаче:</strong> <span style="font-size: 14px; color: #15803d; font-weight: bold;">${Number(run.totalCashExpected).toLocaleString('ru-RU')} TJS</span></p>
+              </div>
+            </div>
+
+            <h3 style="font-size: 13px; text-transform: uppercase; margin: 16px 0 4px 0;">1. Реестр доставок и инкассации по точкам</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 30px;">№</th>
+                  <th>Клиент и адрес доставки</th>
+                  <th style="width: 80px;">Заказ</th>
+                  <th style="width: 60px;">Штук/Мест</th>
+                  <th style="width: 85px;">Тип оплаты</th>
+                  <th style="width: 100px;">Сумма (TJS)</th>
+                  <th style="width: 140px;">Подпись клиента</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orderRows}
+              </tbody>
+            </table>
+
+            <div class="kpi-row">
+              <div>Всего заказ-нарядов: ${run.orders?.length || 0} шт.</div>
+              <div>Общий тоннаж / коробок: ${run.stats?.totalBoxes || 0} шт.</div>
+              <div style="color: #15803d;">Итого наличных к инкассации: ${Number(run.totalCashExpected).toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS</div>
+            </div>
+
+            <h3 style="font-size: 13px; text-transform: uppercase; margin: 24px 0 4px 0;">2. Сводная комплектация товара на борт</h3>
+            <table>
+              <thead>
+                <tr style="background: #f8fafc;">
+                  <th style="width: 30px;">№</th>
+                  <th style="width: 90px;">Артикул</th>
+                  <th>Наименование продукции</th>
+                  <th style="width: 60px;">Ед. изм.</th>
+                  <th style="width: 80px;">Всего к погрузке</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${loadingRows}
+              </tbody>
+            </table>
+
+            <div class="signatures">
+              <div>
+                Диспетчер-логист: <span class="sig-line"></span> / ___________________
+              </div>
+              <div>
+                Водитель-экспедитор: <span class="sig-line"></span> / ___________________
+              </div>
+              <div>
+                Кассир (прием наличности): <span class="sig-line"></span> / ___________________
+              </div>
+            </div>
+
+            <script>window.onload = function() { window.print(); }</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (err: any) {
+      console.error('Failed to print waybill', err);
+      alert('Ошибка при формировании маршрутного листа');
     }
   };
 
@@ -528,6 +771,20 @@ export default function Orders() {
             <span>{tableDensity === 'compact' ? '⚡ Компактно' : 'Обычный вид'}</span>
           </button>
 
+          {selectedOrderIds.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedDriverForRun(users.find((u: any) => u.role?.name === 'DELIVERY_DRIVER' || u.role === 'DELIVERY_DRIVER')?.id || users[0]?.id || '');
+                setShowCreateRunModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs transition-all shadow-sm animate-pulse"
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Сформировать рейс ({selectedOrderIds.length})</span>
+            </button>
+          )}
+
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg font-semibold text-xs transition-all shadow-sm"
@@ -538,8 +795,36 @@ export default function Orders() {
         </div>
       </div>
 
-      {/* Smart Search & Filter Control Center */}
-      <div className="space-y-3 no-print">
+      {/* Navigation Tabs (Журнал заказов vs Экспедиция и рейсы) */}
+      <div className="flex border-b border-[#e9e9e7] gap-6 text-xs font-bold uppercase tracking-wider no-print">
+        <button
+          onClick={() => setActiveTab('orders')}
+          className={`pb-2.5 transition-all flex items-center gap-2 ${
+            activeTab === 'orders'
+              ? 'border-b-2 border-[#0071e3] text-[#0071e3]'
+              : 'text-[#86868b] hover:text-[#37352f] border-b-2 border-transparent'
+          }`}
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span>Журнал заказов ({orders.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('dispatch')}
+          className={`pb-2.5 transition-all flex items-center gap-2 ${
+            activeTab === 'dispatch'
+              ? 'border-b-2 border-[#0071e3] text-[#0071e3]'
+              : 'text-[#86868b] hover:text-[#37352f] border-b-2 border-transparent'
+          }`}
+        >
+          <Truck className="w-4 h-4" />
+          <span>Экспедиция и рейсы доставки ({deliveryRuns.length})</span>
+        </button>
+      </div>
+
+      {activeTab === 'orders' ? (
+        <>
+          {/* Smart Search & Filter Control Center */}
+          <div className="space-y-3 no-print">
         {/* Search & Top Action Bar */}
         <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-white p-3.5 border border-[#e9e9e7] rounded-xl shadow-sm">
           {/* Search Input */}
@@ -1315,6 +1600,202 @@ export default function Orders() {
           </div>
         </div>
       </div>
+      </>
+      ) : (
+        /* Dispatch View */
+        <div className="space-y-6">
+          {/* Dispatch KPI Summary Cards */}
+          {(() => {
+            const totalRunsCount = deliveryRuns.length;
+            const totalOrdersInRuns = deliveryRuns.reduce((sum, r) => sum + Number(r.totalOrders || 0), 0);
+            const totalCashExpected = deliveryRuns.reduce((sum, r) => sum + Number(r.totalCashExpected || 0), 0);
+            const totalCashHandedOver = deliveryRuns.reduce((sum, r) => sum + Number(r.cashHandedOver || 0), 0);
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-xs">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider block">
+                    Всего рейсов
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-1.5">
+                    <span className="text-2xl font-bold text-[#1d1d1f] font-mono">{totalRunsCount}</span>
+                    <span className="text-xs text-slate-400">маршрутов</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-xs">
+                  <span className="text-[10px] uppercase font-bold text-[#86868b] tracking-wider block">
+                    Заказов на доставку
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-1.5">
+                    <span className="text-2xl font-bold text-[#0071e3] font-mono">{totalOrdersInRuns}</span>
+                    <span className="text-xs text-slate-400">точек</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-xs">
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 tracking-wider block">
+                    Ожидаемый нал к инкассации
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-1.5">
+                    <span className="text-2xl font-bold text-emerald-600 font-mono">
+                      {totalCashExpected.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </span>
+                    <span className="text-xs text-emerald-700 font-bold">TJS</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 border border-[#e9e9e7] rounded-xl shadow-xs">
+                  <span className="text-[10px] uppercase font-bold text-blue-700 tracking-wider block">
+                    Инкассировано в кассу
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-1.5">
+                    <span className="text-2xl font-bold text-blue-600 font-mono">
+                      {totalCashHandedOver.toLocaleString('ru-RU', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </span>
+                    <span className="text-xs text-blue-700 font-bold">TJS</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Delivery Runs Table */}
+          <div className="bg-white border border-[#e9e9e7] rounded-xl shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#e9e9e7] flex justify-between items-center">
+              <div>
+                <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#0071e3]" />
+                  Реестр экспедиторских рейсов и инкассации
+                </h4>
+                <p className="text-[11px] text-[#86868b] mt-0.5">
+                  Бортовые маршрутные листы, распределение заказов водителям и кассовая сверка
+                </p>
+              </div>
+            </div>
+
+            {loadingRuns ? (
+              <div className="p-12 text-center text-slate-400">
+                <span className="w-6 h-6 border-2 border-slate-200 border-t-[#0071e3] rounded-full animate-spin inline-block mb-2"></span>
+                <p className="text-xs">Загрузка рейсов доставки...</p>
+              </div>
+            ) : deliveryRuns.length === 0 ? (
+              <div className="p-12 text-center space-y-3">
+                <Truck className="w-10 h-10 text-slate-300 mx-auto" />
+                <h5 className="font-bold text-sm text-[#1d1d1f]">Рейсы доставки еще не созданы</h5>
+                <p className="text-xs text-[#86868b] max-w-md mx-auto">
+                  Перейдите во вкладку «Журнал заказов», выберите чекбоксами заказы к отгрузке и нажмите зеленую кнопку «Сформировать рейс».
+                </p>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0071e3] text-white rounded-lg text-xs font-bold hover:bg-[#0077ed] transition-all"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" />
+                  Перейти к заказам
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-[#e9e9e7] bg-[#fbfbfa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
+                      <th className="p-3.5">Рейс №</th>
+                      <th className="p-3.5">Дата</th>
+                      <th className="p-3.5">Водитель-экспедитор</th>
+                      <th className="p-3.5 text-center">Заказов</th>
+                      <th className="p-3.5 text-right">Сумма рейса</th>
+                      <th className="p-3.5 text-right">Ожидаемый нал</th>
+                      <th className="p-3.5 text-right">Сдано в кассу</th>
+                      <th className="p-3.5 text-right">Разница</th>
+                      <th className="p-3.5">Статус</th>
+                      <th className="p-3.5 text-right">Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e9e9e7]/70">
+                    {deliveryRuns.map((run) => {
+                      const isCompleted = run.status === 'completed';
+                      const exp = Number(run.totalCashExpected || 0);
+                      const handed = Number(run.cashHandedOver || 0);
+                      const diff = handed - exp;
+
+                      return (
+                        <tr key={run.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3.5 font-mono font-bold text-[#1d1d1f]">
+                            #{run.id.slice(0, 8).toUpperCase()}
+                          </td>
+                          <td className="p-3.5 text-slate-600">
+                            {new Date(run.runDate || run.createdAt).toLocaleDateString('ru-RU')}
+                          </td>
+                          <td className="p-3.5">
+                            <span className="font-bold text-[#1d1d1f] block">
+                              {run.driver ? `${run.driver.firstName} ${run.driver.lastName || ''}` : 'Не назначен'}
+                            </span>
+                            <span className="text-[10px] text-slate-400">{run.driver?.phone || '—'}</span>
+                          </td>
+                          <td className="p-3.5 text-center font-mono font-bold text-[#0071e3]">
+                            {run.totalOrders}
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-semibold text-slate-800">
+                            {Number(run.totalAmount).toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold text-emerald-600">
+                            {exp.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold text-blue-600">
+                            {handed.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold">
+                            {diff === 0 ? (
+                              <span className="text-slate-400">0.00</span>
+                            ) : (
+                              <span className={diff > 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                                {diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3.5">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                isCompleted
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                  : 'bg-blue-50 text-blue-700 border border-blue-100'
+                              }`}
+                            >
+                              {isCompleted ? '✓ Закрыт / Инкассирован' : 'В рейсе'}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => printWaybill(run.id)}
+                              className="p-1.5 text-slate-600 hover:text-[#0071e3] hover:bg-slate-100 rounded-lg transition-all"
+                              title="Печать маршрутного листа экспедитора (А4)"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                            </button>
+                            {!isCompleted && (
+                              <button
+                                onClick={() => {
+                                  setHandoverRun(run);
+                                  setCashHandedOver(String(run.totalCashExpected));
+                                  setHandoverNotes('');
+                                  setShowHandoverModal(true);
+                                }}
+                                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-2xs"
+                              >
+                                Принять кассу
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Printable Waybill Sheet Modal */}
       {printOrder && (() => {
@@ -1642,8 +2123,192 @@ export default function Orders() {
             ) : (
               <p className="text-center py-8 italic text-slate-400 text-xs">Пожалуйста, выберите водителя-экспедитора для формирования сводного листа.</p>
             )}
-
           </div>
+        </div>
+      )}
+
+      {/* Modal: Create Delivery Run */}
+      {showCreateRunModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <form onSubmit={handleCreateDeliveryRun} className="bg-white border border-[#e9e9e7] rounded-xl max-w-md w-full p-5 space-y-4 shadow-xl animate-fadeIn">
+            <div className="flex justify-between items-center border-b border-[#e9e9e7] pb-3">
+              <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                <Truck className="w-4 h-4 text-emerald-600" />
+                Формирование рейса доставки ({selectedOrderIds.length} заказов)
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowCreateRunModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-lg text-[11px] text-emerald-800 space-y-1">
+                <p className="font-bold">Параметры рейса:</p>
+                {(() => {
+                  const selOrders = orders.filter((o) => selectedOrderIds.includes(o.id));
+                  const total = selOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+                  const cashExp = selOrders
+                    .filter((o) => o.client?.paymentType === 'CASH' || !o.client?.paymentType)
+                    .reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
+                  return (
+                    <div>
+                      <p>Общая сумма заказов: <strong>{total.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS</strong></p>
+                      <p>Ожидаемая сумма наличных (к инкассации): <strong>{cashExp.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS</strong></p>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-[#6a6a65]">Назначить водителя-экспедитора*</label>
+                <select
+                  required
+                  value={selectedDriverForRun}
+                  onChange={(e) => setSelectedDriverForRun(e.target.value)}
+                  className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2 text-xs focus:outline-none focus:border-[#0071e3]"
+                >
+                  <option value="">Выберите водителя</option>
+                  {users.map((d: any) => (
+                    <option key={d.id} value={d.id}>
+                      {d.firstName} {d.lastName} ({d.phone || `@${d.username}`})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-[#6a6a65]">Инструкции / Заметки для рейса</label>
+                <textarea
+                  value={runNotes}
+                  onChange={(e) => setRunNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Особые указания по маршруту или времени доставки..."
+                  className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2 text-xs focus:outline-none focus:border-[#0071e3]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#e9e9e7]">
+              <button
+                type="button"
+                onClick={() => setShowCreateRunModal(false)}
+                className="px-3.5 py-1.5 border border-[#e9e9e7] rounded-lg text-xs font-semibold text-[#6a6a65] hover:bg-[#fbfbfa]"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={creatingRun}
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50"
+              >
+                {creatingRun ? 'Формирование...' : 'Сформировать и распечатать лист'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal: Cash Handover (Инкассация кассиром) */}
+      {showHandoverModal && handoverRun && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <form onSubmit={handleConfirmHandover} className="bg-white border border-[#e9e9e7] rounded-xl max-w-md w-full p-5 space-y-4 shadow-xl animate-fadeIn">
+            <div className="flex justify-between items-center border-b border-[#e9e9e7] pb-3">
+              <h4 className="font-bold text-[#1d1d1f] text-sm flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-emerald-600" />
+                Прием инкассации рейса #{handoverRun.id.slice(0, 8).toUpperCase()}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowHandoverModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <div className="flex justify-between text-slate-600">
+                  <span>Водитель-экспедитор:</span>
+                  <strong className="text-slate-900">{handoverRun.driver?.firstName} {handoverRun.driver?.lastName}</strong>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Всего заказов в рейсе:</span>
+                  <strong className="text-slate-900">{handoverRun.totalOrders} шт.</strong>
+                </div>
+                <div className="flex justify-between text-slate-600 border-t border-slate-200 pt-1 mt-1">
+                  <span>Ожидаемый нал к сдаче:</span>
+                  <strong className="text-emerald-700 font-mono text-sm">
+                    {Number(handoverRun.totalCashExpected).toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
+                  </strong>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-bold text-[#1d1d1f]">Фактически сданная сумма в кассу (TJS)*</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={cashHandedOver}
+                  onChange={(e) => setCashHandedOver(e.target.value)}
+                  placeholder="Введите сданную сумму"
+                  className="bg-white border border-[#0071e3] rounded-lg p-2.5 font-mono font-bold text-sm text-[#1d1d1f] focus:outline-none shadow-2xs"
+                />
+              </div>
+
+              {/* Realtime variance */}
+              {(() => {
+                const diff = (parseFloat(cashHandedOver) || 0) - Number(handoverRun.totalCashExpected || 0);
+                return (
+                  <div className={`p-2.5 rounded-lg border flex justify-between items-center text-xs font-bold ${
+                    diff === 0
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                      : diff > 0
+                      ? 'bg-blue-50 border-blue-200 text-blue-800'
+                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                  }`}>
+                    <span>Расхождение по инкассации:</span>
+                    <span className="font-mono text-sm">
+                      {diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2)} TJS
+                    </span>
+                  </div>
+                );
+              })()}
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-[#6a6a65]">Заметка кассира / примечание</label>
+                <textarea
+                  value={handoverNotes}
+                  onChange={(e) => setHandoverNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Номер кассового ордера или примечание..."
+                  className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2 text-xs focus:outline-none focus:border-[#0071e3]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-[#e9e9e7]">
+              <button
+                type="button"
+                onClick={() => setShowHandoverModal(false)}
+                className="px-3.5 py-1.5 border border-[#e9e9e7] rounded-lg text-xs font-semibold text-[#6a6a65] hover:bg-[#fbfbfa]"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={submittingHandover}
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm disabled:opacity-50"
+              >
+                {submittingHandover ? 'Проведение...' : 'Подтвердить инкассацию и закрыть рейс'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>
