@@ -179,6 +179,12 @@ export default function Orders() {
         userNotes: notes,
       });
 
+      const clientObj = clients.find(c => c.id === selectedClient);
+      if (clientObj?.status === 'blocked') {
+        alert('Ошибка: Торговая точка находится в СТОП-ЛИСТЕ. Создание заказа заблокировано коммерческой политикой.');
+        return;
+      }
+
       await api.post('/orders', {
         clientId: selectedClient,
         totalAmount,
@@ -192,9 +198,9 @@ export default function Orders() {
 
       closeForm();
       loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create order', err);
-      alert('Ошибка при создании заказа.');
+      alert(err.response?.data?.message || 'Ошибка при создании заказа.');
     }
   };
 
@@ -834,6 +840,40 @@ export default function Orders() {
                   />
                 </div>
               </div>
+
+              {/* Real-time Client Credit & Stop-list Status */}
+              {(() => {
+                const clientObj = clients.find(c => c.id === selectedClient);
+                if (!clientObj) return null;
+                if (clientObj.status === 'blocked') {
+                  return (
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2.5 animate-fadeIn">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-bold">⚠️ ВНИМАНИЕ: Клиент находится в СТОП-ЛИСТЕ!</div>
+                        <div className="text-[11px] mt-0.5">
+                          Отгрузка данному магазину заблокирована руководством из-за просроченной задолженности ({Number(clientObj.currentDebt || 0).toFixed(2)} TJS).
+                          Создание накладной заблокировано до погашения долга.
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span className="font-semibold text-slate-900">Кредитный контроль:</span>
+                      <span className="ml-2 font-mono">Долг: <strong className="text-rose-600">{Number(clientObj.currentDebt || 0).toFixed(2)} TJS</strong></span>
+                      <span className="ml-2 font-mono">/ Лимит: <strong className="text-emerald-700">{Number(clientObj.creditLimit || 0) > 0 ? `${Number(clientObj.creditLimit).toFixed(2)} TJS` : 'Без ограничений'}</strong></span>
+                    </div>
+                    {Number(clientObj.creditLimit || 0) > 0 && Number(clientObj.currentDebt || 0) > Number(clientObj.creditLimit || 0) && (
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">
+                        Превышен кредитный лимит (Заказ уйдет на Hold)
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="space-y-3">
@@ -921,10 +961,10 @@ export default function Orders() {
               </button>
               <button
                 type="submit"
-                disabled={orderItems.length === 0 || !selectedClient}
+                disabled={orderItems.length === 0 || !selectedClient || clients.find(c => c.id === selectedClient)?.status === 'blocked'}
                 className="px-4 py-2 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-lg text-xs font-bold shadow-sm disabled:opacity-50"
               >
-                Создать заказ
+                {clients.find(c => c.id === selectedClient)?.status === 'blocked' ? 'Отгрузка запрещена (Стоп-лист)' : 'Создать заказ'}
               </button>
             </div>
           </form>

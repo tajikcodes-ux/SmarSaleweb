@@ -3,7 +3,8 @@ import api from '../services/api';
 import { 
   Plus, Navigation, Wallet, Edit, Trash, X, FileText, 
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle,
-  Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
+  Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw,
+  Ban, ShieldCheck, Printer, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 
@@ -18,6 +19,7 @@ L.Icon.Default.mergeOptions({
 export default function Clients() {
   const [clients, setClients] = useState<any[]>([]);
   const [priceCategories, setPriceCategories] = useState<any[]>([]);
+  const [debtAgingMap, setDebtAgingMap] = useState<Record<string, { ageDays: number; bucket: string }>>({});
 
   // Search, filter, sorting and selection states
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,20 +28,69 @@ export default function Clients() {
   const [sortField, setSortField] = useState<'name' | 'currentDebt' | 'creditLimit' | 'phone' | 'address'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const handlePrintReconciliation = async (clientId: string) => {
+  // Reconciliation statement modal state
+  const [reconciliationModal, setReconciliationModal] = useState<{
+    open: boolean;
+    clientId: string;
+    clientName: string;
+    data: any;
+    loading: boolean;
+    startDate: string;
+    endDate: string;
+  }>({
+    open: false,
+    clientId: '',
+    clientName: '',
+    data: null,
+    loading: false,
+    startDate: '',
+    endDate: '',
+  });
+
+  const handleOpenReconciliation = async (clientId: string, clientName: string, start = '', end = '') => {
+    setReconciliationModal({
+      open: true,
+      clientId,
+      clientName,
+      data: null,
+      loading: true,
+      startDate: start,
+      endDate: end,
+    });
     try {
-      const res = await api.get(`/documents/client/${clientId}/reconciliation`, { responseType: 'text' });
-      const printWin = window.open('', '_blank');
-      if (printWin) {
-        printWin.document.write(res.data);
-        printWin.document.close();
-      }
-    } catch (err) {
-      console.error('Error loading reconciliation statement:', err);
+      const res = await api.get(`/documents/client/${clientId}/reconciliation-data`, {
+        params: {
+          ...(start ? { startDate: start } : {}),
+          ...(end ? { endDate: end } : {}),
+        },
+      });
+      setReconciliationModal(prev => ({ ...prev, data: res.data, loading: false }));
+    } catch (err: any) {
+      console.error('Failed to load reconciliation data', err);
+      setReconciliationModal(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const handleToggleBlockClient = async (clientId: string, currentStatus: string) => {
+    const isBlocked = currentStatus === 'blocked';
+    const confirmMsg = isBlocked 
+      ? 'Разблокировать торговую точку и разрешить отгрузку заказов?'
+      : 'Внести торговую точку в СТОП-ЛИСТ? Отгрузка заказов будет заблокирована!';
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      await api.patch(`/clients/${clientId}/toggle-block`);
+      loadData();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка изменения статуса стоп-листа');
+    }
+  };
+
+  const handlePrintReconciliation = (clientId: string, start = '', end = '') => {
+    const url = `/documents/client/${clientId}/reconciliation${start || end ? `?startDate=${start}&endDate=${end}` : ''}`;
+    window.open(`${api.defaults.baseURL || ''}${url}`, '_blank');
   };
 
   // Settings states
@@ -263,11 +314,19 @@ export default function Clients() {
 
   const loadData = async () => {
     try {
-      const [clientsRes, settingsRes] = await Promise.all([
+      const [clientsRes, settingsRes, debtAgingRes] = await Promise.all([
         api.get('/clients'),
         api.get('/companies/payment-settings'),
+        api.get('/clients/debt-aging').catch(() => ({ data: { clients: [] } })),
       ]);
       setClients(clientsRes.data);
+      if (debtAgingRes?.data?.clients) {
+        const map: Record<string, { ageDays: number; bucket: string }> = {};
+        debtAgingRes.data.clients.forEach((c: any) => {
+          map[c.id] = { ageDays: c.ageDays, bucket: c.bucket };
+        });
+        setDebtAgingMap(map);
+      }
       if (settingsRes.data) {
         setSalesRepCanCreateClient(settingsRes.data.salesRepCanCreateClient ?? false);
         setDeliveryDriverCanCreateClient(settingsRes.data.deliveryDriverCanCreateClient ?? false);
@@ -1118,8 +1177,13 @@ export default function Clients() {
                       />
                     </td>
                     <td className="p-3.5">
-                      <div className="font-bold text-[#37352f] flex items-center gap-1.5">
+                      <div className="font-bold text-[#37352f] flex items-center gap-1.5 flex-wrap">
                         <span>{item.name}</span>
+                        {item.status === 'blocked' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 text-white tracking-wider" title="Точка находится в СТОП-ЛИСТЕ (отгрузка запрещена)">
+                            СТОП-ЛИСТ
+                          </span>
+                        )}
                         {isOverlimit && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800" title="Превышен кредитный лимит">
                             Лимит!
@@ -1138,7 +1202,17 @@ export default function Clients() {
                       <span>{parseFloat(item.latitude || 0).toFixed(4)}, {parseFloat(item.longitude || 0).toFixed(4)}</span>
                     </td>
                     <td className="p-3.5 text-rose-600 font-bold font-mono">
-                      {debt > 0 ? `${debt.toFixed(2)} TJS` : '0.00 TJS'}
+                      <div>{debt > 0 ? `${debt.toFixed(2)} TJS` : '0.00 TJS'}</div>
+                      {debt > 0 && debtAgingMap[item.id] && (
+                        <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold font-sans ${
+                          debtAgingMap[item.id].ageDays > 30 ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                          debtAgingMap[item.id].ageDays >= 16 ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                          debtAgingMap[item.id].ageDays >= 8 ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                          'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        }`}>
+                          {debtAgingMap[item.id].ageDays} дн. ({debtAgingMap[item.id].ageDays > 30 ? 'Крит.' : debtAgingMap[item.id].ageDays >= 16 ? 'Просроч.' : debtAgingMap[item.id].ageDays >= 8 ? 'Внимание' : 'Норма'})
+                        </span>
+                      )}
                     </td>
                     <td className="p-3.5 text-emerald-700 font-bold font-mono">
                       <div className="flex items-center gap-1">
@@ -1148,8 +1222,22 @@ export default function Clients() {
                     </td>
                     <td className="p-3.5 text-right">
                       <div className="flex justify-end gap-1.5">
+                        {/* Toggle Stop-List Button */}
                         <button
-                          onClick={() => handlePrintReconciliation(item.id)}
+                          onClick={() => handleToggleBlockClient(item.id, item.status || 'active')}
+                          className={`p-1.5 rounded-lg border transition-colors ${
+                            item.status === 'blocked'
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'border-[#e3e3e8] hover:bg-rose-50 text-[#6a6a65] hover:text-rose-600 hover:border-rose-200'
+                          }`}
+                          title={item.status === 'blocked' ? 'Разблокировать точку (снять СТОП-ЛИСТ)' : 'Поставить в СТОП-ЛИСТ (заблокировать отгрузки)'}
+                        >
+                          {item.status === 'blocked' ? <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Ban className="w-3.5 h-3.5" />}
+                        </button>
+
+                        {/* Interactive Reconciliation Statement Modal */}
+                        <button
+                          onClick={() => handleOpenReconciliation(item.id, item.name)}
                           className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-blue-50 text-[#0071e3] hover:border-blue-200 transition-colors"
                           title="Акт сверки взаиморасчетов"
                         >
@@ -1314,6 +1402,233 @@ export default function Clients() {
                   <span>{importing ? 'Загрузка...' : `Импортировать ${parsedClients.length} клиентов`}</span>
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* INTERACTIVE RECONCILIATION STATEMENT MODAL */}
+      {reconciliationModal.open && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 bg-blue-50 text-[#0071e3] rounded-xl border border-blue-100">
+                  <FileText className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">
+                    Акт сверки взаиморасчетов: {reconciliationModal.clientName}
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Детальная хронология всех продаж, оплат и возвратов со сквозным сальдо
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setReconciliationModal(prev => ({ ...prev, open: false }))}
+                className="p-1.5 hover:bg-gray-100 text-gray-400 hover:text-gray-700 rounded-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Date Filters Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#f8f9fa] rounded-xl border border-[#e3e3e8]">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-slate-500" />
+                <span className="text-xs font-bold text-[#1d1d1f]">Период сверки:</span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenReconciliation(reconciliationModal.clientId, reconciliationModal.clientName, '', '')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                    !reconciliationModal.startDate && !reconciliationModal.endDate
+                      ? 'bg-[#0071e3] text-white shadow-xs'
+                      : 'bg-white border border-[#e3e3e8] hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  Все время
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                    const end = now.toISOString().split('T')[0];
+                    handleOpenReconciliation(reconciliationModal.clientId, reconciliationModal.clientName, start, end);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                    reconciliationModal.startDate && !reconciliationModal.startDate.includes('09-')
+                      ? 'bg-[#0071e3] text-white shadow-xs'
+                      : 'bg-white border border-[#e3e3e8] hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  Этот месяц
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={reconciliationModal.startDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleOpenReconciliation(reconciliationModal.clientId, reconciliationModal.clientName, val, reconciliationModal.endDate);
+                  }}
+                  className="px-2 py-1 bg-white border border-[#e3e3e8] rounded-lg text-xs text-slate-700 focus:outline-none"
+                />
+                <span className="text-xs text-slate-400">—</span>
+                <input
+                  type="date"
+                  value={reconciliationModal.endDate}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleOpenReconciliation(reconciliationModal.clientId, reconciliationModal.clientName, reconciliationModal.startDate, val);
+                  }}
+                  className="px-2 py-1 bg-white border border-[#e3e3e8] rounded-lg text-xs text-slate-700 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Financial Summary KPI Cards */}
+            {reconciliationModal.data && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Входящий долг</span>
+                  <span className="text-sm font-extrabold text-slate-800 font-mono">
+                    {Number(reconciliationModal.data.initialBalance || 0).toFixed(2)} TJS
+                  </span>
+                </div>
+                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
+                  <span className="text-[10px] uppercase font-bold text-blue-700 block">Продажи (Дебет, +)</span>
+                  <span className="text-sm font-extrabold text-blue-900 font-mono">
+                    +{Number(reconciliationModal.data.periodDebit || 0).toFixed(2)} TJS
+                  </span>
+                </div>
+                <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl">
+                  <span className="text-[10px] uppercase font-bold text-emerald-700 block">Оплаты (Кредит, -)</span>
+                  <span className="text-sm font-extrabold text-emerald-900 font-mono">
+                    -{Number(reconciliationModal.data.periodCredit || 0).toFixed(2)} TJS
+                  </span>
+                </div>
+                <div className={`p-3 rounded-xl border ${
+                  Number(reconciliationModal.data.finalBalance || 0) > 0
+                    ? 'bg-rose-50/70 border-rose-200 text-rose-900'
+                    : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                }`}>
+                  <span className="text-[10px] uppercase font-bold block opacity-80">Итоговое сальдо (Долг)</span>
+                  <span className="text-sm font-extrabold font-mono">
+                    {Number(reconciliationModal.data.finalBalance || 0).toFixed(2)} TJS
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Operations Table */}
+            <div className="flex-1 overflow-y-auto border border-[#e3e3e8] rounded-xl">
+              {reconciliationModal.loading ? (
+                <div className="py-16 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs">Загрузка операций по клиенту...</span>
+                </div>
+              ) : !reconciliationModal.data || reconciliationModal.data.operations.length === 0 ? (
+                <div className="py-16 text-center text-slate-400 text-xs italic">
+                  Нет операций за выбранный период сверки.
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-[#f8f9fa] sticky top-0 border-b border-[#e3e3e8] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
+                    <tr>
+                      <th className="p-2.5 text-center w-10">№</th>
+                      <th className="p-2.5 w-24">Дата</th>
+                      <th className="p-2.5">Документ / Основание</th>
+                      <th className="p-2.5 text-right w-28 text-blue-700">Продажи (+)</th>
+                      <th className="p-2.5 text-right w-28 text-emerald-700">Оплаты (-)</th>
+                      <th className="p-2.5 text-right w-32">Сальдо</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e3e3e8]/60">
+                    {reconciliationModal.data.initialBalance !== 0 && (
+                      <tr className="bg-slate-50 font-bold">
+                        <td colSpan={3} className="p-2.5 text-slate-700">Входящее сальдо на начало периода</td>
+                        <td className="p-2.5 text-right text-slate-500 font-mono">—</td>
+                        <td className="p-2.5 text-right text-slate-500 font-mono">—</td>
+                        <td className="p-2.5 text-right font-mono font-bold text-slate-800">
+                          {Number(reconciliationModal.data.initialBalance).toFixed(2)}
+                        </td>
+                      </tr>
+                    )}
+                    {reconciliationModal.data.operations.map((op: any, i: number) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-2.5 text-center text-slate-400 font-mono">{i + 1}</td>
+                        <td className="p-2.5 font-mono text-slate-600">
+                          {new Date(op.date).toLocaleDateString('ru-RU')}
+                        </td>
+                        <td className="p-2.5 font-medium text-slate-800">
+                          {op.type} № {op.docNumber}
+                        </td>
+                        <td className="p-2.5 text-right font-mono font-bold text-blue-700">
+                          {op.debit > 0 ? Number(op.debit).toFixed(2) : '—'}
+                        </td>
+                        <td className="p-2.5 text-right font-mono font-bold text-emerald-700">
+                          {op.credit > 0 ? Number(op.credit).toFixed(2) : '—'}
+                        </td>
+                        <td className={`p-2.5 text-right font-mono font-extrabold ${
+                          op.balance > 0 ? 'text-rose-600' : 'text-emerald-700'
+                        }`}>
+                          {Number(op.balance).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrintReconciliation(reconciliationModal.clientId, reconciliationModal.startDate, reconciliationModal.endDate)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#0071e3] hover:bg-[#0077ed] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Печать официального бланка / PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!reconciliationModal.data) return;
+                    const headers = ['№', 'Дата', 'Документ / Операция', 'Дебет (Продажи)', 'Кредит (Оплаты)', 'Сальдо (Долг)'];
+                    const rows = reconciliationModal.data.operations.map((op: any, idx: number) => [
+                      idx + 1,
+                      new Date(op.date).toLocaleDateString('ru-RU'),
+                      `${op.type} № ${op.docNumber}`,
+                      op.debit > 0 ? Number(op.debit) : 0,
+                      op.credit > 0 ? Number(op.credit) : 0,
+                      Number(op.balance),
+                    ]);
+                    const wb = XLSX.utils.book_new();
+                    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+                    XLSX.utils.book_append_sheet(wb, ws, 'Акт сверки');
+                    XLSX.writeFile(wb, `akt_sverki_${reconciliationModal.clientName.replace(/\s+/g, '_')}.xlsx`);
+                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 border border-[#e3e3e8] hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-all"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Экспорт в Excel</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setReconciliationModal(prev => ({ ...prev, open: false }))}
+                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Закрыть
+              </button>
             </div>
           </div>
         </div>

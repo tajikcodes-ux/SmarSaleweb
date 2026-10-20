@@ -46,12 +46,23 @@ export default function Dashboard() {
   const [weather, setWeather] = useState({ temp: '28°C', desc: 'Солнечно' });
   const [aiForecast, setAiForecast] = useState<any[]>([]);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [debtAging, setDebtAging] = useState<{
+    totalDebt: number;
+    buckets: { days0_7: number; days8_15: number; days16_30: number; over30: number };
+    debtorsCount: number;
+    clients: any[];
+  }>({
+    totalDebt: 0,
+    buckets: { days0_7: 0, days8_15: 0, days16_30: 0, over30: 0 },
+    debtorsCount: 0,
+    clients: [],
+  });
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const today = new Date().toISOString().split('T')[0];
-        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes] = await Promise.all([
+        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes, debtRes] = await Promise.all([
           api.get('/users').catch(() => ({ data: [] })),
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes', { params: { date: today } }).catch(() => ({ data: [] })),
@@ -60,8 +71,12 @@ export default function Dashboard() {
           api.get('/clients').catch(() => ({ data: [] })),
           api.get('/ai/predictions/sales').catch(() => ({ data: [] })),
           api.get('/smm/leaderboard').catch(() => ({ data: [] })),
+          api.get('/clients/debt-aging').catch(() => ({ data: { totalDebt: 0, buckets: { days0_7: 0, days8_15: 0, days16_30: 0, over30: 0 }, debtorsCount: 0, clients: [] } })),
         ]);
 
+        if (debtRes?.data) {
+          setDebtAging(debtRes.data);
+        }
         setPhotoReports(photoRes.data || []);
         setAiForecast(Array.isArray(aiRes.data) ? aiRes.data : []);
         setLeaderboard(Array.isArray(smmRes.data) ? smmRes.data : []);
@@ -587,6 +602,162 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* FMCG Risk Control: Debt Aging Breakdown (Smartup Standard) */}
+      <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl shadow-sm space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#e3e3e8] pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#1d1d1f]">Старение дебиторской задолженности (Debt Aging)</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0b57d0] border border-blue-100">
+                  FMCG SFA Standard
+                </span>
+              </div>
+              <p className="text-[11px] text-[#86868b] mt-0.5">
+                Автоматический контроль сроков долга торговых точек по корзинам дней
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <span className="text-[10px] text-[#86868b] uppercase tracking-wider block font-bold">Общий долг сети</span>
+              <span className="text-base font-extrabold text-[#1d1d1f] font-mono">
+                {debtAging.totalDebt.toLocaleString('ru-RU')} TJS
+              </span>
+            </div>
+            <Link
+              to="/clients"
+              className="px-3 py-1.5 bg-[#0b57d0] hover:bg-[#094cb3] text-white text-xs font-bold rounded-xl transition-colors shadow-sm"
+            >
+              Реестр должников →
+            </Link>
+          </div>
+        </div>
+
+        {/* Multi-segment Progress Bar */}
+        <div className="space-y-1.5">
+          <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+            <div
+              style={{ width: `${debtAging.totalDebt > 0 ? (debtAging.buckets.days0_7 / debtAging.totalDebt) * 100 : 25}%` }}
+              className="bg-emerald-500 transition-all duration-500"
+              title={`0-7 дней: ${debtAging.buckets.days0_7} TJS`}
+            />
+            <div
+              style={{ width: `${debtAging.totalDebt > 0 ? (debtAging.buckets.days8_15 / debtAging.totalDebt) * 100 : 25}%` }}
+              className="bg-amber-400 transition-all duration-500"
+              title={`8-15 дней: ${debtAging.buckets.days8_15} TJS`}
+            />
+            <div
+              style={{ width: `${debtAging.totalDebt > 0 ? (debtAging.buckets.days16_30 / debtAging.totalDebt) * 100 : 25}%` }}
+              className="bg-orange-500 transition-all duration-500"
+              title={`16-30 дней: ${debtAging.buckets.days16_30} TJS`}
+            />
+            <div
+              style={{ width: `${debtAging.totalDebt > 0 ? (debtAging.buckets.over30 / debtAging.totalDebt) * 100 : 25}%` }}
+              className="bg-rose-600 transition-all duration-500"
+              title={`30+ дней (Критический): ${debtAging.buckets.over30} TJS`}
+            />
+          </div>
+        </div>
+
+        {/* 4 Buckets Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-100">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">0–7 дней</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">Норма</span>
+            </div>
+            <div className="text-sm font-extrabold text-emerald-900 font-mono">
+              {debtAging.buckets.days0_7.toLocaleString('ru-RU')} TJS
+            </div>
+            <span className="text-[10px] text-emerald-700/80 block mt-0.5">В рамках стандартной отсрочки</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-100">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">8–15 дней</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Внимание</span>
+            </div>
+            <div className="text-sm font-extrabold text-amber-900 font-mono">
+              {debtAging.buckets.days8_15.toLocaleString('ru-RU')} TJS
+            </div>
+            <span className="text-[10px] text-amber-700/80 block mt-0.5">Рекомендуется напоминание</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-orange-50/60 border border-orange-100">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-bold text-orange-800 uppercase tracking-wider">16–30 дней</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-800">Просрочка</span>
+            </div>
+            <div className="text-sm font-extrabold text-orange-900 font-mono">
+              {debtAging.buckets.days16_30.toLocaleString('ru-RU')} TJS
+            </div>
+            <span className="text-[10px] text-orange-700/80 block mt-0.5">Ограничение отгрузок</span>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-rose-50/60 border border-rose-100">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider">30+ дней</span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">Критический</span>
+            </div>
+            <div className="text-sm font-extrabold text-rose-900 font-mono">
+              {debtAging.buckets.over30.toLocaleString('ru-RU')} TJS
+            </div>
+            <span className="text-[10px] text-rose-700/80 block mt-0.5">Стоп-лист / Инкассация</span>
+          </div>
+        </div>
+
+        {/* Top Critical Debtors preview */}
+        {debtAging.clients.length > 0 && (
+          <div className="border border-[#e3e3e8] rounded-xl overflow-hidden mt-3">
+            <div className="bg-[#f8f9fa] px-4 py-2 border-b border-[#e3e3e8] flex justify-between items-center">
+              <span className="text-[11px] font-bold text-[#1d1d1f]">Торговые точки с наибольшим сроком задолженности</span>
+              <span className="text-[10px] text-[#86868b]">Всего точек с долгом: {debtAging.debtorsCount}</span>
+            </div>
+            <div className="divide-y divide-[#e3e3e8]/60 text-xs">
+              {debtAging.clients.slice(0, 3).map((debtor) => (
+                <div key={debtor.id} className="p-3 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
+                      debtor.ageDays > 30 ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                      debtor.ageDays >= 16 ? 'bg-orange-100 text-orange-800' :
+                      debtor.ageDays >= 8 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {debtor.ageDays} дн.
+                    </span>
+                    <div>
+                      <div className="font-bold text-[#1d1d1f] flex items-center gap-1.5">
+                        <span>{debtor.name}</span>
+                        {debtor.status === 'blocked' && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600 text-white">
+                            СТОП-ЛИСТ
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-[#86868b]">{debtor.address} • {debtor.phone}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-extrabold text-rose-600 font-mono">
+                      {debtor.currentDebt.toLocaleString('ru-RU')} TJS
+                    </div>
+                    <Link
+                      to="/clients"
+                      className="text-[10px] font-bold text-[#0b57d0] hover:underline"
+                    >
+                      Карточка точки →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Analytics (Sparklines), Top Products & Activity Feed */}
