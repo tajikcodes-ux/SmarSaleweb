@@ -79,7 +79,12 @@ export default function Dashboard() {
         ]);
 
         if (targetsRes?.data) {
-          setMonthlyTargets(targetsRes.data);
+          const items = Array.isArray(targetsRes.data)
+            ? targetsRes.data
+            : Array.isArray(targetsRes.data?.items)
+            ? targetsRes.data.items
+            : [];
+          setMonthlyTargets(items);
         }
         if (debtRes?.data) {
           setDebtAging(debtRes.data);
@@ -279,8 +284,9 @@ export default function Dashboard() {
     };
   }, []);
 
-  const totalTargetRevenue = monthlyTargets.reduce((s, t) => s + Number(t.targetRevenue || 0), 0);
-  const totalActualRevenue = monthlyTargets.reduce((s, t) => s + Number(t.actualRevenue || 0), 0);
+  const targetsList = Array.isArray(monthlyTargets) ? monthlyTargets : [];
+  const totalTargetRevenue = targetsList.reduce((s, t) => s + Number(t.targetRevenue || 0), 0);
+  const totalActualRevenue = targetsList.reduce((s, t) => s + Number(t.actualRevenue || 0), 0);
   const revenueProgress = totalTargetRevenue > 0 ? Math.round((totalActualRevenue / totalTargetRevenue) * 100) : 0;
 
   const kpis = [

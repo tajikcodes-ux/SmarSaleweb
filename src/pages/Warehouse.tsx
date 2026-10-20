@@ -63,7 +63,7 @@ export default function Warehouse() {
     try {
       setLoadingAudits(true);
       const res = await api.get('/stocks/audits');
-      setAudits(res.data || []);
+      setAudits(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to load audits', err);
     } finally {

@@ -129,7 +129,7 @@ export default function Orders() {
     try {
       setLoadingRuns(true);
       const res = await api.get('/orders/dispatch/runs');
-      setDeliveryRuns(res.data || []);
+      setDeliveryRuns(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error('Failed to load delivery runs', err);
     } finally {

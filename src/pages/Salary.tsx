@@ -68,7 +68,8 @@ export default function Salary() {
         api.get('/salary/targets', { params: { month } }),
         allUsers.length === 0 ? api.get('/users').catch(() => ({ data: [] })) : Promise.resolve({ data: allUsers }),
       ]);
-      setSalesTargets(res.data);
+      const items = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      setSalesTargets(items);
       if (allUsers.length === 0 && uRes.data) {
         setAllUsers(uRes.data);
       }
@@ -621,16 +622,17 @@ export default function Salary() {
         <div className="space-y-6">
           {/* Targets Metric Cards */}
           {(() => {
-            const totalTargetRevenue = salesTargets.reduce((sum, t) => sum + Number(t.targetRevenue || 0), 0);
-            const totalActualRevenue = salesTargets.reduce((sum, t) => sum + Number(t.actualRevenue || 0), 0);
+            const list = Array.isArray(salesTargets) ? salesTargets : [];
+            const totalTargetRevenue = list.reduce((sum, t) => sum + Number(t.targetRevenue || 0), 0);
+            const totalActualRevenue = list.reduce((sum, t) => sum + Number(t.actualRevenue || 0), 0);
             const revPct = totalTargetRevenue > 0 ? Math.round((totalActualRevenue / totalTargetRevenue) * 100) : 0;
 
-            const totalTargetAkb = salesTargets.reduce((sum, t) => sum + Number(t.targetAkb || 0), 0);
-            const totalActualAkb = salesTargets.reduce((sum, t) => sum + Number(t.actualAkb || 0), 0);
+            const totalTargetAkb = list.reduce((sum, t) => sum + Number(t.targetAkb || 0), 0);
+            const totalActualAkb = list.reduce((sum, t) => sum + Number(t.actualAkb || 0), 0);
             const akbPct = totalTargetAkb > 0 ? Math.round((totalActualAkb / totalTargetAkb) * 100) : 0;
 
-            const totalTargetOrders = salesTargets.reduce((sum, t) => sum + Number(t.targetOrders || 0), 0);
-            const totalActualOrders = salesTargets.reduce((sum, t) => sum + Number(t.actualOrders || 0), 0);
+            const totalTargetOrders = list.reduce((sum, t) => sum + Number(t.targetOrders || 0), 0);
+            const totalActualOrders = list.reduce((sum, t) => sum + Number(t.actualOrders || 0), 0);
             const ordPct = totalTargetOrders > 0 ? Math.round((totalActualOrders / totalTargetOrders) * 100) : 0;
 
             return (
@@ -763,14 +765,15 @@ export default function Salary() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e9e9e7]/70 text-xs">
-                    {salesTargets.map((item) => {
-                      const rep = item.salesRep;
+                    {(Array.isArray(salesTargets) ? salesTargets : []).map((item: any, idx: number) => {
+                      const rep = item.user || item.salesRep;
+                      const repId = item.salesRepId || rep?.id || '';
                       const revPct = Number(item.revenuePercent || 0);
                       const akbPct = Number(item.akbPercent || 0);
-                      const forecast = Number(item.paceForecast?.forecastRevenue || 0);
+                      const forecast = Number(item.projectedRevenue || item.paceForecast?.forecastRevenue || 0);
 
                       return (
-                        <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                        <tr key={item.id || item.targetId || repId || idx} className="hover:bg-slate-50/70 transition-colors">
                           <td className="p-3.5">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-[11px] text-[#37352f]">
@@ -824,10 +827,10 @@ export default function Salary() {
                             <button
                               onClick={() => {
                                 setTargetForm({
-                                  salesRepId: item.salesRepId,
-                                  targetRevenue: String(item.targetRevenue),
-                                  targetAkb: String(item.targetAkb),
-                                  targetOrders: String(item.targetOrders),
+                                  salesRepId: repId,
+                                  targetRevenue: String(item.targetRevenue || ''),
+                                  targetAkb: String(item.targetAkb || ''),
+                                  targetOrders: String(item.targetOrders || ''),
                                   notes: item.notes || '',
                                 });
                                 setShowTargetModal(true);
