@@ -332,17 +332,16 @@ export default function Clients() {
         setDeliveryDriverCanCreateClient(settingsRes.data.deliveryDriverCanCreateClient ?? false);
       }
       
-      // Try to load real price categories from backend if endpoint exists
+      // Load real price categories from backend
       try {
-        const realCategories = await api.get('/catalog/products').then(() => {
-          // In db we seeded: 'Оптовый' (price category)
-          return [
-            { id: '', name: 'Розничный (Базовый)' },
-            { id: 'wholesale-id-placeholder', name: 'Оптовый' } // will resolve dynamically or fallback
-          ];
-        });
-        setPriceCategories(realCategories);
-      } catch {
+        const catRes = await api.get('/catalog/price-categories');
+        const dbCategories = catRes.data || [];
+        setPriceCategories([
+          { id: '', name: 'Розничный (Базовый)' },
+          ...dbCategories.map((c: any) => ({ id: c.id, name: c.name })),
+        ]);
+      } catch (err) {
+        console.error('Failed to load price categories', err);
         setPriceCategories([{ id: '', name: 'Розничный (Базовый)' }]);
       }
 
@@ -1187,6 +1186,11 @@ export default function Clients() {
                         {isOverlimit && (
                           <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800" title="Превышен кредитный лимит">
                             Лимит!
+                          </span>
+                        )}
+                        {item.priceCategoryId && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800/50" title="Ценовая категория точки">
+                            🏷️ {priceCategories.find(p => p.id === item.priceCategoryId)?.name || 'Категория цен'}
                           </span>
                         )}
                       </div>

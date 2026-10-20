@@ -2,18 +2,25 @@ import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { 
   Plus, Package, Map, Edit, Trash, Users, ArrowLeftRight, Check, X, ClipboardList,
-  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw
+  FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, Tag
 } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 
 export default function Catalog() {
-  const [activeTab, setActiveTab] = useState<'products' | 'stocks' | 'suppliers' | 'incoming' | 'movements'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'stocks' | 'price_categories' | 'suppliers' | 'incoming' | 'movements'>('products');
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [selectedWarehouseId, setSelectedWarehouseId] = useState('');
   const [stocks, setStocks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Price Categories State
+  const [priceCategories, setPriceCategories] = useState<any[]>([]);
+  const [showPriceCatForm, setShowPriceCatForm] = useState(false);
+  const [editingPriceCat, setEditingPriceCat] = useState<any | null>(null);
+  const [priceCatName, setPriceCatName] = useState('');
+  const [prodCustomPrices, setProdCustomPrices] = useState<Record<string, any>>({});
 
   // Suppliers State
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -341,7 +348,7 @@ export default function Catalog() {
 
   const loadCatalog = async () => {
     try {
-      const [prodRes, catRes, whRes, supRes, procRes, movRes, branchRes] = await Promise.all([
+      const [prodRes, catRes, whRes, supRes, procRes, movRes, branchRes, priceCatRes] = await Promise.all([
         api.get('/catalog/products'),
         api.get('/catalog/categories'),
         api.get('/stocks/warehouses'),
@@ -349,6 +356,7 @@ export default function Catalog() {
         api.get('/procurements/incoming'),
         api.get('/procurements/movements'),
         api.get('/branches').catch(() => ({ data: [] })),
+        api.get('/catalog/price-categories').catch(() => ({ data: [] })),
       ]);
       setProducts(prodRes.data);
       setCategories(catRes.data);
@@ -357,6 +365,7 @@ export default function Catalog() {
       setProcurements(procRes.data);
       setMovements(movRes.data);
       setBranches(branchRes.data || []);
+      setPriceCategories(priceCatRes.data || []);
 
       if (whRes.data.length > 0) {
         setSelectedWarehouseId(whRes.data[0].id);
@@ -396,6 +405,15 @@ export default function Catalog() {
     setUnit(product.unit || 'pcs');
     setCatId(product.categoryId || '');
     setImageUrl(product.imageUrl || '');
+    
+    // Load existing custom category prices
+    const customMap: Record<string, any> = {};
+    if (Array.isArray(product.prices)) {
+      product.prices.forEach((pp: any) => {
+        customMap[pp.priceCategoryId] = parseFloat(pp.price?.toString() || '0');
+      });
+    }
+    setProdCustomPrices(customMap);
     setShowProductForm(true);
   };
 
@@ -407,11 +425,19 @@ export default function Catalog() {
     setUnit('pcs');
     setCatId('');
     setImageUrl('');
+    setProdCustomPrices({});
     setShowProductForm(true);
   };
 
   const handleCreateOrUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    const pricesPayload = Object.entries(prodCustomPrices)
+      .filter(([_, val]) => val !== '' && val !== null && !isNaN(Number(val)) && Number(val) > 0)
+      .map(([priceCategoryId, val]) => ({
+        priceCategoryId,
+        price: Number(val),
+      }));
+
     const payload = {
       name: prodName,
       sku,
@@ -419,6 +445,7 @@ export default function Catalog() {
       unit,
       categoryId: catId || undefined,
       imageUrl: imageUrl || undefined,
+      prices: pricesPayload,
     };
 
     try {
@@ -434,8 +461,51 @@ export default function Catalog() {
       setSku('');
       setPrice(0);
       setImageUrl('');
-    } catch (err) {
+      setProdCustomPrices({});
+    } catch (err: any) {
       console.error(err);
+      alert(err.response?.data?.message || 'Ошибка сохранения товара');
+    }
+  };
+
+  // Price Category CRUD handlers
+  const handleOpenCreatePriceCat = () => {
+    setEditingPriceCat(null);
+    setPriceCatName('');
+    setShowPriceCatForm(true);
+  };
+
+  const handleOpenEditPriceCat = (cat: any) => {
+    setEditingPriceCat(cat);
+    setPriceCatName(cat.name || '');
+    setShowPriceCatForm(true);
+  };
+
+  const handleSavePriceCat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!priceCatName.trim()) return;
+    try {
+      if (editingPriceCat) {
+        await api.put(`/catalog/price-categories/${editingPriceCat.id}`, { name: priceCatName.trim() });
+      } else {
+        await api.post('/catalog/price-categories', { name: priceCatName.trim() });
+      }
+      setShowPriceCatForm(false);
+      setEditingPriceCat(null);
+      setPriceCatName('');
+      loadCatalog();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка сохранения ценовой категории');
+    }
+  };
+
+  const handleDeletePriceCat = async (id: string, name: string) => {
+    if (!window.confirm(`Вы уверены, что хотите удалить ценовую категорию "${name}"? Привязанные точки будут переведены на базовую розницу.`)) return;
+    try {
+      await api.delete(`/catalog/price-categories/${id}`);
+      loadCatalog();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Ошибка при удалении ценовой категории');
     }
   };
 
@@ -693,6 +763,13 @@ export default function Catalog() {
             <span>Категория</span>
           </button>
           <button
+            onClick={() => setActiveTab('price_categories')}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-all shadow-sm"
+          >
+            <Tag className="w-4 h-4" />
+            <span>Ценовые категории</span>
+          </button>
+          <button
             onClick={() => setShowWarehouseForm(!showWarehouseForm)}
             className="flex items-center gap-1.5 px-4 py-2 bg-white border border-[#e3e3e8] hover:bg-[#f5f5f7] rounded-xl font-bold text-xs text-[#1d1d1f] transition-all shadow-sm"
           >
@@ -721,6 +798,20 @@ export default function Catalog() {
         >
           <Map className="w-3.5 h-3.5 inline-block mr-1.5 align-text-bottom" />
           Остатки на складах
+        </button>
+        <button
+          onClick={() => setActiveTab('price_categories')}
+          className={`pb-3 px-4 text-xs font-bold border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'price_categories' ? 'border-indigo-600 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400' : 'border-transparent text-[#5f6368] hover:text-[#1d1d1f]'
+          }`}
+        >
+          <Tag className="w-3.5 h-3.5 inline-block align-text-bottom" />
+          <span>Ценовые категории</span>
+          {priceCategories.length > 0 && (
+            <span className="px-1.5 py-0.2 bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 rounded-full text-[10px] font-bold">
+              {priceCategories.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab('suppliers')}
@@ -851,6 +942,44 @@ export default function Catalog() {
               onChange={(e) => setImageUrl(e.target.value)}
               className="bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-3 text-xs focus:outline-none focus:border-[#0b57d0] text-[#1d1d1f]"
             />
+
+            {/* Multi-tier Category Prices Section */}
+            {priceCategories.length > 0 && (
+              <div className="md:col-span-2 p-3.5 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                    Спеццены по ценовым категориям (Мульти-прайс)
+                  </span>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400">
+                    Если не заполнено — действует базовая цена ({price || 0} TJS)
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {priceCategories.map((cat) => (
+                    <div key={cat.id} className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-slate-700 dark:text-zinc-300">
+                        {cat.name} (TJS)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder={`Базовая: ${price || 0}`}
+                        value={prodCustomPrices[cat.id] ?? ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setProdCustomPrices((prev) => ({
+                            ...prev,
+                            [cat.id]: val === '' ? '' : parseFloat(val),
+                          }));
+                        }}
+                        className="bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800/60 rounded-lg p-2 text-xs focus:outline-none focus:border-indigo-500 font-mono"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex gap-2 justify-end">
             <button type="button" onClick={() => setShowProductForm(false)} className="px-4 py-2 border border-[#e3e3e8] hover:bg-slate-50 text-[#1d1d1f] rounded-xl font-semibold text-xs">
@@ -1247,8 +1376,25 @@ export default function Catalog() {
                               </span>
                             )}
                           </td>
-                          <td className="p-3 font-bold text-[#1d1d1f] font-mono">
-                            {parseFloat(p.price || 0).toFixed(2)} TJS
+                          <td className="p-3 font-mono">
+                            <div className="font-bold text-[#1d1d1f] dark:text-white">
+                              {parseFloat(p.price || 0).toFixed(2)} TJS
+                            </div>
+                            {p.prices && p.prices.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {p.prices.map((pr: any) => (
+                                  <span
+                                    key={pr.id || pr.priceCategoryId}
+                                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60"
+                                    title={`${pr.priceCategory?.name || 'Прайс'}: ${parseFloat(pr.price).toFixed(2)} TJS`}
+                                  >
+                                    <Tag className="w-2.5 h-2.5 opacity-70" />
+                                    <span>{pr.priceCategory?.name || 'Прайс'}:</span>
+                                    <b>{parseFloat(pr.price).toFixed(2)}</b>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </td>
                           <td className="p-3 text-right">
                             <div className="flex justify-end gap-1.5">
@@ -1326,6 +1472,174 @@ export default function Catalog() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'price_categories' && (
+        <div className="space-y-4">
+          {/* Header Info Banner */}
+          <div className="bg-gradient-to-r from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/20 dark:via-[#1e2433] dark:to-blue-950/20 border border-indigo-100 dark:border-indigo-900/50 p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
+                  <Tag className="w-5 h-5" />
+                </span>
+                <div>
+                  <h3 className="font-bold text-[#1d1d1f] dark:text-white text-base">Ценовые категории и мульти-прайс</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Управление прайс-листами (Опт, Розница, Сети, VIP, ХоРеКа) и индивидуальными ценами для торговых точек
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleOpenCreatePriceCat}
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs transition-all shadow-sm shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Создать категорию цен</span>
+            </button>
+          </div>
+
+          {/* Form Modal / Card */}
+          {showPriceCatForm && (
+            <form onSubmit={handleSavePriceCat} className="bg-white dark:bg-[#1e2433] border border-[#e3e3e8] dark:border-slate-800 p-6 rounded-2xl space-y-4 max-w-xl shadow-sm">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-[#1d1d1f] dark:text-white text-sm flex items-center gap-2">
+                  <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <span>{editingPriceCat ? 'Редактировать ценовую категорию' : 'Новая ценовая категория'}</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowPriceCatForm(false)}
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-[#86868b] uppercase mb-1.5">
+                  Наименование категории *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Например: Крупный опт, Сети (Корзинка), VIP-клиенты"
+                  required
+                  value={priceCatName}
+                  onChange={(e) => setPriceCatName(e.target.value)}
+                  className="w-full bg-[#f8f9fa] dark:bg-slate-900 border border-[#e3e3e8] dark:border-slate-700 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 text-[#1d1d1f] dark:text-white"
+                  autoFocus
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  После создания категории вы сможете назначить её клиентам в разделе «Клиенты» и задать спеццены в каталоге товаров.
+                </p>
+              </div>
+
+              <div className="flex gap-2 justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPriceCatForm(false)}
+                  className="px-4 py-2 border border-[#e3e3e8] dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[#1d1d1f] dark:text-slate-300 rounded-xl font-semibold text-xs"
+                >
+                  Отмена
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm transition-colors"
+                >
+                  {editingPriceCat ? 'Сохранить изменения' : 'Создать категорию'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Categories List Card */}
+          <div className="bg-white dark:bg-[#1e2433] border border-[#e3e3e8] dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="font-bold text-[#1d1d1f] dark:text-white text-sm flex items-center gap-1.5">
+                <Tag className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                Активные ценовые категории ({priceCategories.length})
+              </h4>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#e3e3e8] dark:border-slate-800 bg-[#f8f9fa] dark:bg-slate-900/50 text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
+                    <th className="p-3">Ценовая категория</th>
+                    <th className="p-3">Торговых точек</th>
+                    <th className="p-3">Товаров со спецценой</th>
+                    <th className="p-3">Дата добавления</th>
+                    <th className="p-3 text-right">Действия</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e3e3e8]/60 dark:divide-slate-800 text-xs">
+                  {priceCategories.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center p-8">
+                        <div className="max-w-xs mx-auto text-center space-y-2">
+                          <Tag className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                          <div className="font-bold text-slate-700 dark:text-slate-200">Ценовые категории не созданы</div>
+                          <p className="text-[11px] text-slate-400">
+                            Создайте категории (например, Оптовый, VIP, Сети), чтобы закрепить индивидуальные цены за клиентами.
+                          </p>
+                          <button
+                            onClick={handleOpenCreatePriceCat}
+                            className="mt-2 inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-semibold"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Добавить первую
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    priceCategories.map((c) => (
+                      <tr key={c.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <span className="font-bold text-[#1d1d1f] dark:text-white text-sm">{c.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono font-bold text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {c._count?.clients ?? 0} точек
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-mono font-bold text-[11px] bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                            {c._count?.prices ?? 0} товаров
+                          </span>
+                        </td>
+                        <td className="p-3 text-[#5f6368] dark:text-slate-400 text-[11px]">
+                          {c.createdAt ? new Date(c.createdAt).toLocaleDateString('ru-RU') : '—'}
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditPriceCat(c)}
+                              className="p-2 rounded-xl border border-[#e3e3e8] dark:border-slate-700 hover:bg-[#f8f9fa] dark:hover:bg-slate-800 text-[#5f6368] dark:text-slate-300 transition-colors"
+                              title="Редактировать категорию"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeletePriceCat(c.id, c.name)}
+                              className="p-2 rounded-xl border border-[#e3e3e8] dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 hover:border-rose-200 dark:hover:border-rose-800 transition-colors"
+                              title="Удалить категорию"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

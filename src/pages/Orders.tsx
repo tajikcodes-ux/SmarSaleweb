@@ -132,6 +132,27 @@ export default function Orders() {
     loadData();
   }, []);
 
+  // Dynamic price category pricing when selectedClient changes
+  useEffect(() => {
+    if (!selectedClient) {
+      api.get('/catalog/products').then((res) => setProducts(res.data)).catch(() => {});
+      return;
+    }
+    api
+      .get(`/catalog/products?clientId=${selectedClient}`)
+      .then((res) => {
+        setProducts(res.data);
+        setOrderItems((prev) =>
+          prev.map((item) => {
+            if (!item.productId) return item;
+            const matched = res.data.find((p: any) => p.id === item.productId);
+            return matched ? { ...item, price: parseFloat(matched.price) } : item;
+          })
+        );
+      })
+      .catch((err) => console.error('Failed to load products for client', err));
+  }, [selectedClient]);
+
   const handleAddItem = () => {
     setOrderItems([...orderItems, { productId: '', quantity: 1, price: 0 }]);
   };
@@ -904,7 +925,9 @@ export default function Orders() {
                       >
                         <option value="">Выберите продукт...</option>
                         {products.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                          <option key={p.id} value={p.id}>
+                            {p.name} ({p.sku}) — {parseFloat(p.price || 0).toFixed(2)} TJS{p.customPriceApplied ? ' 🏷️ (Спецпрайс)' : ''}
+                          </option>
                         ))}
                       </select>
 
