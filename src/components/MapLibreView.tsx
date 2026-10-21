@@ -30,6 +30,7 @@ interface MapLibreViewProps {
   marketLeads: any[];
   onConvertLead: (lead: any) => void;
   mapFilter: 'ALL' | 'SALES_REP' | 'DELIVERY' | 'SUPERVISOR' | 'VISITS' | 'DEBT' | 'STORES';
+  agentStatusFilter?: 'ALL' | 'ONLINE' | 'OFFLINE';
   is3D: boolean;
   onToggle3D: () => void;
   searchFocusedPoint: { lat: number; lon: number; name?: string } | null;
@@ -50,6 +51,7 @@ export default function MapLibreView({
   marketLeads,
   onConvertLead,
   mapFilter,
+  agentStatusFilter = 'ALL',
   is3D,
   onToggle3D,
   searchFocusedPoint,
@@ -444,22 +446,35 @@ export default function MapLibreView({
 
         onSelectAgent(props.userId);
 
+        const batteryColor = (props.batteryLevel > 50) ? '#10b981' : (props.batteryLevel >= 20 ? '#f59e0b' : '#ef4444');
+        const motionText = props.speed > 5 ? `🚗 В движении (${props.speed} км/ч)` : `🚶 На месте (${props.speed} км/ч)`;
+
         const popupHtml = `
-          <div style="font-family: inherit; padding: 6px; min-width: 180px; color: #0f172a;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px;">
-              <span style="font-size: 10px; font-weight: 800; color: #0071e3;">
-                ${props.roleTitle || 'Сотрудник'}
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 4px; min-width: 220px; color: #0f172a;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+              <span style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: ${props.roleBadgeBg || '#ecfdf5'}; color: ${props.roleBadgeText || '#065f46'}; border: 1px solid ${props.roleBadgeBorder || '#a7f3d0'};">
+                ${props.roleLabel || 'Сотрудник'}
               </span>
-              <span style="font-size: 9px; padding: 2px 6px; border-radius: 9999px; background: ${props.onShift ? '#dcfce7' : '#f1f5f9'}; color: ${props.onShift ? '#15803d' : '#64748b'}; font-weight: bold;">
-                ${props.onShift ? 'В смене' : 'Не в смене'}
+              <span style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: ${props.statusBadgeBg || '#f1f5f9'}; color: ${props.statusBadgeText || '#64748b'}; border: 1px solid ${props.statusBadgeBorder || '#cbd5e1'};">
+                ${props.statusText || 'Офлайн'}
               </span>
             </div>
-            <h4 style="font-weight: 700; font-size: 13px; margin: 0 0 6px 0; color: #0f172a;">
+            <h4 style="font-weight: 700; font-size: 13px; margin: 0 0 8px 0; color: #0f172a; line-height: 1.3;">
               ${props.name || 'Сотрудник'}
             </h4>
-            <div style="font-size: 10px; padding-top: 6px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #475569;">
-              <span>🔋 Заряд: <strong style="color: #0f172a;">${props.batteryLevel}%</strong></span>
-              <span>🚀 Скорость: <strong style="color: #0f172a;">${props.speed} км/ч</strong></span>
+            <div style="font-size: 11px; display: flex; flex-direction: column; gap: 5px; color: #475569; background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #e2e8f0;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🔋 Заряд:</span>
+                <span style="font-weight: 700; color: ${batteryColor};">${props.batteryLevel}%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>🚀 Скорость:</span>
+                <span style="font-weight: 600; color: #0f172a;">${motionText}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 4px; margin-top: 2px; font-size: 10px;">
+                <span style="color: #64748b;">GPS фиксация:</span>
+                <span style="font-weight: 600; color: #0f172a;">${props.recordedAt || 'Нет данных'}</span>
+              </div>
             </div>
           </div>
         `;
@@ -721,19 +736,91 @@ export default function MapLibreView({
     }
   }, [clients, routes, showClients, mapFilter]);
 
-  // Helper to extract human-readable role title from string or relation object
-  const getAgentRoleTitle = (role: any): string => {
+  // Helper to extract human-readable role info with badges
+  const getAgentRoleInfo = (role: any) => {
     let r = '';
     if (typeof role === 'string') {
       r = role.toUpperCase();
     } else if (role && typeof role === 'object') {
       r = (role.name || role.code || role.title || role.role || '').toString().toUpperCase();
     }
-    if (r.includes('SUPERVISOR')) return '🛡️ Супервайзер';
-    if (r.includes('DELIVER') || r.includes('DRIVER') || r.includes('EXPEDITOR')) return '🚚 Экспедитор';
-    if (r.includes('OWNER') || r.includes('ADMIN')) return '👑 Администратор';
-    if (r.includes('MERCHANDISER') || r.includes('MERCH')) return '📦 Мерчендайзер';
-    return '💼 Торговый представитель';
+    if (r.includes('SUPERVISOR')) {
+      return { label: '🛡️ Супервайзер', badgeBg: '#fef3c7', badgeText: '#92400e', badgeBorder: '#fde68a' };
+    }
+    if (r.includes('DELIVER') || r.includes('DRIVER') || r.includes('EXPEDITOR')) {
+      return { label: '🚚 Экспедитор', badgeBg: '#f3e8ff', badgeText: '#6b21a8', badgeBorder: '#e9d5ff' };
+    }
+    if (r.includes('OWNER') || r.includes('ADMIN')) {
+      return { label: '👑 Админ', badgeBg: '#dbeafe', badgeText: '#1e40af', badgeBorder: '#bfdbfe' };
+    }
+    if (r.includes('MERCHANDISER') || r.includes('MERCH')) {
+      return { label: '📦 Мерчендайзер', badgeBg: '#e0e7ff', badgeText: '#3730a3', badgeBorder: '#c7d2fe' };
+    }
+    return { label: '💼 Торговый агент', badgeBg: '#ecfdf5', badgeText: '#065f46', badgeBorder: '#a7f3d0' };
+  };
+
+  // Helper to calculate agent online/offline/shift status
+  const getAgentStatus = (agent: any) => {
+    if (agent.onShift === false) {
+      return {
+        isOnline: false,
+        text: 'Смена закрыта',
+        bgColor: '#64748b',
+        haloColor: 'rgba(148, 163, 184, 0.3)',
+        badgeBg: '#f1f5f9',
+        badgeText: '#475569',
+        badgeBorder: '#cbd5e1',
+      };
+    }
+    if (!agent.recordedAt) {
+      return {
+        isOnline: false,
+        text: 'Нет GPS данных',
+        bgColor: '#94a3b8',
+        haloColor: 'rgba(148, 163, 184, 0.25)',
+        badgeBg: '#f1f5f9',
+        badgeText: '#64748b',
+        badgeBorder: '#e2e8f0',
+      };
+    }
+
+    const lastTime = new Date(agent.recordedAt).getTime();
+    const now = Date.now();
+    const diffMins = Math.floor((now - lastTime) / (1000 * 60));
+
+    if (diffMins < 10) {
+      return {
+        isOnline: true,
+        text: `В сети (${diffMins === 0 ? 'сейчас' : diffMins + ' мин'})`,
+        bgColor: '#10b981',
+        haloColor: 'rgba(52, 211, 153, 0.45)',
+        badgeBg: '#ecfdf5',
+        badgeText: '#065f46',
+        badgeBorder: '#a7f3d0',
+      };
+    } else if (diffMins < 60) {
+      return {
+        isOnline: false,
+        text: `Вне сети (${diffMins} мин)`,
+        bgColor: '#f59e0b',
+        haloColor: 'rgba(251, 191, 36, 0.4)',
+        badgeBg: '#fffbeb',
+        badgeText: '#92400e',
+        badgeBorder: '#fde68a',
+      };
+    } else {
+      const diffHours = Math.floor(diffMins / 60);
+      const diffDays = Math.floor(diffHours / 24);
+      return {
+        isOnline: false,
+        text: diffDays > 0 ? `Вне сети (${diffDays} дн)` : `Вне сети (${diffHours} ч)`,
+        bgColor: '#94a3b8',
+        haloColor: 'rgba(148, 163, 184, 0.25)',
+        badgeBg: '#f8fafc',
+        badgeText: '#64748b',
+        badgeBorder: '#e2e8f0',
+      };
+    }
   };
 
   // 5. Update Live Agents GeoJSON (GPU Zero-Lag)
@@ -746,36 +833,83 @@ export default function MapLibreView({
       return;
     }
 
-    const features = agents
-      .filter((agent) => agent.latitude && agent.longitude)
-      .map((agent) => {
-        const lat = parseFloat(agent.latitude);
-        const lon = parseFloat(agent.longitude);
-        const isSelected = selectedAgentId === agent.userId;
-        const initials = ((agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '')).toUpperCase();
-        const fullName = `${agent.firstName || ''} ${agent.lastName || ''}`.trim() || 'Сотрудник';
-        const roleTitle = getAgentRoleTitle(agent.role);
+    const getRoleUpper = (r: any): string => {
+      if (!r) return '';
+      if (typeof r === 'string') return r.toUpperCase();
+      if (typeof r === 'object') return (r.name || r.code || r.title || '').toString().toUpperCase();
+      return String(r).toUpperCase();
+    };
 
-        return {
-          type: 'Feature',
-          geometry: {
-            type: 'Point',
-            coordinates: [lon, lat],
-          },
-          properties: {
-            userId: agent.userId,
-            name: fullName,
-            initials: isSelected ? '★' : initials,
-            roleTitle: roleTitle,
-            role: roleTitle,
-            speed: agent.speed || 0,
-            batteryLevel: agent.batteryLevel || 100,
-            onShift: !!agent.onShift,
-            bgColor: isSelected ? '#0071e3' : '#10b981',
-            haloColor: isSelected ? '#3b82f6' : '#34d399',
-          },
-        };
-      });
+    const filteredAgents = agents.filter((agent) => {
+      if (!agent.latitude || !agent.longitude) return false;
+
+      // Filter by role
+      const roleUpper = getRoleUpper(agent.role);
+      if (mapFilter === 'SALES_REP') {
+        if (roleUpper.includes('DELIVER') || roleUpper.includes('DRIVER')) return false;
+      } else if (mapFilter === 'DELIVERY') {
+        if (!roleUpper.includes('DELIVER') && !roleUpper.includes('DRIVER')) return false;
+      } else if (mapFilter === 'SUPERVISOR') {
+        if (!roleUpper.includes('SUPERVISOR')) return false;
+      }
+
+      // Filter by online/offline status
+      const statusInfo = getAgentStatus(agent);
+      if (agentStatusFilter === 'ONLINE' && !statusInfo.isOnline) return false;
+      if (agentStatusFilter === 'OFFLINE' && statusInfo.isOnline) return false;
+
+      return true;
+    });
+
+    const features = filteredAgents.map((agent) => {
+      const lat = parseFloat(agent.latitude);
+      const lon = parseFloat(agent.longitude);
+      const isSelected = selectedAgentId === agent.userId;
+      const initials = ((agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '')).toUpperCase();
+      const fullName = `${agent.firstName || ''} ${agent.lastName || ''}`.trim() || 'Сотрудник';
+      const roleInfo = getAgentRoleInfo(agent.role);
+      const statusInfo = getAgentStatus(agent);
+
+      const speedVal = agent.speed !== null && agent.speed !== undefined ? Math.round(Number(agent.speed)) : 0;
+      const batteryVal = agent.batteryLevel !== null && agent.batteryLevel !== undefined ? Number(agent.batteryLevel) : 100;
+      const recordedDateStr = agent.recordedAt
+        ? new Date(agent.recordedAt).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Dushanbe',
+          })
+        : 'Нет данных';
+
+      return {
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [lon, lat],
+        },
+        properties: {
+          userId: agent.userId,
+          name: fullName,
+          initials: isSelected ? '★' : initials,
+          roleLabel: roleInfo.label,
+          roleBadgeBg: roleInfo.badgeBg,
+          roleBadgeText: roleInfo.badgeText,
+          roleBadgeBorder: roleInfo.badgeBorder,
+          statusText: statusInfo.text,
+          statusBadgeBg: statusInfo.badgeBg,
+          statusBadgeText: statusInfo.badgeText,
+          statusBadgeBorder: statusInfo.badgeBorder,
+          isOnline: statusInfo.isOnline,
+          speed: speedVal,
+          batteryLevel: batteryVal,
+          recordedAt: recordedDateStr,
+          onShift: !!agent.onShift,
+          bgColor: isSelected ? '#0071e3' : statusInfo.bgColor,
+          haloColor: isSelected ? 'rgba(59, 130, 246, 0.5)' : statusInfo.haloColor,
+        },
+      };
+    });
 
     source.setData({
       type: 'FeatureCollection',
@@ -787,7 +921,7 @@ export default function MapLibreView({
     if (mapRef.current && mapRef.current.isStyleLoaded()) {
       updateAgentsData(mapRef.current);
     }
-  }, [agents, selectedAgentId, showLiveAgents]);
+  }, [agents, selectedAgentId, showLiveAgents, mapFilter, agentStatusFilter]);
 
   // 6. Update Market Leads GeoJSON (GPU Zero-Lag)
   const updateLeadsData = (map: maplibregl.Map) => {

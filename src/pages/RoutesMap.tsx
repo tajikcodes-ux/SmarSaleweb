@@ -137,8 +137,8 @@ export default function RoutesMap() {
       return { 
         isOnline: false, 
         text: diffDays > 0 ? `Вне сети (${diffDays} дн назад)` : `Вне сети (${diffHours} ч назад)`, 
-        color: 'bg-rose-500', 
-        badgeClass: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800' 
+        color: 'bg-slate-400', 
+        badgeClass: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700' 
       };
     }
   };
@@ -1025,6 +1025,7 @@ export default function RoutesMap() {
         const isSelected = agent.userId === selectedAgentId;
         const statusInfo = getAgentStatusInfo(agent);
         const roleInfo = getAgentRoleLabel(agent);
+        const initials = ((agent.firstName?.[0] || 'A') + (agent.lastName?.[0] || '')).toUpperCase();
 
         // Filter by online/offline status if set
         if (agentStatusFilter === 'ONLINE' && !statusInfo.isOnline) return;
@@ -1039,9 +1040,9 @@ export default function RoutesMap() {
         const dynamicAgentIcon = L.divIcon({
           className: 'custom-agent-dynamic-icon',
           html: `
-            <div class="relative w-8 h-8 flex items-center justify-center ${markerBg} text-white rounded-full ${isSelected ? 'border-3 border-white shadow-lg' : 'border-2 border-white shadow-md'} font-bold text-xs">
+            <div class="relative w-8 h-8 flex items-center justify-center ${markerBg} text-white rounded-full ${isSelected ? 'border-3 border-white shadow-lg' : 'border-2 border-white shadow-md'} font-bold text-xs select-none">
               ${pingHtml}
-              ${isSelected ? '★' : 'A'}
+              ${isSelected ? '★' : initials}
             </div>
           `,
           iconSize: isSelected ? [36, 36] : [32, 32],
@@ -1684,6 +1685,7 @@ export default function RoutesMap() {
               marketLeads={marketLeads}
               onConvertLead={handleConvertLead}
               mapFilter={mapFilter}
+              agentStatusFilter={agentStatusFilter}
               is3D={is3D}
               onToggle3D={() => setIs3D((prev) => !prev)}
               searchFocusedPoint={searchFocusedPoint}
