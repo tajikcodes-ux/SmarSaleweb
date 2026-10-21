@@ -1,0 +1,123 @@
+@keyframes tour-ripple {
+  0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+@keyframes tour-pop {
+  0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes tour-fade-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes tour-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 2px #3b82f6, 0 0 0 6px rgba(59, 130, 246, 0.25), 0 0 26px rgba(59, 130, 246, 0.45); }
+  50% { box-shadow: 0 0 0 2px #60a5fa, 0 0 0 12px rgba(59, 130, 246, 0.08), 0 0 40px rgba(59, 130, 246, 0.6); }
+}
+@keyframes tour-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-7px) rotate(4deg); }
+}
+@keyframes tour-confetti {
+  0% { transform: translate3d(0, -20px, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--dx), 105vh, 0) rotate(var(--rot)); opacity: 0.9; }
+}
+@keyframes tour-shine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes tour-bubble {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+@keyframes tour-hint {
+  0%, 100% { opacity: 0.75; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-2px); }
+}
+
+.tour-spot {
+  position: fixed;
+  z-index: 2001;
+  pointer-events: none;
+  border-radius: 16px;
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.66);
+  transition: top 0.5s cubic-bezier(0.22, 1, 0.36, 1), left 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.5s cubic-bezier(0.22, 1, 0.36, 1), height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tour-spot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  animation: tour-pulse-ring 1.8s ease-in-out infinite;
+}
+.tour-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.66);
+  backdrop-filter: blur(2px);
+}
+.tour-blocker {
+  position: fixed;
+  z-index: 2002;
+  background: transparent;
+}
+.tour-card {
+  animation: tour-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: top 0.5s cubic-bezier(0.22, 1, 0.36, 1), left 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tour-bullet {
+  opacity: 0;
+  animation: tour-fade-up 0.4s ease-out forwards;
+}
+.tour-cursor {
+  position: fixed;
+  z-index: 2100;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transition: transform 0.95s cubic-bezier(0.65, 0, 0.25, 1), opacity 0.3s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}
+.tour-ripple {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid #60a5fa;
+  background: rgba(96, 165, 250, 0.35);
+  animation: tour-ripple 0.7s ease-out forwards;
+}
+.tour-press {
+  transform: scale(0.95) !important;
+  transition: transform 0.15s ease !important;
+}
+.tour-confetti-piece {
+  position: fixed;
+  top: 0;
+  z-index: 2200;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: tour-confetti var(--dur) cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+.tour-progress-fill {
+  background: linear-gradient(90deg, #2563eb, #7c3aed, #2563eb);
+  background-size: 200% 100%;
+  animation: tour-shine 2.4s linear infinite;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tour-invite {
+  animation: tour-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.tour-start-btn {
+  animation: tour-bubble 2.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-cursor, .tour-spot, .tour-card { transition: none; }
+  .tour-start-btn, .tour-progress-fill, .tour-spot::after { animation: none; }
+}

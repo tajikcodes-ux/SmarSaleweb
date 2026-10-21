@@ -29,7 +29,11 @@ import {
   Sun,
   Moon,
   Camera,
+  Compass,
 } from 'lucide-react';
+import { useSyncExternalStore } from 'react';
+import { Tour, TourInvite } from '../tour/Tour';
+import { tourStore } from '../tour/tourStore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -42,6 +46,7 @@ export default function Layout({ children }: LayoutProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const tourActive = useSyncExternalStore(tourStore.subscribe, tourStore.getSnapshot).active;
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
@@ -293,6 +298,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Sidebar - Modern light sidebar */}
       <aside
+        data-tour="sidebar"
         className={`fixed inset-y-0 left-0 z-[1300] flex flex-col justify-between p-4 bg-white border-r border-[#e3e3e8] flex-shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:z-auto ${
           isMobileMenuOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         } ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}
@@ -340,7 +346,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Navigation Links */}
           <nav className="space-y-4 overflow-y-auto flex-1 pr-1 py-2">
             {getFilteredMenuStructure().map((group) => {
-              const isExpanded = expandedGroups[group.key] !== false;
+              const isExpanded = tourActive || expandedGroups[group.key] !== false;
               return (
                 <div key={group.key} className="space-y-1">
                   {(!isCollapsed || isMobileMenuOpen) && (
@@ -362,6 +368,7 @@ export default function Layout({ children }: LayoutProps) {
                         return (
                           <button
                             key={item.path}
+                            data-tour={`nav:${item.path}`}
                             onClick={() => navigate(item.path)}
                             title={item.label}
                             className={`w-full flex items-center gap-3 px-3 py-2 ${
@@ -473,7 +480,7 @@ export default function Layout({ children }: LayoutProps) {
             </h2>
             
             {/* Search Box */}
-            <div className="relative hidden md:block">
+            <div className="relative hidden md:block" data-tour="search">
               <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
                 <Search className="w-3.5 h-3.5" />
               </span>
@@ -486,8 +493,20 @@ export default function Layout({ children }: LayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Start interactive tour */}
+            <button
+              onClick={() => tourStore.start()}
+              data-tour="tour-btn"
+              className="tour-start-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#0b57d0] to-[#6d28d9] text-white font-bold text-xs shadow-md shadow-blue-500/30 hover:brightness-110 transition-all"
+              title="Интерактивный обучающий тур"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Тур</span>
+            </button>
+
             {/* AI Sales Forecasting Button */}
             <button
+              data-tour="ai-btn"
               onClick={() => setShowAiInsight(!showAiInsight)}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e8f0fe] hover:bg-[#d2e3fc] text-[#1a73e8] font-bold text-xs transition-all border border-[#d2e3fc]/30 shadow-sm"
             >
@@ -500,12 +519,14 @@ export default function Layout({ children }: LayoutProps) {
               className="p-1.5 bg-white border border-[#e3e3e8] rounded-xl hover:bg-[#f8f9fa] text-[#5f6368] transition-colors shadow-sm"
               title="Переключить тему"
               id="theme-toggle-btn"
+              data-tour="theme"
             >
               {isDarkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
             </button>
 
             <div className="relative">
               <button
+                data-tour="bell"
                 onClick={() => setShowNotifications(!showNotifications)}
                 className="relative p-1.5 bg-white border border-[#e3e3e8] rounded-xl hover:bg-[#f8f9fa] text-[#5f6368] transition-colors shadow-sm"
               >
@@ -558,7 +579,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
             
-            <div className="flex items-center gap-2 border-l border-[#e3e3e8] pl-4">
+            <div data-tour="profile" className="flex items-center gap-2 border-l border-[#e3e3e8] pl-4">
               <div className="w-8 h-8 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 A
               </div>
@@ -606,6 +627,13 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </div>
       </main>
+
+      <Tour
+        user={user}
+        availablePaths={getFilteredMenuStructure().flatMap((g) => g.items.map((i) => i.path))}
+        setMobileMenu={setIsMobileMenuOpen}
+      />
+      <TourInvite user={user} />
     </div>
   );
 }
