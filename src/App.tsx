@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import { Shield } from 'lucide-react';
 
 // Lazy loaded page components for optimal performance and instant initial load
 const Login = lazy(() => import('./pages/Login'));
@@ -38,10 +39,59 @@ function PageLoader() {
   );
 }
 
-// Guard for authenticated pages
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+// Guard for authenticated pages with granular permission verification
+function ProtectedRoute({
+  children,
+  resource,
+}: {
+  children: React.ReactNode;
+  resource?: string;
+}) {
   const token = localStorage.getItem('access_token');
-  return token ? <Layout>{children}</Layout> : <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/login" replace />;
+
+  if (resource) {
+    try {
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (user && user.role !== 'OWNER' && user.role !== 'SUPER_ADMIN') {
+        const permissions = user.permissions || {};
+        if (permissions && Object.keys(permissions).length > 0) {
+          const modPerms = permissions[resource];
+          if (Array.isArray(modPerms) && !modPerms.includes('read')) {
+            return (
+              <Layout>
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#f4f6fa] dark:bg-[#1a1a1a] h-full">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center mb-4 text-amber-600 shadow-sm">
+                    <Shield className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Доступ к разделу ограничен</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-6">
+                    У вашей роли <strong>«{user.role}»</strong> нет разрешения на просмотр данного модуля. Если вам необходим доступ, обратитесь к руководителю или администратору компании.
+                  </p>
+                  <button
+                    onClick={() => (window.location.href = '/')}
+                    className="px-4 py-2 bg-[#0071e3] text-white rounded-xl text-xs font-bold hover:bg-[#0077ed] transition-all shadow-sm"
+                  >
+                    Вернуться на главную
+                  </button>
+                </div>
+              </Layout>
+            );
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error verifying route permission', e);
+    }
+  }
+
+  return <Layout>{children}</Layout>;
+}
+
+// Legacy PrivateRoute alias
+function PrivateRoute({ children }: { children: React.ReactNode }) {
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
 // Redirect home page based on user role or landing domain
@@ -90,161 +140,161 @@ export default function App() {
           <Route
             path="/agents"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="agents">
                 <Agents />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/map"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="map">
                 <RoutesMap />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/photo-reports"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="photo_reports">
                 <PhotoReports />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/clients"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="clients">
                 <Clients />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/catalog"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="catalog">
                 <Catalog />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/warehouse"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="warehouse">
                 <Warehouse />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/orders"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="orders">
                 <Orders />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/returns"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="returns">
                 <Returns />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/tasks"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="tasks">
                 <Tasks />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/salary"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="salary">
                 <Salary />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/payments"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="payments">
                 <Payments />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/branches"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="branches">
                 <Branches />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/promotions"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="promotions">
                 <Promotions />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/roles"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="roles">
                 <Roles />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/smm"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="smm">
                 <SmmPanel />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/feedbacks"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="feedbacks">
                 <FeedbackPanel />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/audit-logs"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="audit_logs">
                 <AuditLogs />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/reports"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="reports">
                 <ReportConstructor />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/superadmin"
             element={
-              <PrivateRoute>
+              <ProtectedRoute>
                 <SuperAdmin />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/ai-assistant"
             element={
-              <PrivateRoute>
+              <ProtectedRoute resource="ai">
                 <AiAssistant />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
 

@@ -192,55 +192,78 @@ export default function Layout({ children }: LayoutProps) {
       ];
     }
 
+    const resourceMap: Record<string, string> = {
+      '/': 'dashboard',
+      '/reports': 'reports',
+      '/ai-assistant': 'ai',
+      '/orders': 'orders',
+      '/returns': 'returns',
+      '/payments': 'payments',
+      '/promotions': 'promotions',
+      '/catalog': 'catalog',
+      '/warehouse': 'warehouse',
+      '/agents': 'agents',
+      '/map': 'map',
+      '/photo-reports': 'photo_reports',
+      '/tasks': 'tasks',
+      '/salary': 'salary',
+      '/clients': 'clients',
+      '/branches': 'branches',
+      '/roles': 'roles',
+      '/audit-logs': 'audit_logs',
+      '/smm': 'smm',
+      '/feedbacks': 'feedbacks',
+    };
+
     return menuStructure.map(group => {
       const filteredItems = group.items.filter(item => {
+        // OWNER has full bypass access to all modules
         if (role === 'OWNER') return true;
 
+        const resource = resourceMap[item.path];
+        if (!resource) return false;
+
+        // If user has specific permissions matrix populated
         if (permissions && Object.keys(permissions).length > 0) {
-          if (item.path === '/' || item.path === '/ai-assistant' || item.path === '/reports' || item.path === '/photo-reports' || item.path === '/feedbacks') return true;
-
-          const resourceMap: Record<string, string> = {
-            '/agents': 'agents',
-            '/map': 'map',
-            '/photo-reports': 'map',
-            '/clients': 'clients',
-            '/catalog': 'catalog',
-            '/warehouse': 'warehouse',
-            '/orders': 'orders',
-            '/returns': 'returns',
-            '/payments': 'payments',
-            '/tasks': 'tasks',
-            '/salary': 'salary',
-            '/branches': 'branches',
-            '/promotions': 'promotions',
-            '/roles': 'roles',
-            '/smm': 'smm',
-            '/feedbacks': 'feedbacks',
-          };
-
-          const resource = resourceMap[item.path];
-          if (!resource) return false;
-
-          return permissions[resource]?.includes('read') || false;
+          const modPerms = permissions[resource];
+          if (Array.isArray(modPerms)) {
+            return modPerms.includes('read');
+          }
         }
 
-        if (role === 'OWNER' || role === 'SALES_MANAGER') {
+        // Fallback for legacy role-based profiles without custom permissions
+        if (role === 'DIRECTOR' || role === 'SALES_MANAGER') {
           return true;
         }
         if (role === 'SUPERVISOR') {
-          return ['/', '/agents', '/map', '/photo-reports', '/clients', '/orders', '/returns', '/payments', '/tasks', '/ai-assistant'].includes(item.path);
+          return ['/', '/agents', '/map', '/photo-reports', '/clients', '/orders', '/returns', '/payments', '/tasks', '/reports', '/ai-assistant'].includes(item.path);
+        }
+        if (role === 'SALES_REP') {
+          return ['/orders', '/clients', '/returns', '/payments', '/catalog', '/tasks', '/map', '/smm'].includes(item.path);
         }
         if (role === 'WAREHOUSE_MAN') {
           return ['/catalog', '/warehouse', '/orders'].includes(item.path);
         }
         if (role === 'DELIVERY_MAN' || role === 'DELIVERY_DRIVER') {
-          return ['/warehouse', '/orders'].includes(item.path);
+          return ['/warehouse', '/orders', '/map', '/payments'].includes(item.path);
         }
         if (role === 'FINANCIER') {
-          return ['/orders', '/payments', '/salary'].includes(item.path);
+          return ['/', '/orders', '/payments', '/salary', '/clients', '/reports'].includes(item.path);
+        }
+        if (role === 'AUDITOR') {
+          return ['/', '/orders', '/clients', '/catalog', '/warehouse', '/payments', '/salary', '/reports', '/audit-logs'].includes(item.path);
+        }
+        if (role === 'MARKETER') {
+          return ['/', '/promotions', '/catalog', '/smm', '/reports'].includes(item.path);
+        }
+        if (role === 'BUYER') {
+          return ['/catalog', '/warehouse', '/orders'].includes(item.path);
+        }
+        if (role === 'ADMINISTRATOR') {
+          return ['/', '/agents', '/branches', '/roles', '/clients', '/tasks', '/audit-logs'].includes(item.path);
         }
         if (role === 'DEVELOPER') {
-          return ['/', '/feedbacks'].includes(item.path);
+          return ['/', '/feedbacks', '/ai-assistant', '/roles'].includes(item.path);
         }
         return false;
       });
