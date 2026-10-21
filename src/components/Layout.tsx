@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 import { Tour, TourInvite } from '../tour/Tour';
-import { tourStore } from '../tour/tourStore';
+import { tourStore, tourSeenKey } from '../tour/tourStore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,6 +47,24 @@ export default function Layout({ children }: LayoutProps) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const tourActive = useSyncExternalStore(tourStore.subscribe, tourStore.getSnapshot).active;
+  const [inviteSeenTick, setInviteSeenTick] = useState(0);
+  const tourSeen = (() => {
+    void inviteSeenTick;
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return !!localStorage.getItem(tourSeenKey(u));
+    } catch {
+      return true;
+    }
+  })();
+  useEffect(() => {
+    // re-evaluate after the tour is closed or the invite is dismissed
+    setInviteSeenTick((t) => t + 1);
+  }, [tourActive]);
+  useEffect(() => {
+    const id = window.setInterval(() => setInviteSeenTick((t) => t + 1), 2000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return document.documentElement.classList.contains('dark') || localStorage.getItem('theme') === 'dark';
@@ -497,11 +515,15 @@ export default function Layout({ children }: LayoutProps) {
             <button
               onClick={() => tourStore.start()}
               data-tour="tour-btn"
-              className="tour-start-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#0b57d0] to-[#6d28d9] text-white font-bold text-xs shadow-md shadow-blue-500/30 hover:brightness-110 transition-all"
+              className={
+                tourSeen
+                  ? 'p-1.5 bg-white border border-[#e3e3e8] rounded-xl hover:bg-[#f8f9fa] text-[#5f6368] transition-colors shadow-sm'
+                  : 'tour-start-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#0b57d0] to-[#6d28d9] text-white font-bold text-xs shadow-md shadow-blue-500/30 hover:brightness-110 transition-all'
+              }
               title="Интерактивный обучающий тур"
             >
-              <Compass className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Тур</span>
+              <Compass className="w-4 h-4" />
+              {!tourSeen && <span className="hidden sm:inline">Тур</span>}
             </button>
 
             {/* AI Sales Forecasting Button */}
