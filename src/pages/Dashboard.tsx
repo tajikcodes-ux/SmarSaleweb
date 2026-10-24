@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../services/api';
+import { useScope } from '../context/ScopeContext';
 import {
   Users,
   ShoppingBag,
@@ -23,7 +24,13 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const { selectedBranchId, selectedBrandId, selectedZone } = useScope();
   const [loading, setLoading] = useState(true);
+  const [rawOrders, setRawOrders] = useState<any[]>([]);
+  const [rawUsers, setRawUsers] = useState<any[]>([]);
+  const [rawRoutes, setRawRoutes] = useState<any[]>([]);
+  const [rawGps, setRawGps] = useState<any[]>([]);
+  const [rawClients, setRawClients] = useState<any[]>([]);
   const [stats, setStats] = useState({
     agentsCount: '0 / 0',
     ordersCount: '0',
@@ -93,112 +100,11 @@ export default function Dashboard() {
         setAiForecast(Array.isArray(aiRes.data) ? aiRes.data : []);
         setLeaderboard(Array.isArray(smmRes.data) ? smmRes.data : []);
         
-        // Save first few orders for activity feed
-        const allOrders = ordersRes.data || [];
-        setRecentOrders(allOrders.slice(0, 4));
-
-        // Aggregate top selling products from real orders
-        const productSales: { [key: string]: { quantity: number; revenue: number } } = {};
-        allOrders.forEach((order: any) => {
-          if (Array.isArray(order.items)) {
-            order.items.forEach((item: any) => {
-              const name = item.product?.name || item.name || 'Товар';
-              const qty = Number(item.quantity || 0);
-              const price = Number(item.price || item.product?.price || 0);
-              const revenue = qty * price;
-              if (productSales[name]) {
-                productSales[name].quantity += qty;
-                productSales[name].revenue += revenue;
-              } else {
-                productSales[name] = { quantity: qty, revenue };
-              }
-            });
-          }
-        });
-        const sortedProducts = Object.entries(productSales)
-          .map(([name, data]) => ({ name, ...data }))
-          .sort((a, b) => b.quantity - a.quantity)
-          .slice(0, 3);
-        setTopProducts(sortedProducts);
-
-        // Compute last 5 days sales history for sparklines
-        const dailySales: { [key: string]: number } = {};
-        const dailyOrders: { [key: string]: number } = {};
-        
-        allOrders.forEach((o: any) => {
-          if (!o.createdAt) return;
-          const date = o.createdAt.split('T')[0];
-          dailySales[date] = (dailySales[date] || 0) + Number(o.totalAmount || 0);
-          dailyOrders[date] = (dailyOrders[date] || 0) + 1;
-        });
-
-        const last5Days = Array.from({ length: 5 }, (_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - (4 - i));
-          return d.toISOString().split('T')[0];
-        });
-
-        setSalesSparkline(last5Days.map(date => dailySales[date] || 0));
-        setOrdersSparkline(last5Days.map(date => dailyOrders[date] || 0));
-
-        const reps = usersRes.data.filter((u: any) => u.role === 'SALES_REP');
-        const activeRepsCount = gpsRes.data.length;
-
-        const todayOrders = allOrders.filter((o: any) => {
-          if (!o.createdAt) return false;
-          return o.createdAt.split('T')[0] === today;
-        });
-
-        const totalSales = allOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
-
-        // --- AKB / OKB Logic ---
-        const clients = clientsRes.data || [];
-        const totalClientsCount = clients.length;
-        
-        const currentMonth = new Date().toISOString().slice(0, 7);
-        const thisMonthOrders = allOrders.filter((o: any) => o.createdAt && o.createdAt.startsWith(currentMonth) && o.status !== 'cancelled');
-        
-        const uniqueActiveClients = new Set(thisMonthOrders.map((o: any) => o.clientId || (o.client?.id)));
-        const akbCount = uniqueActiveClients.size;
-        const akbPercentage = totalClientsCount > 0 ? Math.round((akbCount / totalClientsCount) * 100) : 0;
-        
-        const performanceData = reps.map((rep: any) => {
-          const repOrders = thisMonthOrders.filter((o: any) => o.salesRepId === rep.id);
-          const repAkb = new Set(repOrders.map((o: any) => o.clientId || (o.client?.id))).size;
-          const repSales = repOrders.reduce((sum: number, o: any) => sum + Number(o.totalAmount || 0), 0);
-          return {
-            id: rep.id,
-            name: `${rep.firstName} ${rep.lastName}`,
-            akb: repAkb,
-            sales: repSales,
-          };
-        }).sort((a: any, b: any) => b.akb - a.akb);
-        setAgentsPerformance(performanceData);
-        // -------------------------
-
-        const routes = routesRes.data || [];
-        const visitedCount = routes.filter((r: any) => r.visited).length;
-        const rate = routes.length > 0 ? Math.round((visitedCount / routes.length) * 100) : 0;
-
-        setStats({
-          agentsCount: `${activeRepsCount} / ${reps.length || 1}`,
-          ordersCount: `${todayOrders.length} (${allOrders.length} всего)`,
-          salesVolume: `${totalSales.toLocaleString('ru-RU')} TJS`,
-          visitRate: `${rate}%`,
-          rawOrdersCount: todayOrders.length,
-          totalVisits: routes.length,
-          completedVisits: visitedCount,
-          rawSalesVolume: totalSales,
-          akbCount,
-          okbCount: totalClientsCount,
-          akbPercentage,
-        });
-
-        if (gpsRes.data.length > 0) {
-          setAgents(gpsRes.data);
-        } else {
-          setAgents([]);
-        }
+        setRawUsers(usersRes.data || []);
+        setRawOrders(ordersRes.data || []);
+        setRawRoutes(routesRes.data || []);
+        setRawGps(gpsRes.data || []);
+        setRawClients(clientsRes.data || []);
 
         // Fetch real weather for Khujand region (40.28, 69.62) from free Open-Meteo API
         try {
@@ -230,6 +136,167 @@ export default function Dashboard() {
 
     fetchDashboardData();
   }, []);
+
+  // Reactive Scope filtering (Branch / Brand / Zone)
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Helper to calculate revenue for an order respecting selected brand
+    const getOrderRevenue = (order: any, brandId: string | null) => {
+      if (!brandId) {
+        return Number(order.totalAmount || 0);
+      }
+      if (!Array.isArray(order.items)) return 0;
+      return order.items.reduce((sum: number, it: any) => {
+        const prod = it.product || {};
+        const isBrand = prod.categoryId === brandId || prod.category?.parentId === brandId || it.categoryId === brandId;
+        if (!isBrand) return sum;
+        const qty = Number(it.quantity || 0);
+        const price = Number(it.price || prod.price || 0);
+        return sum + qty * price;
+      }, 0);
+    };
+
+    // Filter orders by Branch, Zone, and Brand
+    const filteredOrders = rawOrders.filter((o: any) => {
+      const matchBranch = !selectedBranchId || o.branchId === selectedBranchId || o.salesRep?.branchId === selectedBranchId || o.client?.branchId === selectedBranchId;
+      const matchZone = !selectedZone || o.zone === selectedZone || o.workZone === selectedZone || (o.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
+      const matchBrand = !selectedBrandId || (o.items || []).some((it: any) => {
+        const prod = it.product || {};
+        return prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || it.categoryId === selectedBrandId;
+      });
+      return matchBranch && matchZone && matchBrand;
+    });
+
+    setRecentOrders(filteredOrders.slice(0, 4));
+
+    // Aggregate top selling products from filtered orders (filtered by brand if set)
+    const productSales: { [key: string]: { quantity: number; revenue: number } } = {};
+    filteredOrders.forEach((order: any) => {
+      if (Array.isArray(order.items)) {
+        order.items.forEach((item: any) => {
+          const prod = item.product || {};
+          if (selectedBrandId) {
+            const isBrand = prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || item.categoryId === selectedBrandId;
+            if (!isBrand) return;
+          }
+          const name = prod.name || item.name || 'Товар';
+          const qty = Number(item.quantity || 0);
+          const price = Number(item.price || prod.price || 0);
+          const revenue = qty * price;
+          if (productSales[name]) {
+            productSales[name].quantity += qty;
+            productSales[name].revenue += revenue;
+          } else {
+            productSales[name] = { quantity: qty, revenue };
+          }
+        });
+      }
+    });
+    const sortedProducts = Object.entries(productSales)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 3);
+    setTopProducts(sortedProducts);
+
+    // Compute last 5 days sales history for sparklines
+    const dailySales: { [key: string]: number } = {};
+    const dailyOrders: { [key: string]: number } = {};
+    filteredOrders.forEach((o: any) => {
+      if (!o.createdAt) return;
+      const date = o.createdAt.split('T')[0];
+      const rev = getOrderRevenue(o, selectedBrandId);
+      dailySales[date] = (dailySales[date] || 0) + rev;
+      dailyOrders[date] = (dailyOrders[date] || 0) + 1;
+    });
+
+    const last5Days = Array.from({ length: 5 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (4 - i));
+      return d.toISOString().split('T')[0];
+    });
+
+    setSalesSparkline(last5Days.map(date => dailySales[date] || 0));
+    setOrdersSparkline(last5Days.map(date => dailyOrders[date] || 0));
+
+    // Filter reps by branch
+    const reps = rawUsers.filter((u: any) => {
+      if (u.role !== 'SALES_REP') return false;
+      if (selectedBranchId && u.branchId && u.branchId !== selectedBranchId) return false;
+      return true;
+    });
+
+    const filteredGps = rawGps.filter((g: any) => {
+      if (selectedBranchId && g.branchId && g.branchId !== selectedBranchId) return false;
+      return true;
+    });
+    setAgents(filteredGps);
+    const activeRepsCount = filteredGps.length;
+
+    const todayOrders = filteredOrders.filter((o: any) => {
+      if (!o.createdAt) return false;
+      return o.createdAt.split('T')[0] === today;
+    });
+
+    const totalSales = filteredOrders.reduce((sum: number, o: any) => sum + getOrderRevenue(o, selectedBrandId), 0);
+
+    // --- AKB / OKB Logic ---
+    const filteredClients = rawClients.filter((c: any) => {
+      if (selectedBranchId && c.branchId && c.branchId !== selectedBranchId) return false;
+      if (selectedZone) {
+        const zoneMatch = c.zone === selectedZone || (c.address || '').toLowerCase().includes(selectedZone.toLowerCase());
+        if (!zoneMatch) return false;
+      }
+      return true;
+    });
+    const totalClientsCount = filteredClients.length;
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const thisMonthOrders = filteredOrders.filter((o: any) => o.createdAt && o.createdAt.startsWith(currentMonth) && o.status !== 'cancelled');
+
+    const uniqueActiveClients = new Set(thisMonthOrders.map((o: any) => o.clientId || (o.client?.id)));
+    const akbCount = uniqueActiveClients.size;
+    const akbPercentage = totalClientsCount > 0 ? Math.round((akbCount / totalClientsCount) * 100) : 0;
+
+    const performanceData = reps.map((rep: any) => {
+      const repOrders = thisMonthOrders.filter((o: any) => o.salesRepId === rep.id);
+      const repAkb = new Set(repOrders.map((o: any) => o.clientId || (o.client?.id))).size;
+      const repSales = repOrders.reduce((sum: number, o: any) => sum + getOrderRevenue(o, selectedBrandId), 0);
+      return {
+        id: rep.id,
+        name: `${rep.firstName} ${rep.lastName}`,
+        akb: repAkb,
+        sales: repSales,
+      };
+    }).sort((a: any, b: any) => b.akb - a.akb);
+    setAgentsPerformance(performanceData);
+
+    // Filter routes by branch and zone
+    const filteredRoutes = rawRoutes.filter((r: any) => {
+      if (selectedBranchId && r.branchId && r.branchId !== selectedBranchId) return false;
+      if (selectedZone) {
+        const zoneMatch = r.zone === selectedZone || (r.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
+        if (!zoneMatch) return false;
+      }
+      return true;
+    });
+    const visitedCount = filteredRoutes.filter((r: any) => r.visited).length;
+    const rate = filteredRoutes.length > 0 ? Math.round((visitedCount / filteredRoutes.length) * 100) : 0;
+
+    setStats({
+      agentsCount: `${activeRepsCount} / ${reps.length || 1}`,
+      ordersCount: `${todayOrders.length} (${filteredOrders.length} всего)`,
+      salesVolume: `${Math.round(totalSales).toLocaleString('ru-RU')} TJS`,
+      visitRate: `${rate}%`,
+      rawOrdersCount: todayOrders.length,
+      totalVisits: filteredRoutes.length,
+      completedVisits: visitedCount,
+      rawSalesVolume: totalSales,
+      akbCount,
+      okbCount: totalClientsCount,
+      akbPercentage,
+    });
+  }, [rawOrders, rawUsers, rawRoutes, rawGps, rawClients, selectedBranchId, selectedBrandId, selectedZone]);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');

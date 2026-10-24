@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import { Shield } from 'lucide-react';
+import { ScopeProvider } from './context/ScopeContext';
 
 // Lazy loaded page components for optimal performance and instant initial load
 const Login = lazy(() => import('./pages/Login'));
@@ -128,7 +129,8 @@ function RootRoute() {
 export default function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Suspense fallback={<PageLoader />}>
+      <ScopeProvider>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/landing" element={<Landing />} />
@@ -301,7 +303,8 @@ export default function App() {
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
+        </Suspense>
+      </ScopeProvider>
     </Router>
   );
 }

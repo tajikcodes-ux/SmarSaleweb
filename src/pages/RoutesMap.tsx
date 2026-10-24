@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
 import { io } from 'socket.io-client';
 import api from '../services/api';
+import { useScope } from '../context/ScopeContext';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass, Maximize2, Minimize2 } from 'lucide-react';
 import MapLibreView from '../components/MapLibreView';
 
@@ -14,6 +15,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function RoutesMap() {
+  const { selectedBranchId, selectedZone } = useScope();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
@@ -35,6 +37,36 @@ export default function RoutesMap() {
   const [historyTrack, setHistoryTrack] = useState<any[]>([]);
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
+
+  // Scoped Data (Branch / Brand / Zone)
+  const scopedAgents = useMemo(() => {
+    return agents.filter((a) => {
+      if (selectedBranchId && a.branchId && a.branchId !== selectedBranchId) return false;
+      return true;
+    });
+  }, [agents, selectedBranchId]);
+
+  const scopedClients = useMemo(() => {
+    return clients.filter((c) => {
+      if (selectedBranchId && c.branchId && c.branchId !== selectedBranchId) return false;
+      if (selectedZone) {
+        const match = c.zone === selectedZone || (c.address || '').toLowerCase().includes(selectedZone.toLowerCase());
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [clients, selectedBranchId, selectedZone]);
+
+  const scopedRoutes = useMemo(() => {
+    return routes.filter((r) => {
+      if (selectedBranchId && r.branchId && r.branchId !== selectedBranchId) return false;
+      if (selectedZone) {
+        const match = r.zone === selectedZone || (r.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [routes, selectedBranchId, selectedZone]);
 
   // GIS & Smart Geo Layers
   const [showRoadRoutes, setShowRoadRoutes] = useState(true);
@@ -931,7 +963,7 @@ export default function RoutesMap() {
 
     // Plot clients
     if (showClients) {
-      clients.forEach((client) => {
+      scopedClients.forEach((client) => {
       if (!client.latitude || !client.longitude) return;
 
       const lat = parseFloat(client.latitude.toString());
@@ -1004,7 +1036,7 @@ export default function RoutesMap() {
 
     // Plot live agents (Only when viewing today's map and showLiveAgents is true)
     if (isToday && showLiveAgents) {
-      agents.forEach((agent) => {
+      scopedAgents.forEach((agent) => {
         if (!agent.latitude || !agent.longitude) return;
 
         const getRoleString = (r: any): string => {
@@ -1490,7 +1522,7 @@ export default function RoutesMap() {
     }
 
     // Auto-fit bounds disabled to show all Tajikistan by default
-  }, [agents, clients, routes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes, agentStatusFilter, mapEngine]);
+  }, [scopedAgents, scopedClients, scopedRoutes, selectedAgentId, historyTrack, loading, mapFilter, timelineTime, showClients, showLiveAgents, showRoadRoutes, agentStatusFilter, mapEngine]);
 
   const selectedAgentDetails = agents.find((a) => a.userId === selectedAgentId);
   const selectedAgentRoutes = routes
@@ -1669,9 +1701,9 @@ export default function RoutesMap() {
             style={{ display: mapEngine === 'maplibre' ? 'block' : 'none' }}
           >
             <MapLibreView
-              clients={clients}
-              agents={agents}
-              routes={routes}
+              clients={scopedClients}
+              agents={scopedAgents}
+              routes={scopedRoutes}
               selectedAgentId={selectedAgentId}
               onSelectAgent={setSelectedAgentId}
               onAssignClient={handleAssignClientDirectly}
@@ -2758,7 +2790,7 @@ export default function RoutesMap() {
                   </h4>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-slate-400 font-medium">
-                      Всего: {agents.length}
+                      Всего: {scopedAgents.length}
                     </span>
                     <button
                       type="button"
@@ -2786,8 +2818,8 @@ export default function RoutesMap() {
                 {/* Online/Offline Status Filter Badges */}
                 <div className="flex items-center gap-1 pt-1">
                   {(() => {
-                    const onlineCount = agents.filter(a => getAgentStatusInfo(a).isOnline).length;
-                    const offlineCount = agents.length - onlineCount;
+                    const onlineCount = scopedAgents.filter(a => getAgentStatusInfo(a).isOnline).length;
+                    const offlineCount = scopedAgents.length - onlineCount;
                     return (
                       <>
                         <button
@@ -2799,7 +2831,7 @@ export default function RoutesMap() {
                               : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                           }`}
                         >
-                          Все ({agents.length})
+                          Все ({scopedAgents.length})
                         </button>
                         <button
                           type="button"
@@ -2831,7 +2863,7 @@ export default function RoutesMap() {
 
               {/* Scrollable list of agents */}
               <div className="flex-1 overflow-y-auto space-y-2 mt-3 pr-1">
-                {agents
+                {scopedAgents
                   .filter((agent) => {
                     const status = getAgentStatusInfo(agent);
                     if (agentStatusFilter === 'ONLINE' && !status.isOnline) return false;

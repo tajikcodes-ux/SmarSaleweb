@@ -27,6 +27,7 @@ export default function Login() {
       const response = await api.post('/auth/login', { username, password });
       localStorage.setItem('access_token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      window.dispatchEvent(new CustomEvent('smartsale:auth-change'));
       navigate('/');
     } catch (err: any) {
       console.error(err);

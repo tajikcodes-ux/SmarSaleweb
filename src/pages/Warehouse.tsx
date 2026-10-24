@@ -1,14 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
+import { useScope } from '../context/ScopeContext';
 import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
 
 export default function Warehouse() {
+  const { selectedBranchId, selectedBrandId } = useScope();
   const [activeTab, setActiveTab] = useState<'management' | 'picking' | 'audits' | 'auto_order'>('management');
 
   // Warehouses state
   const [warehouses, setWarehouses] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [loadingWarehouses, setLoadingWarehouses] = useState(true);
+
+  // Scoped filters (Branch / Brand)
+  const filteredWarehouses = useMemo(() => {
+    return warehouses.filter((wh) => {
+      if (selectedBranchId && wh.branchId && wh.branchId !== selectedBranchId && wh.branch?.id !== selectedBranchId) {
+        return false;
+      }
+      return true;
+    });
+  }, [warehouses, selectedBranchId]);
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -44,6 +56,28 @@ export default function Warehouse() {
   const [autoOrderWarehouseId, setAutoOrderWarehouseId] = useState('');
   const [autoOrderQuantities, setAutoOrderQuantities] = useState<Record<string, number>>({});
   const [submittingAutoOrder, setSubmittingAutoOrder] = useState(false);
+
+  const filteredPickingOrders = useMemo(() => {
+    return orders.filter((o) => {
+      if (selectedBranchId && o.client?.branchId && o.client.branchId !== selectedBranchId) return false;
+      if (selectedBrandId && !(o.items || []).some((it: any) => {
+        const prod = it.product || {};
+        return prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || it.categoryId === selectedBrandId;
+      })) return false;
+      return true;
+    });
+  }, [orders, selectedBranchId, selectedBrandId]);
+
+  const filteredSuggestions = useMemo(() => {
+    return reorderData.suggestions.filter((s: any) => {
+      if (selectedBrandId) {
+        const prod = s.product || {};
+        const isBrand = prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || s.categoryId === selectedBrandId;
+        if (!isBrand) return false;
+      }
+      return true;
+    });
+  }, [reorderData.suggestions, selectedBrandId]);
 
   const loadWarehouses = async () => {
     try {
@@ -525,7 +559,7 @@ export default function Warehouse() {
                 }
                 setShowAutoOrderModal(true);
               }}
-              disabled={reorderData.suggestions.length === 0}
+              disabled={filteredSuggestions.length === 0}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0071e3] hover:bg-[#0077ed] disabled:opacity-50 text-white rounded-lg font-semibold text-xs transition-all shadow-sm"
             >
               <ShoppingCart className="w-4 h-4" />
@@ -589,8 +623,8 @@ export default function Warehouse() {
                 : 'bg-[#fbfbfa] text-[#6a6a65] hover:bg-slate-100'
             }`}
           >
-            <AlertTriangle className={`w-4 h-4 ${reorderData.suggestions.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
-            <span>Автозаказ и дефицит ({reorderData.suggestions.length})</span>
+            <AlertTriangle className={`w-4 h-4 ${filteredSuggestions.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+            <span>Автозаказ и дефицит ({filteredSuggestions.length})</span>
           </button>
         </div>
       </div>
@@ -619,13 +653,13 @@ export default function Warehouse() {
                 </div>
               ))}
             </div>
-          ) : warehouses.length === 0 ? (
+          ) : filteredWarehouses.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-12 text-center text-xs text-[#86868b] italic">
-              Склады еще не созданы. Нажмите "Создать склад" для добавления первого склада.
+              {selectedBranchId ? 'В выбранном филиале склады не найдены.' : 'Склады еще не созданы. Нажмите "Создать склад" для добавления первого склада.'}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {warehouses.map((wh) => (
+              {filteredWarehouses.map((wh) => (
                 <div
                   key={wh.id}
                   className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow relative"
@@ -724,12 +758,12 @@ export default function Warehouse() {
                 </div>
               ))}
             </div>
-          ) : orders.length === 0 ? (
+          ) : filteredPickingOrders.length === 0 ? (
             <div className="bg-white border border-[#e9e9e7] rounded-xl p-8 text-center text-xs text-[#86868b] italic">
-              Нет заказов на сборку в данный момент.
+              {selectedBranchId || selectedBrandId ? 'Нет заказов на сборку по выбранным фильтрам филиала/бренда.' : 'Нет заказов на сборку в данный момент.'}
             </div>
           ) : (
-            orders.map((order) => (
+            filteredPickingOrders.map((order) => (
               <div key={order.id} className="bg-white border border-[#e9e9e7] rounded-xl p-5 shadow-sm space-y-4">
                 <div className="flex justify-between items-start border-b border-[#e9e9e7] pb-3">
                   <div>
@@ -1359,12 +1393,12 @@ export default function Warehouse() {
               <div className="p-12 text-center text-slate-400 text-xs">
                 Расчёт скорости продаж и проверка остатков...
               </div>
-            ) : reorderData.suggestions.length === 0 ? (
+            ) : filteredSuggestions.length === 0 ? (
               <div className="p-12 text-center space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
                 <h5 className="font-bold text-[#1d1d1f] text-sm">Складские запасы в идеальном состоянии!</h5>
                 <p className="text-xs text-[#86868b] max-w-md mx-auto">
-                  Ни по одной товарной позиции нет дефицита ниже неснижаемого остатка или риска обнуления в ближайшие недели.
+                  {selectedBrandId ? 'По выбранному бренду нет дефицита ниже неснижаемого остатка.' : 'Ни по одной товарной позиции нет дефицита ниже неснижаемого остатка или риска обнуления в ближайшие недели.'}
                 </p>
               </div>
             ) : (
@@ -1384,7 +1418,7 @@ export default function Warehouse() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e9e9e7]">
-                    {reorderData.suggestions.map((s: any) => {
+                    {filteredSuggestions.map((s: any) => {
                       const cost = Number(s.product.costPrice || Number(s.product.price) * 0.7);
                       const currentOrderQty = autoOrderQuantities[s.product.id] !== undefined
                         ? autoOrderQuantities[s.product.id]

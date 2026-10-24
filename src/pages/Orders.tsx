@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
+import { useScope } from '../context/ScopeContext';
 import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle, Truck, DollarSign, ArrowRight } from 'lucide-react';
 
 export default function Orders() {
+  const { selectedBranchId, selectedBrandId, selectedZone: globalZone } = useScope();
   const [activeTab, setActiveTab] = useState<'orders' | 'dispatch'>('orders');
   const [orders, setOrders] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
@@ -610,7 +612,15 @@ export default function Orders() {
       const matchRep = selectedRep === 'all' || o.salesRepId === selectedRep;
       const matchPayment = selectedPayment === 'all' || o.paymentStatus === selectedPayment;
 
-      return matchZone && matchRep && matchPayment;
+      // 5. Global Scope Bar Filters (Branch / Brand / Zone)
+      const matchGlobalBranch = !selectedBranchId || o.client?.branchId === selectedBranchId || o.salesRep?.branchId === selectedBranchId;
+      const matchGlobalZone = !globalZone || o.workZone === globalZone || (o.client?.address || '').toLowerCase().includes(globalZone.toLowerCase());
+      const matchGlobalBrand = !selectedBrandId || (o.items || []).some((it: any) => {
+        const prod = it.product || {};
+        return prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || it.categoryId === selectedBrandId;
+      });
+
+      return matchZone && matchRep && matchPayment && matchGlobalBranch && matchGlobalZone && matchGlobalBrand;
     }).sort((a, b) => {
       let valA = a[sortField];
       let valB = b[sortField];
@@ -642,7 +652,7 @@ export default function Orders() {
       if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [processedOrders, searchTerm, statusFilter, datePreset, customStartDate, customEndDate, selectedZone, selectedRep, selectedPayment, sortField, sortDirection, todayStr]);
+  }, [processedOrders, searchTerm, statusFilter, datePreset, customStartDate, customEndDate, selectedZone, selectedRep, selectedPayment, sortField, sortDirection, todayStr, selectedBranchId, selectedBrandId, globalZone]);
 
   const toggleOrderSort = (field: 'id' | 'client' | 'salesRep' | 'totalAmount' | 'deliveryDate' | 'createdAt' | 'status') => {
     if (sortField === field) {

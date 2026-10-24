@@ -34,6 +34,7 @@ import {
 import { useSyncExternalStore } from 'react';
 import { Tour, TourInvite } from '../tour/Tour';
 import { tourStore, tourSeenKey } from '../tour/tourStore';
+import ScopeBar from './ScopeBar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -508,6 +509,11 @@ export default function Layout({ children }: LayoutProps) {
                 className="pl-9 pr-4 py-1.5 bg-[#f1f3f4] text-xs text-[#1d1d1f] rounded-full w-64 border border-transparent focus:outline-none focus:border-[#0b57d0]/20 focus:bg-white focus:shadow-sm transition-all placeholder-slate-400"
               />
             </div>
+          </div>
+
+          {/* Global Scope Switcher (Branch / Brand / Zone) */}
+          <div className="hidden lg:flex items-center" data-tour="scope-bar">
+            <ScopeBar />
           </div>
 
           <div className="flex items-center gap-4">
