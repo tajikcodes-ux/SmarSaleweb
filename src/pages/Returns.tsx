@@ -108,8 +108,10 @@ export default function Returns() {
     try {
       await api.patch(`/returns/${id}/status`, { status: newStatus });
       loadData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update status', err);
+      alert(err.response?.data?.message || 'Ошибка при обновлении статуса возврата.');
+      loadData();
     }
   };
 

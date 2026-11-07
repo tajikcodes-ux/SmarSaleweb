@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { DollarSign, Plus, Calendar, User, FileText, Filter, CheckCircle2, TrendingUp, AlertCircle } from 'lucide-react';
+import { clientBalance } from '../utils/clientBalance';
 
 export default function Payments() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -308,7 +309,7 @@ export default function Payments() {
                 >
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name} (Долг: {c.currentDebt} TJS)
+                      {c.name} ({clientBalance(c.currentDebt).label}: {clientBalance(c.currentDebt).amount} TJS)
                     </option>
                   ))}
                 </select>

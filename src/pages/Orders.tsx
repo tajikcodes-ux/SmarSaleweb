@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
 import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle, Truck, DollarSign, ArrowRight } from 'lucide-react';
+import { clientBalance } from '../utils/clientBalance';
 
 export default function Orders() {
   const { selectedBranchId, selectedBrandId, selectedZone: globalZone } = useScope();
@@ -477,7 +478,9 @@ export default function Orders() {
       alert('Заказ успешно одобрен!');
       loadData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Ошибка при одобрении заказа');
+      const message = err.response?.data?.message || 'Ошибка при одобрении заказа';
+      alert(err.response?.status === 400 ? `${message}\n\nЗаказ остался на проверке.` : message);
+      loadData();
     }
   };
 
@@ -1168,7 +1171,7 @@ export default function Orders() {
                       <div>
                         <div className="font-bold">⚠️ ВНИМАНИЕ: Клиент находится в СТОП-ЛИСТЕ!</div>
                         <div className="text-[11px] mt-0.5">
-                          Отгрузка данному магазину заблокирована руководством из-за просроченной задолженности ({Number(clientObj.currentDebt || 0).toFixed(2)} TJS).
+                          Отгрузка данному магазину заблокирована руководством из-за просроченной задолженности{Number(clientObj.currentDebt || 0) > 0 ? ` (${Number(clientObj.currentDebt).toFixed(2)} TJS)` : ''}.
                           Создание накладной заблокировано до погашения долга.
                         </div>
                       </div>
@@ -1179,7 +1182,7 @@ export default function Orders() {
                   <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <span className="font-semibold text-slate-900">Кредитный контроль:</span>
-                      <span className="ml-2 font-mono">Долг: <strong className="text-rose-600">{Number(clientObj.currentDebt || 0).toFixed(2)} TJS</strong></span>
+                      <span className="ml-2 font-mono">{clientBalance(clientObj.currentDebt).label}: <strong className={clientBalance(clientObj.currentDebt).isAdvance ? 'text-emerald-700' : 'text-rose-600'}>{clientBalance(clientObj.currentDebt).amount.toFixed(2)} TJS</strong></span>
                       <span className="ml-2 font-mono">/ Лимит: <strong className="text-emerald-700">{Number(clientObj.creditLimit || 0) > 0 ? `${Number(clientObj.creditLimit).toFixed(2)} TJS` : 'Без ограничений'}</strong></span>
                     </div>
                     {Number(clientObj.creditLimit || 0) > 0 && Number(clientObj.currentDebt || 0) > Number(clientObj.creditLimit || 0) && (
@@ -1536,7 +1539,7 @@ export default function Orders() {
                   <td className={`${tableDensity === 'compact' ? 'py-1.5 px-2.5' : 'p-3.5'} text-right`}>
 
                     <div className="flex items-center justify-end gap-1.5">
-                      {item.status === 'hold' && (
+                      {(item.status === 'on_hold' || item.status === 'hold') && (
                         <>
                           <button
                             type="button"
@@ -1857,7 +1860,7 @@ export default function Orders() {
         const clientCurrentDebt = Number(client.currentDebt || 0);
         const orderAmount = Number(order.totalAmount || totalDiscountedAmount);
         const startDebt = Math.max(0, clientCurrentDebt - orderAmount);
-        const endDebt = clientCurrentDebt;
+        const endBalance = clientBalance(clientCurrentDebt);
 
         const formattedDate = new Date(order.createdAt).toLocaleDateString('ru-RU');
 
@@ -1913,7 +1916,7 @@ export default function Orders() {
                     <div className="font-bold text-xs">Поставщик: ЧДММ "Сомон Камолот"</div>
                   </div>
                   <div className="text-right font-bold text-xs">
-                    Общий долг: {endDebt.toFixed(2).replace('.', ',')}
+                    {endBalance.isAdvance ? 'Аванс клиента' : 'Общий долг'}: {endBalance.amount.toFixed(2).replace('.', ',')}
                   </div>
                 </div>
 
@@ -1986,7 +1989,7 @@ export default function Orders() {
                 <div className="mt-4 text-[10px]">
                   <div>Всего наименований {rows.length}, вес - {totalQty}, на сумму {totalDiscountedAmount.toFixed(2).replace('.', ',')}</div>
                   <div className="font-bold mt-1 text-xs">
-                    Нач.долг: {startDebt.toFixed(2).replace('.', ',')} смн. Заказ: {orderAmount.toFixed(2).replace('.', ',')} смн. Кон.долг: {endDebt.toFixed(2).replace('.', ',')} смн.
+                    Нач.долг: {startDebt.toFixed(2).replace('.', ',')} смн. Заказ: {orderAmount.toFixed(2).replace('.', ',')} смн. {endBalance.isAdvance ? 'Кон.аванс' : 'Кон.долг'}: {endBalance.amount.toFixed(2).replace('.', ',')} смн.
                   </div>
                 </div>
 

@@ -30,7 +30,8 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         window.location.href = '/login';
-      } else if (error.response.status === 403) {
+      } else if (error.response.status === 403 && error.config?.method !== 'get') {
+        // Pages load optional widgets the role may not have; a denied read is not an error to show
         alert(error.response.data?.message || 'Доступ запрещен: у вашей роли нет прав на выполнение этого действия.');
       }
     }

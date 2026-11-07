@@ -5,6 +5,7 @@ import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass, Maximize2, Minimize2 } from 'lucide-react';
 import MapLibreView from '../components/MapLibreView';
+import { clientBalance } from '../utils/clientBalance';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -1018,7 +1019,7 @@ export default function RoutesMap() {
             <h4 class="font-bold text-xs">${client.name || 'Без названия'}</h4>
             <p class="text-[10px] text-slate-500 mt-0.5">${client.address || 'Адрес не указан'}</p>
             <div class="mt-2 pt-1.5 border-t border-slate-100 flex flex-col gap-1 text-[10px]">
-              <div><strong>Долг:</strong> <span class="${debtVal > 0 ? 'text-rose-600 font-bold' : 'text-slate-600'}">${debtVal.toFixed(2)} TJS</span></div>
+              <div><strong>${clientBalance(debtVal).label}:</strong> <span class="${debtVal > 0 ? 'text-rose-600 font-bold' : debtVal < 0 ? 'text-emerald-700 font-bold' : 'text-slate-600'}">${clientBalance(debtVal).amount.toFixed(2)} TJS</span></div>
               <div><strong>Лимит:</strong> <span class="text-emerald-700 font-bold">${limitVal.toFixed(2)} TJS</span></div>
               <div class="mt-1"><strong>Статус:</strong> <span class="font-semibold text-slate-800">${statusLabel}</span></div>
             </div>

@@ -7,6 +7,7 @@ import {
   Ban, ShieldCheck, Printer, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
+import { clientBalance } from '../utils/clientBalance';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -553,7 +554,7 @@ export default function Clients() {
       return;
     }
 
-    const headers = ['Название точки', 'Юр. лицо', 'ИНН', 'Телефон', 'Адрес', 'Координаты', 'Долг (TJS)', 'Лимит (TJS)', 'Ценовая категория'];
+    const headers = ['Название точки', 'Юр. лицо', 'ИНН', 'Телефон', 'Адрес', 'Координаты', 'Долг (TJS, минус — аванс)', 'Лимит (TJS)', 'Ценовая категория'];
     const rows = dataToExport.map(c => [
       c.name,
       c.legalName || '—',
@@ -1205,8 +1206,8 @@ export default function Clients() {
                       <Navigation className="w-3.5 h-3.5 text-[#0071e3]" />
                       <span>{parseFloat(item.latitude || 0).toFixed(4)}, {parseFloat(item.longitude || 0).toFixed(4)}</span>
                     </td>
-                    <td className="p-3.5 text-rose-600 font-bold font-mono">
-                      <div>{debt > 0 ? `${debt.toFixed(2)} TJS` : '0.00 TJS'}</div>
+                    <td className={`p-3.5 font-bold font-mono ${debt < 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                      <div>{debt < 0 ? `Аванс ${Math.abs(debt).toFixed(2)} TJS` : `${debt.toFixed(2)} TJS`}</div>
                       {debt > 0 && debtAgingMap[item.id] && (
                         <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold font-sans ${
                           debtAgingMap[item.id].ageDays > 30 ? 'bg-rose-100 text-rose-800 border border-rose-200' :
@@ -1499,9 +1500,9 @@ export default function Clients() {
             {reconciliationModal.data && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Входящий долг</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Входящий {clientBalance(reconciliationModal.data.initialBalance).label.toLowerCase()}</span>
                   <span className="text-sm font-extrabold text-slate-800 font-mono">
-                    {Number(reconciliationModal.data.initialBalance || 0).toFixed(2)} TJS
+                    {clientBalance(reconciliationModal.data.initialBalance).amount.toFixed(2)} TJS
                   </span>
                 </div>
                 <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
@@ -1521,9 +1522,9 @@ export default function Clients() {
                     ? 'bg-rose-50/70 border-rose-200 text-rose-900'
                     : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
                 }`}>
-                  <span className="text-[10px] uppercase font-bold block opacity-80">Итоговое сальдо (Долг)</span>
+                  <span className="text-[10px] uppercase font-bold block opacity-80">Итоговое сальдо ({clientBalance(reconciliationModal.data.finalBalance).label})</span>
                   <span className="text-sm font-extrabold font-mono">
-                    {Number(reconciliationModal.data.finalBalance || 0).toFixed(2)} TJS
+                    {clientBalance(reconciliationModal.data.finalBalance).amount.toFixed(2)} TJS
                   </span>
                 </div>
               </div>
@@ -1549,7 +1550,7 @@ export default function Clients() {
                       <th className="p-2.5">Документ / Основание</th>
                       <th className="p-2.5 text-right w-28 text-blue-700">Продажи (+)</th>
                       <th className="p-2.5 text-right w-28 text-emerald-700">Оплаты (-)</th>
-                      <th className="p-2.5 text-right w-32">Сальдо</th>
+                      <th className="p-2.5 text-right w-32">Сальдо (минус — аванс)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e3e3e8]/60">
@@ -1605,7 +1606,7 @@ export default function Clients() {
                   type="button"
                   onClick={() => {
                     if (!reconciliationModal.data) return;
-                    const headers = ['№', 'Дата', 'Документ / Операция', 'Дебет (Продажи)', 'Кредит (Оплаты)', 'Сальдо (Долг)'];
+                    const headers = ['№', 'Дата', 'Документ / Операция', 'Дебет (Продажи)', 'Кредит (Оплаты)', 'Сальдо (минус — аванс)'];
                     const rows = reconciliationModal.data.operations.map((op: any, idx: number) => [
                       idx + 1,
                       new Date(op.date).toLocaleDateString('ru-RU'),
