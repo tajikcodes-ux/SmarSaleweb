@@ -128,6 +128,8 @@ export default function Layout({ children }: LayoutProps) {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{"username":"Admin","role":"OWNER"}');
+  const displayName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || 'Пользователь';
+  const initial = (displayName[0] || 'U').toUpperCase();
 
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
     try {
@@ -420,10 +422,10 @@ export default function Layout({ children }: LayoutProps) {
           {(!isCollapsed || isMobileMenuOpen) && (
             <div className={`flex items-center gap-3 px-2 py-1 mb-2 ${isCollapsed ? 'lg:hidden block' : 'block'}`}>
               <div className="w-9 h-9 rounded-full bg-[#f1f3f4] flex items-center justify-center font-bold text-[#0b57d0] border border-[#e3e3e8] flex-shrink-0">
-                {user.username ? user.username[0].toUpperCase() : 'U'}
+                {initial}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-bold text-[#1d1d1f] truncate">{user.username}</h4>
+                <h4 className="text-xs font-bold text-[#1d1d1f] truncate">{displayName}</h4>
                 <span className="text-[9px] text-[#86868b] font-bold uppercase tracking-wider block">
                   {user.role}
                 </span>
@@ -609,10 +611,10 @@ export default function Layout({ children }: LayoutProps) {
             
             <div data-tour="profile" className="flex items-center gap-2 border-l border-[#e3e3e8] pl-4">
               <div className="w-8 h-8 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                A
+                {initial}
               </div>
               <div className="hidden lg:block text-left">
-                <div className="text-xs font-bold text-[#1d1d1f] leading-none">{user.username}</div>
+                <div className="text-xs font-bold text-[#1d1d1f] leading-none">{displayName}</div>
                 <div className="text-[9px] text-[#86868b] font-bold uppercase mt-0.5">{user.role}</div>
               </div>
             </div>

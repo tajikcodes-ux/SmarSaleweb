@@ -8,6 +8,7 @@ import {
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 import { clientBalance } from '../utils/clientBalance';
+import { normalizePaymentType, PAYMENT_TYPE_OPTIONS } from '../utils/paymentType';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -89,9 +90,23 @@ export default function Clients() {
     }
   };
 
-  const handlePrintReconciliation = (clientId: string, start = '', end = '') => {
-    const url = `/documents/client/${clientId}/reconciliation${start || end ? `?startDate=${start}&endDate=${end}` : ''}`;
-    window.open(`${api.defaults.baseURL || ''}${url}`, '_blank');
+  // The act is fetched with the user's token and written into the new window: opening the URL
+  // directly would send no Authorization header and get 401.
+  const handlePrintReconciliation = async (clientId: string, start = '', end = '') => {
+    const win = window.open('', '_blank');
+    try {
+      const res = await api.get(`/documents/client/${clientId}/reconciliation`, {
+        params: { ...(start ? { startDate: start } : {}), ...(end ? { endDate: end } : {}) },
+        responseType: 'text',
+      });
+      if (win) {
+        win.document.write(res.data);
+        win.document.close();
+      }
+    } catch (err: any) {
+      win?.close();
+      alert(err.response?.data?.message || 'Не удалось сформировать акт сверки');
+    }
   };
 
   // Settings states
@@ -104,19 +119,24 @@ export default function Clients() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [parsedClients, setParsedClients] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ created: number; updated: number; total: number } | null>(null);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    updated: number;
+    total: number;
+    skipped?: Array<{ row: number; name: string; reason: string }>;
+    warnings?: Array<{ row: number; name: string; message: string }>;
+  } | null>(null);
   const [importError, setImportError] = useState('');
 
   const downloadClientTemplate = () => {
     const wb = XLSX.utils.book_new();
     const wsData = [
-      ['Название торговой точки', 'Номер телефона', 'Адрес', 'ИНН (TIN)', 'Юридическое лицо'],
-      ['Магазин "Анис"', '+992900001122', 'ул. Рудаки 45', '020012345', 'ООО "Анис Савдо"'],
-      ['Минимаркет "Шоми Душанбе"', '+992918882233', 'пр. И. Сомони 12', '030098765', 'ИП Каримов С.'],
-      ['Супермаркет "Пайкар Центр"', '+992987773344', 'ул. Айни 8', '010055443', 'ЗАО "Пайкар"'],
+      ['Название торговой точки', 'Номер телефона', 'Адрес', 'ИНН (TIN)', 'Юридическое лицо', 'Канал', 'Агент (логин)', 'Широта', 'Долгота', 'Тип оплаты'],
+      ['Магазин "Анис"', '+992900001122', 'ул. Рудаки 45', '020012345', 'ООО "Анис Савдо"', 'ISFARA', 'agent1', 40.1265, 70.6253, 'CASH'],
+      ['Минимаркет "Шоми Душанбе"', '+992918882233', 'пр. И. Сомони 12', '030098765', 'ИП Каримов С.', 'KONIBODOM', '', '', '', 'CREDIT'],
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 25 }];
+    ws['!cols'] = [{ wch: 30 }, { wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 25 }, { wch: 14 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Шаблон клиентов');
     XLSX.writeFile(wb, 'shablon_klientov_smartsale.xlsx');
   };
@@ -143,11 +163,23 @@ export default function Clients() {
 
         const headers: string[] = rows[0].map((h: any) => String(h || '').trim().toLowerCase());
         
-        const nameIdx = headers.findIndex(h => h.includes('назван') || h.includes('клиент') || h.includes('точка') || h.includes('магазин') || h.includes('name'));
-        const phoneIdx = headers.findIndex(h => h.includes('телефон') || h.includes('тел') || h.includes('phone') || h.includes('номер'));
-        const addressIdx = headers.findIndex(h => h.includes('адрес') || h.includes('address') || h.includes('улиц'));
-        const tinIdx = headers.findIndex(h => h.includes('инн') || h.includes('tin'));
-        const legalIdx = headers.findIndex(h => h.includes('юр') || h.includes('лицо') || h.includes('фирма'));
+        // Each column is matched once, so "Агент (торговый представитель)" is not taken for the phone
+        const taken = new Set<number>();
+        const col = (...keys: string[]) => {
+          const idx = headers.findIndex((h, i) => !taken.has(i) && keys.some(k => h.includes(k)));
+          if (idx !== -1) taken.add(idx);
+          return idx;
+        };
+        const agentIdx = col('агент', 'представител', 'agent');
+        const channelIdx = col('канал', 'сектор', 'группа', 'channel');
+        const latIdx = col('широт', 'latitude', 'lat');
+        const lonIdx = col('долгот', 'longitude', 'lon', 'lng');
+        const paymentIdx = col('оплат', 'payment');
+        const nameIdx = col('назван', 'клиент', 'точка', 'магазин', 'name');
+        const phoneIdx = col('телефон', 'тел', 'phone', 'номер');
+        const addressIdx = col('адрес', 'address', 'улиц');
+        const tinIdx = col('инн', 'tin');
+        const legalIdx = col('юр', 'лицо', 'фирма');
 
         if (nameIdx === -1) {
           setImportError('Не найдена колонка "Название торговой точки" в первой строке таблицы.');
@@ -161,12 +193,18 @@ export default function Clients() {
           const name = String(row[nameIdx]).trim();
           if (!name) continue;
 
+          const cell = (idx: number) => (idx !== -1 && row[idx] !== undefined && row[idx] !== null && String(row[idx]).trim() !== '' ? String(row[idx]).trim() : undefined);
           items.push({
             name,
-            phone: phoneIdx !== -1 && row[phoneIdx] ? String(row[phoneIdx]).trim() : undefined,
-            address: addressIdx !== -1 && row[addressIdx] ? String(row[addressIdx]).trim() : undefined,
-            tin: tinIdx !== -1 && row[tinIdx] ? String(row[tinIdx]).trim() : undefined,
-            legalName: legalIdx !== -1 && row[legalIdx] ? String(row[legalIdx]).trim() : undefined,
+            phone: cell(phoneIdx),
+            address: cell(addressIdx),
+            tin: cell(tinIdx),
+            legalName: cell(legalIdx),
+            channel: cell(channelIdx),
+            agent: cell(agentIdx),
+            latitude: cell(latIdx),
+            longitude: cell(lonIdx),
+            paymentType: cell(paymentIdx),
           });
         }
 
@@ -205,9 +243,14 @@ export default function Clients() {
   const [tin, setTin] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  // latitude/longitude also position the map; hasCoords says whether the point was actually set
   const [latitude, setLatitude] = useState(38.5763);
   const [longitude, setLongitude] = useState(68.7797);
-  const [paymentType, setPaymentType] = useState('cash');
+  const [hasCoords, setHasCoords] = useState(false);
+  const [paymentType, setPaymentType] = useState('CASH');
+  const [channel, setChannel] = useState('');
+  const [agentId, setAgentId] = useState('');
+  const [agentOptions, setAgentOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [creditLimit, setCreditLimit] = useState(0);
   const [priceCategoryId, setPriceCategoryId] = useState('');
   const [error, setError] = useState('');
@@ -249,6 +292,7 @@ export default function Clients() {
     setAddress(fullAddr);
     setLatitude(item.lat);
     setLongitude(item.lon);
+    setHasCoords(true);
     updateMapMarker(item.lat, item.lon);
     if (mapRef.current) {
       mapRef.current.setView([item.lat, item.lon], 16);
@@ -300,6 +344,7 @@ export default function Clients() {
         const latLng = marker.getLatLng();
         setLatitude(parseFloat(latLng.lat.toFixed(6)));
         setLongitude(parseFloat(latLng.lng.toFixed(6)));
+        setHasCoords(true);
       });
 
       map.on('click', (e) => {
@@ -307,6 +352,7 @@ export default function Clients() {
         marker.setLatLng([lat, lng]);
         setLatitude(parseFloat(lat.toFixed(6)));
         setLongitude(parseFloat(lng.toFixed(6)));
+        setHasCoords(true);
       });
     }, 150);
 
@@ -333,6 +379,16 @@ export default function Clients() {
         setDeliveryDriverCanCreateClient(settingsRes.data.deliveryDriverCanCreateClient ?? false);
       }
       
+      // Agents for assigning a client (needs agents:read; without it the field stays empty)
+      api.get('/users')
+        .then((res) => {
+          const list = Array.isArray(res.data) ? res.data : [];
+          setAgentOptions(list
+            .filter((u: any) => (u.role?.name || u.role) === 'SALES_REP')
+            .map((u: any) => ({ id: u.id, name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username })));
+        })
+        .catch(() => setAgentOptions([]));
+
       // Load real price categories from backend
       try {
         const catRes = await api.get('/catalog/price-categories');
@@ -385,7 +441,10 @@ export default function Clients() {
     setAddress(client.address || '');
     setLatitude(parseFloat(client.latitude?.toString() || '38.5763'));
     setLongitude(parseFloat(client.longitude?.toString() || '68.7797'));
-    setPaymentType(client.paymentType || 'cash');
+    setHasCoords(client.latitude !== null && client.latitude !== undefined && client.longitude !== null && client.longitude !== undefined);
+    setPaymentType(normalizePaymentType(client.paymentType));
+    setChannel(client.channel || '');
+    setAgentId(client.agentId || '');
     setCreditLimit(parseFloat(client.creditLimit?.toString() || '0'));
     setPriceCategoryId(client.priceCategoryId || '');
     setShowAddForm(true);
@@ -400,7 +459,10 @@ export default function Clients() {
     setAddress('');
     setLatitude(38.5763);
     setLongitude(68.7797);
-    setPaymentType('cash');
+    setHasCoords(false);
+    setPaymentType('CASH');
+    setChannel('');
+    setAgentId('');
     setCreditLimit(0);
     setPriceCategoryId('');
     setShowAddForm(true);
@@ -415,9 +477,12 @@ export default function Clients() {
       tin: tin || null,
       phone,
       address,
-      latitude: parseFloat(latitude.toString()),
-      longitude: parseFloat(longitude.toString()),
+      // No point picked: the client is saved without coordinates rather than at the map's centre
+      latitude: hasCoords ? parseFloat(latitude.toString()) : null,
+      longitude: hasCoords ? parseFloat(longitude.toString()) : null,
       paymentType,
+      channel: channel || null,
+      agentId: agentId || null,
       creditLimit: parseFloat(creditLimit.toString()),
       priceCategoryId: priceCategoryId || null,
     };
@@ -561,7 +626,7 @@ export default function Clients() {
       c.tin || '—',
       c.phone,
       c.address,
-      `${parseFloat(c.latitude || 0).toFixed(4)}, ${parseFloat(c.longitude || 0).toFixed(4)}`,
+      c.latitude !== null && c.latitude !== undefined ? `${parseFloat(c.latitude).toFixed(4)}, ${parseFloat(c.longitude).toFixed(4)}` : '—',
       parseFloat(c.currentDebt || 0),
       parseFloat(c.creditLimit || 0),
       priceCategories.find(p => p.id === c.priceCategoryId)?.name || 'Базовая розница'
@@ -817,12 +882,13 @@ export default function Clients() {
               <input
                 type="number"
                 step="any"
-                placeholder="Широта (Latitude)*"
-                required
-                value={latitude}
+                placeholder="Широта (необязательно)"
+                value={hasCoords ? latitude : ''}
                 onChange={(e) => {
+                  if (e.target.value === '') { setHasCoords(false); return; }
                   const val = parseFloat(e.target.value) || 0;
                   setLatitude(val);
+                  setHasCoords(true);
                   updateMapMarker(val, longitude);
                 }}
                 className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
@@ -830,12 +896,13 @@ export default function Clients() {
               <input
                 type="number"
                 step="any"
-                placeholder="Долгота (Longitude)*"
-                required
-                value={longitude}
+                placeholder="Долгота (необязательно)"
+                value={hasCoords ? longitude : ''}
                 onChange={(e) => {
+                  if (e.target.value === '') { setHasCoords(false); return; }
                   const val = parseFloat(e.target.value) || 0;
                   setLongitude(val);
+                  setHasCoords(true);
                   updateMapMarker(latitude, val);
                 }}
                 className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
@@ -845,10 +912,30 @@ export default function Clients() {
                 onChange={(e) => setPaymentType(e.target.value)}
                 className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
               >
-                <option value="cash">Наличный расчет</option>
-                <option value="bank_transfer">Безналичный расчет</option>
-                <option value="card">Карта</option>
+                {PAYMENT_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
+              <input
+                type="text"
+                placeholder="Канал / сектор (например, ISFARA)"
+                value={channel}
+                onChange={(e) => setChannel(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              />
+              <select
+                value={agentId}
+                onChange={(e) => setAgentId(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              >
+                <option value="">Агент: не закреплён</option>
+                {agentOptions.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+              {!hasCoords && (
+                <p className="text-[10px] text-[#86868b] md:col-span-2">Координаты не указаны: кликните по карте или выберите адрес из подсказок. Без координат точка сохранится, но не будет на карте и без проверки радиуса при чекине.</p>
+              )}
               <input
                 type="number"
                 placeholder="Кредитный лимит (TJS)"
@@ -1204,7 +1291,7 @@ export default function Clients() {
                     <td className="p-3.5 text-[#37352f] max-w-[200px] truncate" title={item.address}>{item.address}</td>
                     <td className="p-3.5 text-[#86868b] font-mono flex items-center gap-1">
                       <Navigation className="w-3.5 h-3.5 text-[#0071e3]" />
-                      <span>{parseFloat(item.latitude || 0).toFixed(4)}, {parseFloat(item.longitude || 0).toFixed(4)}</span>
+                      <span>{item.latitude !== null && item.latitude !== undefined ? `${parseFloat(item.latitude).toFixed(4)}, ${parseFloat(item.longitude).toFixed(4)}` : 'нет координат'}</span>
                     </td>
                     <td className={`p-3.5 font-bold font-mono ${debt < 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                       <div>{debt < 0 ? `Аванс ${Math.abs(debt).toFixed(2)} TJS` : `${debt.toFixed(2)} TJS`}</div>
@@ -1350,6 +1437,22 @@ export default function Clients() {
                   <div>Всего распознано: <b>{importResult.total}</b></div>
                   <div>Новых добавлено: <b>{importResult.created}</b></div>
                   <div>Обновлено существующих: <b>{importResult.updated}</b></div>
+                  {!!importResult.skipped?.length && (
+                    <div className="pt-2 text-rose-700">
+                      <b>Не загружено строк: {importResult.skipped.length}</b>
+                      {importResult.skipped.slice(0, 20).map((s) => (
+                        <div key={`s${s.row}`}>Строка {s.row}{s.name ? ` «${s.name}»` : ''}: {s.reason}</div>
+                      ))}
+                    </div>
+                  )}
+                  {!!importResult.warnings?.length && (
+                    <div className="pt-2 text-amber-700">
+                      <b>Предупреждения: {importResult.warnings.length}</b>
+                      {importResult.warnings.slice(0, 20).map((w) => (
+                        <div key={`w${w.row}`}>Строка {w.row} «{w.name}»: {w.message}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

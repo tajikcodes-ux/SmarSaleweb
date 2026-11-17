@@ -23,12 +23,30 @@ import {
   Target,
 } from 'lucide-react';
 
+// Cancelled orders and those waiting for a supervisor are not revenue
+const isRevenueOrder = (o: any) => o.status !== 'cancelled' && o.status !== 'on_hold';
+
+// Calendar day in the browser's time zone (Dushanbe is UTC+5: toISOString would shift the day)
+const localDay = (value: string | Date) => {
+  const d = new Date(value);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+/** Real change against yesterday; a dash when there is nothing to compare with. */
+const changeVsYesterday = (today: number, yesterday: number) => {
+  if (!yesterday) return { text: '—', up: today >= 0 };
+  const pct = ((today - yesterday) / yesterday) * 100;
+  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, up: pct >= 0 };
+};
+
 export default function Dashboard() {
   const { selectedBranchId, selectedBrandId, selectedZone } = useScope();
   const [loading, setLoading] = useState(true);
   const [rawOrders, setRawOrders] = useState<any[]>([]);
   const [rawUsers, setRawUsers] = useState<any[]>([]);
   const [rawRoutes, setRawRoutes] = useState<any[]>([]);
+  const [rawYesterdayRoutes, setRawYesterdayRoutes] = useState<any[]>([]);
+  const [agentBases, setAgentBases] = useState<Record<string, number>>({});
   const [rawGps, setRawGps] = useState<any[]>([]);
   const [rawClients, setRawClients] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -40,6 +58,10 @@ export default function Dashboard() {
     totalVisits: 0,
     completedVisits: 0,
     rawSalesVolume: 0,
+    yesterdaySales: 0,
+    yesterdayOrders: 0,
+    yesterdayVisitRate: 0,
+    rawVisitRate: 0,
     akbCount: 0,
     okbCount: 0,
     akbPercentage: 0,
@@ -70,9 +92,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const today = new Date().toISOString().split('T')[0];
+        const today = localDay(new Date());
+        const yesterday = localDay(new Date(Date.now() - 86_400_000));
         const targetMonth = today.substring(0, 7);
-        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes, debtRes, targetsRes] = await Promise.all([
+        const [usersRes, ordersRes, routesRes, gpsRes, photoRes, clientsRes, aiRes, smmRes, debtRes, targetsRes, yRoutesRes, baseRes] = await Promise.all([
           api.get('/users').catch(() => ({ data: [] })),
           api.get('/orders').catch(() => ({ data: [] })),
           api.get('/routes', { params: { date: today } }).catch(() => ({ data: [] })),
@@ -83,7 +106,17 @@ export default function Dashboard() {
           api.get('/smm/leaderboard').catch(() => ({ data: [] })),
           api.get('/clients/debt-aging').catch(() => ({ data: { totalDebt: 0, buckets: { days0_7: 0, days8_15: 0, days16_30: 0, over30: 0 }, debtorsCount: 0, clients: [] } })),
           api.get('/salary/targets', { params: { month: targetMonth } }).catch(() => ({ data: [] })),
+          api.get('/routes', { params: { date: yesterday } }).catch(() => ({ data: [] })),
+          // ОКБ by agent: his assigned clients, or the clients of his routes this month
+          api.post('/reports/run', { rows: ['salesRep'], values: ['acb', 'okb'], startDate: `${targetMonth}-01`, endDate: today }).catch(() => ({ data: null })),
         ]);
+
+        const bases: Record<string, number> = {};
+        for (const row of baseRes?.data?.rows || []) {
+          if (row.salesRepId) bases[row.salesRepId] = Number(row.metrics?.okb || 0);
+        }
+        setAgentBases(bases);
+        setRawYesterdayRoutes(Array.isArray(yRoutesRes.data) ? yRoutesRes.data : []);
 
         if (targetsRes?.data) {
           const items = Array.isArray(targetsRes.data)
@@ -139,7 +172,8 @@ export default function Dashboard() {
 
   // Reactive Scope filtering (Branch / Brand / Zone)
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDay(new Date());
+    const yesterday = localDay(new Date(Date.now() - 86_400_000));
 
     // Helper to calculate revenue for an order respecting selected brand
     const getOrderRevenue = (order: any, brandId: string | null) => {
@@ -167,12 +201,13 @@ export default function Dashboard() {
       });
       return matchBranch && matchZone && matchBrand;
     });
+    const revenueOrders = filteredOrders.filter(isRevenueOrder);
 
     setRecentOrders(filteredOrders.slice(0, 4));
 
     // Aggregate top selling products from filtered orders (filtered by brand if set)
     const productSales: { [key: string]: { quantity: number; revenue: number } } = {};
-    filteredOrders.forEach((order: any) => {
+    revenueOrders.forEach((order: any) => {
       if (Array.isArray(order.items)) {
         order.items.forEach((item: any) => {
           const prod = item.product || {};
@@ -202,9 +237,9 @@ export default function Dashboard() {
     // Compute last 5 days sales history for sparklines
     const dailySales: { [key: string]: number } = {};
     const dailyOrders: { [key: string]: number } = {};
-    filteredOrders.forEach((o: any) => {
+    revenueOrders.forEach((o: any) => {
       if (!o.createdAt) return;
-      const date = o.createdAt.split('T')[0];
+      const date = localDay(o.createdAt);
       const rev = getOrderRevenue(o, selectedBrandId);
       dailySales[date] = (dailySales[date] || 0) + rev;
       dailyOrders[date] = (dailyOrders[date] || 0) + 1;
@@ -213,7 +248,7 @@ export default function Dashboard() {
     const last5Days = Array.from({ length: 5 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (4 - i));
-      return d.toISOString().split('T')[0];
+      return localDay(d);
     });
 
     setSalesSparkline(last5Days.map(date => dailySales[date] || 0));
@@ -233,12 +268,13 @@ export default function Dashboard() {
     setAgents(filteredGps);
     const activeRepsCount = filteredGps.length;
 
-    const todayOrders = filteredOrders.filter((o: any) => {
-      if (!o.createdAt) return false;
-      return o.createdAt.split('T')[0] === today;
-    });
+    const ordersOn = (day: string) => revenueOrders.filter((o: any) => o.createdAt && localDay(o.createdAt) === day);
+    const todayOrders = ordersOn(today);
+    const yesterdayOrders = ordersOn(yesterday);
 
-    const totalSales = filteredOrders.reduce((sum: number, o: any) => sum + getOrderRevenue(o, selectedBrandId), 0);
+    // "Выручка сегодня" is today's revenue only
+    const totalSales = todayOrders.reduce((sum: number, o: any) => sum + getOrderRevenue(o, selectedBrandId), 0);
+    const yesterdaySales = yesterdayOrders.reduce((sum: number, o: any) => sum + getOrderRevenue(o, selectedBrandId), 0);
 
     // --- AKB / OKB Logic ---
     const filteredClients = rawClients.filter((c: any) => {
@@ -251,8 +287,8 @@ export default function Dashboard() {
     });
     const totalClientsCount = filteredClients.length;
 
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const thisMonthOrders = filteredOrders.filter((o: any) => o.createdAt && o.createdAt.startsWith(currentMonth) && o.status !== 'cancelled');
+    const currentMonth = today.slice(0, 7);
+    const thisMonthOrders = revenueOrders.filter((o: any) => o.createdAt && localDay(o.createdAt).startsWith(currentMonth));
 
     const uniqueActiveClients = new Set(thisMonthOrders.map((o: any) => o.clientId || (o.client?.id)));
     const akbCount = uniqueActiveClients.size;
@@ -266,37 +302,47 @@ export default function Dashboard() {
         id: rep.id,
         name: `${rep.firstName} ${rep.lastName}`,
         akb: repAkb,
+        okb: agentBases[rep.id] ?? null,
         sales: repSales,
       };
     }).sort((a: any, b: any) => b.akb - a.akb);
     setAgentsPerformance(performanceData);
 
     // Filter routes by branch and zone
-    const filteredRoutes = rawRoutes.filter((r: any) => {
+    const routeInScope = (r: any) => {
       if (selectedBranchId && r.branchId && r.branchId !== selectedBranchId) return false;
       if (selectedZone) {
         const zoneMatch = r.zone === selectedZone || (r.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
         if (!zoneMatch) return false;
       }
       return true;
-    });
+    };
+    const filteredRoutes = rawRoutes.filter(routeInScope);
     const visitedCount = filteredRoutes.filter((r: any) => r.visited).length;
     const rate = filteredRoutes.length > 0 ? Math.round((visitedCount / filteredRoutes.length) * 100) : 0;
+    const yesterdayRoutes = rawYesterdayRoutes.filter(routeInScope);
+    const yesterdayRate = yesterdayRoutes.length > 0
+      ? Math.round((yesterdayRoutes.filter((r: any) => r.visited).length / yesterdayRoutes.length) * 100)
+      : 0;
 
     setStats({
       agentsCount: `${activeRepsCount} / ${reps.length || 1}`,
-      ordersCount: `${todayOrders.length} (${filteredOrders.length} всего)`,
+      ordersCount: `${todayOrders.length} (${revenueOrders.length} всего)`,
       salesVolume: `${Math.round(totalSales).toLocaleString('ru-RU')} TJS`,
-      visitRate: `${rate}%`,
+      visitRate: filteredRoutes.length > 0 ? `${rate}%` : '—',
       rawOrdersCount: todayOrders.length,
       totalVisits: filteredRoutes.length,
       completedVisits: visitedCount,
       rawSalesVolume: totalSales,
+      yesterdaySales,
+      yesterdayOrders: yesterdayOrders.length,
+      yesterdayVisitRate: yesterdayRoutes.length > 0 ? yesterdayRate : 0,
+      rawVisitRate: rate,
       akbCount,
       okbCount: totalClientsCount,
       akbPercentage,
     });
-  }, [rawOrders, rawUsers, rawRoutes, rawGps, rawClients, selectedBranchId, selectedBrandId, selectedZone]);
+  }, [rawOrders, rawUsers, rawRoutes, rawYesterdayRoutes, rawGps, rawClients, agentBases, selectedBranchId, selectedBrandId, selectedZone]);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -356,48 +402,57 @@ export default function Dashboard() {
   const totalActualRevenue = targetsList.reduce((s, t) => s + Number(t.actualRevenue || 0), 0);
   const revenueProgress = totalTargetRevenue > 0 ? Math.round((totalActualRevenue / totalTargetRevenue) * 100) : 0;
 
+  const avgCheckToday = stats.rawOrdersCount > 0 ? stats.rawSalesVolume / stats.rawOrdersCount : 0;
+  const avgCheckYesterday = stats.yesterdayOrders > 0 ? stats.yesterdaySales / stats.yesterdayOrders : 0;
+  const salesChange = changeVsYesterday(stats.rawSalesVolume, stats.yesterdaySales);
+  const ordersChange = changeVsYesterday(stats.rawOrdersCount, stats.yesterdayOrders);
+  const checkChange = changeVsYesterday(avgCheckToday, avgCheckYesterday);
+  const visitsChange = stats.totalVisits > 0 && stats.yesterdayVisitRate > 0
+    ? { text: `${stats.rawVisitRate - stats.yesterdayVisitRate >= 0 ? '+' : ''}${stats.rawVisitRate - stats.yesterdayVisitRate} п.п.`, up: stats.rawVisitRate >= stats.yesterdayVisitRate }
+    : { text: '—', up: true };
+
   const kpis = [
     {
       title: 'Выручка сегодня',
       value: stats.salesVolume,
-      change: stats.rawSalesVolume > 0 ? '+18.2%' : '0%',
+      change: salesChange.text,
       subText: 'по сравнению с вчера',
       icon: TrendingUp,
       color: 'bg-blue-50 border-blue-100 text-blue-600',
-      trendUp: true,
+      trendUp: salesChange.up,
     },
     {
       title: 'Заказы сегодня',
       value: `${stats.rawOrdersCount} ед.`,
-      change: stats.rawOrdersCount > 0 ? '+12.4%' : '0%',
+      change: ordersChange.text,
       subText: 'по сравнению с вчера',
       icon: ShoppingBag,
       color: 'bg-emerald-50 border-emerald-100 text-emerald-600',
-      trendUp: true,
+      trendUp: ordersChange.up,
     },
     {
       title: 'Средний чек',
-      value: stats.rawOrdersCount > 0 ? `${Math.round(stats.rawSalesVolume / stats.rawOrdersCount)} TJS` : '0 TJS',
-      change: stats.rawSalesVolume > 0 ? '+7.6%' : '0%',
+      value: `${Math.round(avgCheckToday)} TJS`,
+      change: checkChange.text,
       subText: 'по сравнению с вчера',
       icon: Compass,
       color: 'bg-indigo-50 border-indigo-100 text-indigo-600',
-      trendUp: true,
+      trendUp: checkChange.up,
     },
     {
       title: 'Посещения',
       value: stats.visitRate,
-      change: stats.totalVisits > 0 ? '+8.1%' : '0%',
+      change: visitsChange.text,
       subText: 'по сравнению с вчера',
       icon: MapPin,
       color: 'bg-purple-50 border-purple-100 text-purple-600',
-      trendUp: true,
+      trendUp: visitsChange.up,
     },
     {
-      title: totalTargetRevenue > 0 ? 'План выручки (МЕС)' : 'Выполнение плана',
-      value: totalTargetRevenue > 0 ? `${revenueProgress}%` : stats.visitRate,
-      change: totalTargetRevenue > 0 ? `${Math.round(totalActualRevenue).toLocaleString('ru-RU')} / ${Math.round(totalTargetRevenue).toLocaleString('ru-RU')} TJS` : (stats.totalVisits > 0 ? '+14%' : '0%'),
-      subText: totalTargetRevenue > 0 ? 'Квота продаж отдела' : 'по сравнению с вчера',
+      title: 'План выручки (МЕС)',
+      value: totalTargetRevenue > 0 ? `${revenueProgress}%` : '—',
+      change: totalTargetRevenue > 0 ? `${Math.round(totalActualRevenue).toLocaleString('ru-RU')} / ${Math.round(totalTargetRevenue).toLocaleString('ru-RU')} TJS` : 'не задан',
+      subText: totalTargetRevenue > 0 ? 'Квота продаж отдела' : 'задайте план в разделе «Зарплата»',
       icon: totalTargetRevenue > 0 ? Target : Users,
       color: totalTargetRevenue > 0
         ? (revenueProgress >= 100 ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : revenueProgress >= 70 ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-amber-50 border-amber-100 text-amber-600')
@@ -514,6 +569,17 @@ export default function Dashboard() {
     );
   };
 
+  const hour = new Date().getHours();
+  const greeting = hour < 5 ? 'Доброй ночи' : hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
+  const userDisplayName = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      return [u.firstName, u.lastName].filter(Boolean).join(' ') || u.username || 'коллега';
+    } catch {
+      return 'коллега';
+    }
+  })();
+
   const maxSales = Math.max(...salesSparkline, 1);
   const maxOrders = Math.max(...ordersSparkline, 1);
   const visitsSparkline = stats.totalVisits > 0 ? [0, 0, 0, 0, stats.completedVisits] : [0, 0, 0, 0, 0];
@@ -525,7 +591,7 @@ export default function Dashboard() {
       <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div>
           <h2 className="text-xl font-extrabold text-[#1d1d1f] tracking-tight">
-            Доброе утро, admin! 👋
+            {greeting}, {userDisplayName}! 👋
           </h2>
           <p className="text-xs text-[#86868b] mt-1 capitalize">{todayStr}</p>
         </div>
@@ -881,8 +947,8 @@ export default function Dashboard() {
             <div className="bg-white border border-[#e3e3e8] p-5 rounded-2xl shadow-sm">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider">Выручка</span>
-                <span className="text-[10px] font-bold text-emerald-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3 mr-0.5" /> +18.2%
+                <span className={`text-[10px] font-bold flex items-center ${salesChange.text === '—' ? 'text-[#86868b]' : salesChange.up ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {salesChange.text !== '—' && (salesChange.up ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />)} {salesChange.text}
                 </span>
               </div>
               <h4 className="text-base font-extrabold text-[#1d1d1f]">{stats.salesVolume}</h4>
@@ -901,8 +967,8 @@ export default function Dashboard() {
             <div className="bg-white border border-[#e3e3e8] p-5 rounded-2xl shadow-sm">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider">Заказы</span>
-                <span className="text-[10px] font-bold text-emerald-600 flex items-center">
-                  <ArrowUpRight className="w-3 h-3 mr-0.5" /> +12.4%
+                <span className={`text-[10px] font-bold flex items-center ${ordersChange.text === '—' ? 'text-[#86868b]' : ordersChange.up ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {ordersChange.text !== '—' && (ordersChange.up ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />)} {ordersChange.text}
                 </span>
               </div>
               <h4 className="text-base font-extrabold text-[#1d1d1f]">{stats.rawOrdersCount} ед.</h4>
@@ -921,8 +987,8 @@ export default function Dashboard() {
             <div className="bg-white border border-[#e3e3e8] p-5 rounded-2xl shadow-sm">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-bold text-[#86868b] uppercase tracking-wider">Визиты</span>
-                <span className="text-[10px] font-bold text-rose-500 flex items-center">
-                  <TrendingDown className="w-3 h-3 mr-0.5" /> -2.1%
+                <span className={`text-[10px] font-bold flex items-center ${visitsChange.text === '—' ? 'text-[#86868b]' : visitsChange.up ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {visitsChange.text !== '—' && (visitsChange.up ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />)} {visitsChange.text}
                 </span>
               </div>
               <h4 className="text-base font-extrabold text-[#1d1d1f]">
@@ -983,7 +1049,7 @@ export default function Dashboard() {
                 <thead>
                   <tr className="border-b border-[#e3e3e8] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
                     <th className="pb-3 font-semibold">Агент</th>
-                    <th className="pb-3 font-semibold">АКБ (в этом мес)</th>
+                    <th className="pb-3 font-semibold">АКБ / ОКБ (в этом мес)</th>
                     <th className="pb-3 font-semibold text-right">Выручка</th>
                   </tr>
                 </thead>
@@ -996,7 +1062,9 @@ export default function Dashboard() {
                     agentsPerformance.map((rep, i) => (
                       <tr key={i} className="hover:bg-slate-50 transition-colors">
                         <td className="py-3 font-bold text-[#1d1d1f]">{rep.name}</td>
-                        <td className="py-3 text-emerald-600 font-bold">{rep.akb} шт</td>
+                        <td className="py-3 text-emerald-600 font-bold">
+                          {rep.akb}{rep.okb !== null ? ` / ${rep.okb}` : ''} шт
+                        </td>
                         <td className="py-3 text-[#1d1d1f] font-bold text-right">
                           {rep.sales.toLocaleString('ru-RU')} TJS
                         </td>
@@ -1089,12 +1157,12 @@ export default function Dashboard() {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#1d1d1f]">ИИ-Прогнозирование спроса и продаж</h3>
-                <p className="text-[11px] text-[#86868b]">Нейросетевой анализ остатков и прогнозирование закупок на следующую неделю</p>
+                <h3 className="text-sm font-bold text-[#1d1d1f]">Прогноз спроса на неделю</h3>
+                <p className="text-[11px] text-[#86868b]">Средние продажи за 4 недели против остатка на складе</p>
               </div>
             </div>
             <span className="text-[10px] font-bold px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full border border-blue-100">
-              AI Powered
+              По продажам
             </span>
           </div>
 
@@ -1106,7 +1174,9 @@ export default function Dashboard() {
                 <div key={idx} className="p-3.5 bg-[#fbfbfa] dark:bg-[#121214] border border-[#e9e9e7] dark:border-slate-800 rounded-xl space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="font-bold text-xs text-[#1d1d1f] dark:text-white truncate block max-w-[180px]">{item.name}</span>
-                    <span className="text-[10px] font-mono font-bold text-[#0071e3] dark:text-blue-400">Точность: {Math.round(item.confidenceScore * 100)}%</span>
+                    <span className="text-[10px] font-mono font-bold text-[#0071e3] dark:text-blue-400">
+                      {item.basis?.ordersCount ? `${item.basis.ordersCount} зак. за ${item.basis.weeks} нед.` : 'нет продаж'}
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div>
@@ -1115,7 +1185,9 @@ export default function Dashboard() {
                     </div>
                     <div>
                       <span className="text-[#86868b] dark:text-slate-400 block text-[9px]">Прогноз спроса (неделя):</span>
-                      <strong className="text-emerald-700 dark:text-emerald-400 font-mono">~{item.predictedNextWeekDemand} шт.</strong>
+                      <strong className="text-emerald-700 dark:text-emerald-400 font-mono">
+                        {item.predictedNextWeekDemand === null || item.predictedNextWeekDemand === undefined ? '—' : `~${item.predictedNextWeekDemand} шт.`}
+                      </strong>
                     </div>
                   </div>
                   <div className="text-[10px] p-2 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 leading-tight">

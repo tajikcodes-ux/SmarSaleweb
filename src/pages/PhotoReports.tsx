@@ -133,7 +133,7 @@ export default function PhotoReports() {
             latitude: item.latitude ? Number(item.latitude) : undefined,
             longitude: item.longitude ? Number(item.longitude) : undefined,
             clientName: item.visit?.client?.name || 'Торговая точка',
-            clientAddress: item.visit?.client?.address || 'г. Душанбе',
+            clientAddress: item.visit?.client?.address || '',
             agentName: item.visit?.salesRep ? `${item.visit.salesRep.firstName} ${item.visit.salesRep.lastName || ''}`.trim() : 'Торговый агент',
             agentId: item.visit?.salesRepId,
             category: item.category || 'Витрина точки',
@@ -142,7 +142,8 @@ export default function PhotoReports() {
             reviewedBy: item.reviewedBy,
             reviewedAt: item.reviewedAt,
             orderInfo: item.visit?.order ? `Заказ #${item.visit.order.id.slice(0, 5)} • ${item.visit.order.totalAmount} TJS` : undefined,
-            distanceMeters: Math.floor(Math.random() * 15) + 5,
+            // Computed by the server from the photo's GPS and the client's point; null when either is unknown
+            distanceMeters: typeof item.distanceToClientMeters === 'number' ? item.distanceToClientMeters : undefined,
           };
         });
         setPhotos(mapped);
@@ -318,7 +319,7 @@ export default function PhotoReports() {
       'Адрес': p.clientAddress,
       'Категория': p.category || 'Витрина',
       'Координаты GPS': p.latitude && p.longitude ? `${p.latitude}, ${p.longitude}` : 'Не зафиксированы',
-      'Дистанция до двери': p.distanceMeters ? `${p.distanceMeters} м` : 'В радиусе нормы',
+      'Дистанция до двери': typeof p.distanceMeters === 'number' ? `${p.distanceMeters} м` : 'нет данных',
       'Связанный заказ': p.orderInfo || 'Только мерчандайзинг',
       'Статус проверки': p.status === 'approved' ? 'Одобрено' : p.status === 'warning' ? 'Замечание' : 'На проверке',
       'Комментарий супервайзера': p.comment || '-',
@@ -744,7 +745,7 @@ export default function PhotoReports() {
                       </span>
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-0.5 flex-shrink-0">
                         <MapPin className="w-3.5 h-3.5" />
-                        {group.distanceMeters ? `${group.distanceMeters}м` : 'GPS ✓'}
+                        {typeof group.distanceMeters === 'number' ? `${group.distanceMeters}м` : '—'}
                       </span>
                     </div>
 
@@ -820,9 +821,9 @@ export default function PhotoReports() {
                 <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-xs text-white text-[11px] px-3 py-1.5 rounded-xl font-mono flex items-center gap-1.5 border border-white/10">
                   <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                   <span>
-                    {activePhoto.latitude && activePhoto.longitude 
-                      ? `${Number(activePhoto.latitude).toFixed(4)}° N, ${Number(activePhoto.longitude).toFixed(4)}° E • В радиусе ${activePhoto.distanceMeters || 10}м`
-                      : 'GPS подтвержден в радиусе торговой точки'}
+                    {activePhoto.latitude && activePhoto.longitude
+                      ? `${Number(activePhoto.latitude).toFixed(4)}° N, ${Number(activePhoto.longitude).toFixed(4)}° E${typeof activePhoto.distanceMeters === 'number' ? ` • ${activePhoto.distanceMeters} м до точки` : ' • у точки нет координат'}`
+                      : 'Нет GPS-координат снимка'}
                   </span>
                 </div>
               </div>

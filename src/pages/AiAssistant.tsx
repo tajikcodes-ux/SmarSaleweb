@@ -7,8 +7,8 @@ interface ForecastItem {
   sku: string;
   currentStock: number;
   averageWeeklySales: number;
-  predictedNextWeekDemand: number;
-  confidenceScore: number;
+  predictedNextWeekDemand: number | null; // null: no sales in the window, so no forecast
+  basis?: { weeks: number; ordersCount: number; totalSold: number };
   recommendation: string;
 }
 
@@ -127,7 +127,7 @@ export default function AiAssistant() {
         </div>
         <div className="flex gap-2 text-xs font-semibold bg-[#f5f5f7] border border-[#e3e3e8] px-3 py-2 rounded-xl text-[#515154]">
           <Sparkles className="w-4 h-4 text-[#0071e3]" />
-          <span>Модель: SmartSale-Predict-v1.4</span>
+          <span>Прогноз: среднее продаж за 4 недели</span>
         </div>
       </div>
 
@@ -139,8 +139,8 @@ export default function AiAssistant() {
               <BarChart3 className="w-4 h-4 text-[#0071e3]" />
               Прогноз спроса на следующую неделю
             </h3>
-            <span className="text-[10px] bg-[#e8f5e9] text-[#2e7d32] font-bold px-2 py-0.5 rounded-full">
-              Точность: 87.4%
+            <span className="text-[10px] bg-[#f5f5f7] text-[#515154] font-bold px-2 py-0.5 rounded-full">
+              По заказам за 4 недели
             </span>
           </div>
 
@@ -156,7 +156,7 @@ export default function AiAssistant() {
                     <th className="p-4">Товар</th>
                     <th className="p-4 text-center">Продано за неделю (ср)</th>
                     <th className="p-4 text-center">Прогноз спроса</th>
-                    <th className="p-4 text-center">Уверенность AI</th>
+                    <th className="p-4 text-center">Основа</th>
                     <th className="p-4">Рекомендация</th>
                   </tr>
                 </thead>
@@ -171,28 +171,18 @@ export default function AiAssistant() {
                         {item.averageWeeklySales.toFixed(1)} шт
                       </td>
                       <td className="p-4 text-center font-bold text-[#1d1d1f]">
-                        {item.predictedNextWeekDemand} шт
+                        {item.predictedNextWeekDemand === null ? '—' : `${item.predictedNextWeekDemand} шт`}
                       </td>
-                      <td className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <div className="w-12 h-1.5 bg-[#e3e3e8] rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full ${item.confidenceScore > 0.8 ? 'bg-green-500' : 'bg-yellow-500'}`}
-                              style={{ width: `${item.confidenceScore * 100}%` }}
-                            />
-                          </div>
-                          <span className="font-bold text-[10px] text-[#515154]">
-                            {(item.confidenceScore * 100).toFixed(0)}%
-                          </span>
-                        </div>
+                      <td className="p-4 text-center text-[10px] text-[#515154]">
+                        {item.basis?.ordersCount ? `${item.basis.ordersCount} зак. за ${item.basis.weeks} нед.` : 'нет продаж'}
                       </td>
                       <td className="p-4">
                         <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${
-                          item.predictedNextWeekDemand > 80 
-                            ? 'bg-[#ffebee] text-[#c62828] border border-[#ffcdd2]' 
+                          item.predictedNextWeekDemand !== null && item.currentStock < item.predictedNextWeekDemand
+                            ? 'bg-[#ffebee] text-[#c62828] border border-[#ffcdd2]'
                             : 'bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9]'
                         }`}>
-                          {item.recommendation.split(':')[0]}
+                          {item.recommendation}
                         </span>
                       </td>
                     </tr>

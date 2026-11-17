@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
+import StockJournal from '../components/StockJournal';
 import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
 
 export default function Warehouse() {
@@ -727,6 +728,7 @@ export default function Warehouse() {
               ))}
             </div>
           )}
+          {warehouses.length > 0 && <StockJournal warehouses={warehouses} />}
         </>
       )}
 

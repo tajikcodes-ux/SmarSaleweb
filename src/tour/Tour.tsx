@@ -469,7 +469,16 @@ export function TourInvite({ user }: { user: { id?: string; username?: string } 
     } catch {
       return;
     }
-    const t = window.setTimeout(() => setShow(true), 1600);
+    // The invitation is offered once: Layout remounts on every route, so it is marked seen as soon
+    // as it appears, not only when a button is pressed. The tour stays available from the header.
+    const t = window.setTimeout(() => {
+      try {
+        localStorage.setItem(tourSeenKey(user), '1');
+      } catch {
+        /* ignore */
+      }
+      setShow(true);
+    }, 1600);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -487,7 +496,7 @@ export function TourInvite({ user }: { user: { id?: string; username?: string } 
   };
 
   return createPortal(
-    <div className="tour-invite fixed bottom-6 right-6 z-[1500] w-[340px] max-w-[calc(100vw-24px)] rounded-3xl bg-white dark:bg-[#1f1f23] border border-[#e3e3e8] dark:border-[#333] shadow-2xl p-5">
+    <div className="tour-invite fixed bottom-6 left-6 z-[1500] w-[340px] max-w-[calc(100vw-24px)] rounded-3xl bg-white dark:bg-[#1f1f23] border border-[#e3e3e8] dark:border-[#333] shadow-2xl p-5">
       <div className="flex items-start gap-3">
         <div
           className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0b57d0] to-[#6d28d9] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0"

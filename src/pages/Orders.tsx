@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
-import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Scale, Droplet, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle, Truck, DollarSign, ArrowRight } from 'lucide-react';
+import { ShoppingCart, Calendar, CreditCard, Plus, FileText, Printer, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw, X, Download, Clock, CheckCircle2, AlertTriangle, Truck, DollarSign, ArrowRight } from 'lucide-react';
 import { clientBalance } from '../utils/clientBalance';
+import { isCashPaymentType } from '../utils/paymentType';
 
 export default function Orders() {
   const { selectedBranchId, selectedBrandId, selectedZone: globalZone } = useScope();
@@ -47,10 +48,10 @@ export default function Orders() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedClient, setSelectedClient] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
-  const [workZone, setWorkZone] = useState('Сино');
+  const [workZone, setWorkZone] = useState('');
   const [isNewZone, setIsNewZone] = useState(false);
   const [newZoneInput, setNewZoneInput] = useState('');
-  const [contract, setContract] = useState('Договор №1');
+  const [contract, setContract] = useState('');
   const [notes, setNotes] = useState('');
   const [orderItems, setOrderItems] = useState<{ productId: string; quantity: number; price: number }[]>([]);
   const [printOrder, setPrintOrder] = useState<any>(null);
@@ -226,7 +227,7 @@ export default function Orders() {
 
       const orderRows = (run.orders || []).map((o: any, idx: number) => {
         const client = o.client || {};
-        const isCash = client.paymentType === 'CASH' || !client.paymentType;
+        const isCash = isCashPaymentType(client.paymentType);
         const totalItemsCount = (o.items || []).reduce((sum: number, it: any) => sum + Number(it.quantity || 0), 0);
 
         return `
@@ -510,23 +511,22 @@ export default function Orders() {
     }
   };
 
+  // Zone and contract are what the web form saved with the order; the zone falls back to the client's
+  // channel. Nothing is made up: an order without them shows an empty cell.
   const parseOrderDetails = (order: any) => {
     try {
       if (order.notes && order.notes.startsWith('{')) {
         const parsed = JSON.parse(order.notes);
         return {
-          workZone: parsed.workZone || 'Сино',
-          contract: parsed.contract || 'Договор №1',
+          workZone: parsed.workZone || order.client?.channel || '',
+          contract: parsed.contract || '',
           userNotes: parsed.userNotes || '',
         };
       }
     } catch (e) {}
-    const mockZones = ['Сино', 'Фирдавси', 'И. Сомони', 'Шохмансур', 'Худжанд'];
-    const mockContracts = ['Договор №1', 'Договор №2'];
-    const seed = order.id.charCodeAt(0) + order.id.charCodeAt(1);
     return {
-      workZone: mockZones[seed % mockZones.length],
-      contract: mockContracts[seed % mockContracts.length],
+      workZone: order.client?.channel || '',
+      contract: '',
       userNotes: order.notes || '',
     };
   };
@@ -542,9 +542,7 @@ export default function Orders() {
   });
 
   // Collect unique work zones dynamically from database orders
-  const dynamicZones = Array.from(new Set(processedOrders.map((o) => o.workZone))).filter(Boolean);
-  const defaultPresets = ['Сино', 'Фирдавси', 'И. Сомони', 'Шохмансур', 'Худжанд'];
-  const allZones = Array.from(new Set([...defaultPresets, ...dynamicZones]));
+  const allZones = Array.from(new Set(processedOrders.map((o) => o.workZone))).filter(Boolean) as string[];
 
   // Dynamic counts for status chips
   const todayStr = new Date().toISOString().substring(0, 10);
@@ -682,8 +680,7 @@ export default function Orders() {
 
   const totalAmountSum = filteredOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount.toString()), 0);
   const totalDeals = filteredOrders.length;
-  const totalWeight = Math.round(totalAmountSum * 0.15);
-  const totalVolume = Math.round(totalAmountSum * 0.11);
+
 
   if (loading) {
     return (
@@ -1086,7 +1083,7 @@ export default function Orders() {
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-[#6a6a65]">Рабочая зона*</label>
+                  <label className="text-[10px] font-bold text-[#6a6a65]">Рабочая зона</label>
                   <select
                     value={isNewZone ? 'add_new' : workZone}
                     onChange={(e) => {
@@ -1101,6 +1098,7 @@ export default function Orders() {
                     }}
                     className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] cursor-pointer"
                   >
+                    <option value="">— не указана —</option>
                     {allZones.map((zone) => (
                       <option key={zone} value={zone}>{zone}</option>
                     ))}
@@ -1122,15 +1120,14 @@ export default function Orders() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-bold text-[#6a6a65]">Договор*</label>
-                  <select
+                  <label className="text-[10px] font-bold text-[#6a6a65]">Договор</label>
+                  <input
+                    type="text"
+                    placeholder="Номер договора (необязательно)"
                     value={contract}
                     onChange={(e) => setContract(e.target.value)}
-                    className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3]"
-                  >
-                    <option value="Договор №1">Договор №1 (Предоплата)</option>
-                    <option value="Договор №2">Договор №2 (Консигнация)</option>
-                  </select>
+                    className="bg-[#fbfbfa] border border-[#e9e9e7] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] placeholder-slate-400"
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1">
@@ -1592,17 +1589,7 @@ export default function Orders() {
               <strong className="text-[#1d1d1f] font-mono">{totalDeals}</strong>
             </div>
 
-            <div className="flex items-center gap-1.5 border-l border-[#e9e9e7] pl-4">
-              <Scale className="w-4 h-4 text-[#86868b]" />
-              <span className="text-[#86868b]">Вес:</span>
-              <strong className="text-[#1d1d1f] font-mono">{totalWeight} кг</strong>
-            </div>
 
-            <div className="flex items-center gap-1.5 border-l border-[#e9e9e7] pl-4">
-              <Droplet className="w-4 h-4 text-[#86868b]" />
-              <span className="text-[#86868b]">Объем:</span>
-              <strong className="text-[#1d1d1f] font-mono">{totalVolume} л</strong>
-            </div>
           </div>
 
           <div className="flex items-center gap-2 pl-4">
@@ -1929,7 +1916,7 @@ export default function Orders() {
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <span className="underline font-bold">Покупатель:</span> {client.name} {client.address} тел {client.phone || '—'}
-                    <div><span className="underline font-bold">Договор:</span> {order.contract || 'Договор №1'}</div>
+                    <div><span className="underline font-bold">Договор:</span> {order.contract || '—'}</div>
                   </div>
                   <div className="text-right font-bold text-xs">
                     Наличка
@@ -2165,7 +2152,7 @@ export default function Orders() {
                   const selOrders = orders.filter((o) => selectedOrderIds.includes(o.id));
                   const total = selOrders.reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
                   const cashExp = selOrders
-                    .filter((o) => o.client?.paymentType === 'CASH' || !o.client?.paymentType)
+                    .filter((o) => isCashPaymentType(o.client?.paymentType))
                     .reduce((sum, o) => sum + Number(o.totalAmount || 0), 0);
                   return (
                     <div>

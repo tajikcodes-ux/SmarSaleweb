@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save, Target, Plus, Edit2, Sparkles, Printer, Download, CreditCard, FileText, X } from 'lucide-react';
 
+// min_visit_rate is kept in percent (85 = 85 %), the same as the server's defaults without a saved setting
+const defaultMinVisitRate = (role?: string) => (role === 'SUPERVISOR' ? 90 : role === 'SALES_REP' ? 85 : 0);
+
 export default function Salary() {
   const [activeTab, setActiveTab] = useState<'sheet' | 'settings' | 'targets'>('sheet');
   const [calculations, setCalculations] = useState<any[]>([]);
@@ -250,8 +253,9 @@ export default function Salary() {
     const visitRatePercent = Number(item.visitRate) * 100;
     
     // Find dynamic threshold from settingsList, else fallback
-    const rule = settingsList.find((s: any) => s.role === item.user?.role);
-    const minRequired = rule ? parseFloat(rule.minVisitRate) : (item.user?.role === 'SUPERVISOR' ? 90 : 85);
+    const roleName = typeof item.user?.role === 'object' && item.user?.role !== null ? (item.user.role as any).name : item.user?.role;
+    const rule = settingsList.find((s: any) => s.role === roleName);
+    const minRequired = rule ? parseFloat(rule.minVisitRate) : defaultMinVisitRate(roleName);
     
     return visitRatePercent >= minRequired;
   }).length;
@@ -504,7 +508,7 @@ export default function Salary() {
                     ? (item.user.role as any).name
                     : item.user?.role;
                   const rule = settingsList.find((s: any) => s.role === userRoleName);
-                  const minRequired = rule ? parseFloat(rule.minVisitRate) : (userRoleName === 'SUPERVISOR' ? 90 : 85);
+                  const minRequired = rule ? parseFloat(rule.minVisitRate) : defaultMinVisitRate(userRoleName);
                   const kpiPassed = visitRatePercent >= minRequired;
                   const targetBonusNum = Number(item.targetBonus || 0);
 

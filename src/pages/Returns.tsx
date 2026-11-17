@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
-import { RotateCcw, CheckCircle, Plus, Filter, FileText, Scale, Droplet } from 'lucide-react';
+import { RotateCcw, CheckCircle, Plus, Filter, FileText } from 'lucide-react';
 
 export default function Returns() {
   const [returns, setReturns] = useState<any[]>([]);
@@ -115,24 +115,16 @@ export default function Returns() {
     }
   };
 
+  // The zone is the client's channel from the base; a client without one has no zone
   const processedReturns = returns.map((r) => {
-    // Determine a zone from client address or fallback
     const matchedClient = clients.find((c) => c.id === r.clientId);
-    let workZone = 'Сино';
-    if (matchedClient) {
-      if (matchedClient.address.includes('Сомони')) workZone = 'И. Сомони';
-      else if (matchedClient.address.includes('Фирдавси')) workZone = 'Фирдавси';
-      else if (matchedClient.address.includes('Шохмансур')) workZone = 'Шохмансур';
-      else if (matchedClient.address.includes('Худжанд')) workZone = 'Худжанд';
-    }
     return {
       ...r,
-      workZone,
+      workZone: matchedClient?.channel || '',
     };
   });
 
-  const defaultPresets = ['Сино', 'Фирдавси', 'И. Сомони', 'Шохмансур', 'Худжанд'];
-  const allZones = Array.from(new Set([...defaultPresets, ...processedReturns.map((r) => r.workZone)]));
+  const allZones = Array.from(new Set(processedReturns.map((r) => r.workZone))).filter(Boolean) as string[];
 
   const filteredReturns = processedReturns.filter((r) => {
     const zoneMatch = selectedZone === 'all' || r.workZone === selectedZone;
@@ -150,8 +142,7 @@ export default function Returns() {
     return sum + items.reduce((iSum: number, item: any) => iSum + parseFloat(item.quantity || 0), 0);
   }, 0);
 
-  const totalWeight = totalReturnedQty * 1.5; // Calculated based on 1.5 kg per product unit
-  const totalVolume = totalReturnedQty * 0.003; // Calculated based on 0.003 m3 per product unit
+
 
   return (
     <div className="space-y-6">
@@ -252,7 +243,7 @@ export default function Returns() {
                       {ret.salesRep ? `${ret.salesRep.firstName} ${ret.salesRep.lastName}` : 'Неизвестно'}
                     </td>
                     <td className="px-6 py-4 text-xs font-medium text-[#37352f]">
-                      {ret.workZone}
+                      {ret.workZone || '—'}
                     </td>
                     <td className="px-6 py-4 text-xs text-[#6a6a65] italic">
                       {ret.reason}
@@ -333,14 +324,8 @@ export default function Returns() {
               <span className="font-bold text-[#1d1d1f]">{totalDeals}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Scale className="w-3.5 h-3.5 text-[#86868b]" />
-              <span className="text-[#86868b]">Вес:</span>
-              <span className="font-bold text-[#1d1d1f]">{totalWeight.toFixed(1)} кг</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Droplet className="w-3.5 h-3.5 text-[#86868b]" />
-              <span className="text-[#86868b]">Объем:</span>
-              <span className="font-bold text-[#1d1d1f]">{totalVolume.toFixed(1)} л</span>
+              <span className="text-[#86868b]">Единиц товара:</span>
+              <span className="font-bold text-[#1d1d1f]">{totalReturnedQty.toLocaleString('ru-RU')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[#86868b]">Сумма возвратов:</span>

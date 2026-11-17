@@ -196,7 +196,7 @@ export default function Landing() {
               Возможности
             </button>
             <button onClick={() => scrollTo('integration-1c')} className="hover:text-[#0b57d0] transition-colors">
-              Связка с 1С
+              Перенос данных
             </button>
             <button onClick={() => scrollTo('comparison')} className="hover:text-[#0b57d0] transition-colors">
               Сравнение
@@ -256,7 +256,7 @@ export default function Landing() {
               Возможности системы
             </button>
             <button onClick={() => scrollTo('integration-1c')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
-              Связка с 1С (15 минут)
+              Перенос данных из Excel и 1С
             </button>
             <button onClick={() => scrollTo('comparison')} className="block w-full text-left py-1.5 font-semibold text-slate-700 text-sm">
               Сравнение решений
@@ -326,22 +326,22 @@ export default function Landing() {
               </h1>
 
               <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-xl">
-                Единая система для дистрибьюторов: приложение агента, склад, честный GPS-контроль и быстрая связка с 1С без программистов.
+                Единая система для дистрибьюторов: приложение агента, склад, честный GPS-контроль и загрузка товаров и клиентов из Excel без программистов.
               </p>
 
               {/* 3 Clean Highlight Cards */}
               <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
                   <div className="text-[10px] font-bold text-[#0b57d0] uppercase tracking-wider">GPS-контроль</div>
-                  <div className="text-xs font-bold text-slate-900 mt-0.5">Радиус визита 25м</div>
+                  <div className="text-xs font-bold text-slate-900 mt-0.5">Чекин в радиусе 150 м</div>
                 </div>
                 <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
                   <div className="text-[10px] font-bold text-rose-600 uppercase tracking-wider">Стоп-лист</div>
                   <div className="text-xs font-bold text-slate-900 mt-0.5">Защита от должников</div>
                 </div>
                 <div className="bg-white border border-slate-200/90 rounded-xl p-3 shadow-2xs">
-                  <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Связка с 1С</div>
-                  <div className="text-xs font-bold text-slate-900 mt-0.5">Подключение за 15 мин</div>
+                  <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Импорт из Excel</div>
+                  <div className="text-xs font-bold text-slate-900 mt-0.5">Товары и клиенты</div>
                 </div>
               </div>
 
@@ -403,27 +403,27 @@ export default function Landing() {
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-950 text-blue-300 text-xs font-bold mb-3 border border-blue-800">
                 <Database className="w-4 h-4 text-blue-400" />
-                <span>Интеграция с учетной системой</span>
+                <span>Перенос данных</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                «А как это свяжется с 1С?» — Легко и за 15 минут
+                «А как перенести базу из 1С?» — через Excel
               </h2>
               <p className="mt-2 text-slate-300 text-xs sm:text-sm leading-relaxed">
-                Без риска для базы и без переписывания конфигураций. Подключение через стандартную внешнюю обработку (1С:УТ, 1С:Бухгалтерия или МойСклад).
+                Выгрузите номенклатуру и клиентов из 1С или МойСклад в Excel и загрузите в SmartSale. Прямой обмен с 1С пока в разработке.
               </p>
 
               <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
-                  <div className="font-bold text-emerald-400 text-sm">🛡️ База нетронута</div>
-                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Никаких правок в конфигурации. Проводки в полной безопасности.</div>
+                  <div className="font-bold text-emerald-400 text-sm">📦 Товары</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Артикул, цена, себестоимость, категория и штрихкод из одной таблицы.</div>
                 </div>
                 <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
-                  <div className="font-bold text-emerald-400 text-sm">⚡ 1 клик — накладные</div>
-                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Сотни заказов агентов создаются документами в 1С без ручного ввода.</div>
+                  <div className="font-bold text-emerald-400 text-sm">🏪 Клиенты</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Канал, агент и координаты, если они есть. Без координат точка тоже загрузится.</div>
                 </div>
                 <div className="bg-slate-800/90 border border-slate-700/80 p-3.5 rounded-xl">
-                  <div className="font-bold text-emerald-400 text-sm">🔄 Авто-обмен</div>
-                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">Цены, остатки и стоп-листы сразу у агентов на смартфонах.</div>
+                  <div className="font-bold text-amber-300 text-sm">🔄 Обмен с 1С</div>
+                  <div className="text-slate-400 text-[11px] mt-1 leading-snug">В разработке. Пока отчёты и акты сверки выгружаются в Excel.</div>
                 </div>
               </div>
             </div>
@@ -437,18 +437,18 @@ export default function Landing() {
               <div className="mt-4 space-y-3 text-xs font-sans">
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center justify-between">
                   <div>
-                    <div className="text-white font-bold">1С:Предприятие / Склад</div>
-                    <div className="text-[10px] text-slate-400">Цены, остатки, список должников</div>
+                    <div className="text-white font-bold">1С / МойСклад / Excel</div>
+                    <div className="text-[10px] text-slate-400">Номенклатура, цены, клиенты</div>
                   </div>
-                  <span className="text-emerald-400 font-bold text-[11px]">➔ Выгрузка</span>
+                  <span className="text-emerald-400 font-bold text-[11px]">➔ Файл Excel</span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-[#0b57d0]/20 border border-blue-500/40 flex items-center justify-between">
                   <div>
                     <div className="text-white font-bold">Сервер SmartSale Cloud</div>
-                    <div className="text-[10px] text-blue-200">Мгновенный обмен через безопасный API</div>
+                    <div className="text-[10px] text-blue-200">Импорт с проверкой каждой строки</div>
                   </div>
-                  <span className="text-blue-300 font-bold text-[11px]">↔ Автоматически</span>
+                  <span className="text-blue-300 font-bold text-[11px]">➔ Справочники</span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-700 flex items-center justify-between">
@@ -456,7 +456,7 @@ export default function Landing() {
                     <div className="text-white font-bold">Телефоны торговых агентов</div>
                     <div className="text-[10px] text-slate-400">Заказы, координаты, чеки, возвраты</div>
                   </div>
-                  <span className="text-emerald-400 font-bold text-[11px]">➔ В накладные</span>
+                  <span className="text-emerald-400 font-bold text-[11px]">➔ Отчёты в Excel</span>
                 </div>
               </div>
             </div>
@@ -755,7 +755,7 @@ export default function Landing() {
                   </p>
                   <div className="mt-3.5 flex flex-wrap gap-2 text-xs">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
-                      📍 Заказ строго в радиусе 25м
+                      📍 Чекин в радиусе 150 м
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 font-semibold border border-slate-200">
                       ⏱️ Учет времени стоянок (P 19м)
@@ -1131,7 +1131,7 @@ export default function Landing() {
                 <tr>
                   <td className="py-3 px-5 font-semibold text-slate-900">Защита от фейковых визитов</td>
                   <td className="py-3 px-5 text-center font-bold text-emerald-600 bg-blue-50/40 border-x border-blue-100">
-                    ✅ Радиус 25м + блокировка Mock GPS
+                    ✅ Радиус 150 м + блокировка Mock GPS
                   </td>
                   <td className="py-3 px-5 text-center text-emerald-600">✅ Базовый GPS</td>
                   <td className="py-3 px-5 text-center text-slate-400">❌ Отсутствует</td>
@@ -1379,7 +1379,7 @@ export default function Landing() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span>Готовая связка с 1С за 15 минут</span>
+                  <span>Импорт товаров и клиентов из Excel</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />

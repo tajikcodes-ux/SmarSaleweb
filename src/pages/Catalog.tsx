@@ -35,7 +35,7 @@ export default function Catalog() {
   const [showProcurementForm, setShowProcurementForm] = useState(false);
   const [procSupplierId, setProcSupplierId] = useState('');
   const [procWarehouseId, setProcWarehouseId] = useState('');
-  const [procItems, setProcItems] = useState<Array<{ productId: string; quantity: number; price: number }>>([]);
+  const [procItems, setProcItems] = useState<Array<{ productId: string; quantity: number; price: number; batchNumber?: string; expiryDate?: string }>>([]);
 
   // Movements State
   const [movements, setMovements] = useState<any[]>([]);
@@ -49,20 +49,25 @@ export default function Catalog() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [parsedProducts, setParsedProducts] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ created: number; updated: number; total: number } | null>(null);
+  const [importResult, setImportResult] = useState<{
+    created: number;
+    updated: number;
+    total: number;
+    skipped?: Array<{ row: number; name: string; reason: string }>;
+  } | null>(null);
   const [importError, setImportError] = useState('');
 
   const downloadProductTemplate = () => {
     const wb = XLSX.utils.book_new();
     const wsData = [
-      ['Название товара', 'Артикул', 'Цена', 'Ед. изм.', 'Категория', 'Штрихкод'],
-      ['Вода минеральная 0.5л', 'SKU-001', 3.50, 'шт', 'Напитки', '482000001001'],
-      ['Сок Яблочный 1л', 'SKU-002', 12.00, 'шт', 'Напитки', '482000001002'],
-      ['Шоколад Алёнка 100г', 'SKU-003', 9.50, 'шт', 'Кондитерские изделия', '482000001003'],
-      ['Печенье Овсяное 300г', 'SKU-004', 8.00, 'упак', 'Кондитерские изделия', '482000001004'],
+      ['Название товара', 'Артикул', 'Цена', 'Себестоимость', 'Ед. изм.', 'Категория', 'Штрихкод'],
+      ['Вода минеральная 0.5л', 'SKU-001', 3.50, 2.40, 'шт', 'Напитки', '482000001001'],
+      ['Сок Яблочный 1л', 'SKU-002', 12.00, 8.10, 'шт', 'Напитки', '482000001002'],
+      ['Шоколад Алёнка 100г', 'SKU-003', 9.50, 6.00, 'шт', 'Кондитерские изделия', '482000001003'],
+      ['Печенье Овсяное 300г', 'SKU-004', 8.00, 5.20, 'упак', 'Кондитерские изделия', '482000001004'],
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 20 }];
+    ws['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 25 }, { wch: 20 }];
     XLSX.utils.book_append_sheet(wb, ws, 'Шаблон товаров');
     XLSX.writeFile(wb, 'shablon_tovarov_smartsale.xlsx');
   };
@@ -89,9 +94,10 @@ export default function Catalog() {
 
         const headers: string[] = rows[0].map((h: any) => String(h || '').trim().toLowerCase());
         
+        const costIdx = headers.findIndex(h => h.includes('себестоим') || h.includes('закуп') || h.includes('cost'));
         const nameIdx = headers.findIndex(h => h.includes('назван') || h.includes('наименов') || h.includes('товар') || h.includes('name'));
-        const skuIdx = headers.findIndex(h => h.includes('артикул') || h.includes('sku') || h.includes('код'));
-        const priceIdx = headers.findIndex(h => h.includes('цена') || h.includes('стоимост') || h.includes('price'));
+        const skuIdx = headers.findIndex(h => h.includes('артикул') || h.includes('sku') || (h.includes('код') && !h.includes('штрих')));
+        const priceIdx = headers.findIndex((h, i) => i !== costIdx && (h.includes('цена') || h.includes('стоимост') || h.includes('price')));
         const unitIdx = headers.findIndex(h => h.includes('ед') || h.includes('изм') || h.includes('unit'));
         const catIdx = headers.findIndex(h => h.includes('категор') || h.includes('бренд') || h.includes('category'));
         const barcodeIdx = headers.findIndex(h => h.includes('штрих') || h.includes('barcode'));
@@ -111,7 +117,9 @@ export default function Catalog() {
           items.push({
             name,
             sku: skuIdx !== -1 && row[skuIdx] ? String(row[skuIdx]).trim() : undefined,
-            price: priceIdx !== -1 ? Number(row[priceIdx]) || 0 : 0,
+            // A missing or zero price is sent as is: the server skips such rows and reports them
+            price: priceIdx !== -1 ? Number(String(row[priceIdx] ?? '').replace(',', '.')) || 0 : 0,
+            costPrice: costIdx !== -1 && row[costIdx] !== undefined && row[costIdx] !== '' ? Number(String(row[costIdx]).replace(',', '.')) : undefined,
             unit: unitIdx !== -1 && row[unitIdx] ? String(row[unitIdx]).trim() : 'pcs',
             categoryName: catIdx !== -1 && row[catIdx] ? String(row[catIdx]).trim() : undefined,
             barcode: barcodeIdx !== -1 && row[barcodeIdx] ? String(row[barcodeIdx]).trim() : undefined,
@@ -1849,6 +1857,31 @@ export default function Catalog() {
                       className="w-28 bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-2.5 text-xs"
                     />
 
+                    {/* Batch and expiry go onto the stock row, so FEFO sells the earliest date first */}
+                    <input
+                      type="text"
+                      placeholder="Партия"
+                      value={item.batchNumber || ''}
+                      onChange={(e) => {
+                        const next = [...procItems];
+                        next[idx].batchNumber = e.target.value;
+                        setProcItems(next);
+                      }}
+                      className="w-28 bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-2.5 text-xs"
+                    />
+
+                    <input
+                      type="date"
+                      title="Срок годности"
+                      value={item.expiryDate || ''}
+                      onChange={(e) => {
+                        const next = [...procItems];
+                        next[idx].expiryDate = e.target.value;
+                        setProcItems(next);
+                      }}
+                      className="w-36 bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl p-2.5 text-xs"
+                    />
+
                     <button
                       type="button"
                       onClick={() => setProcItems(procItems.filter((_, i) => i !== idx))}
@@ -2190,6 +2223,14 @@ export default function Catalog() {
                   <div>Всего распознано: <b>{importResult.total}</b></div>
                   <div>Новых создано: <b>{importResult.created}</b></div>
                   <div>Обновлено существующих: <b>{importResult.updated}</b></div>
+                  {!!importResult.skipped?.length && (
+                    <div className="pt-2 text-rose-700">
+                      <b>Не загружено строк: {importResult.skipped.length}</b>
+                      {importResult.skipped.slice(0, 20).map((s) => (
+                        <div key={s.row}>Строка {s.row}{s.name ? ` «${s.name}»` : ''}: {s.reason}</div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2217,7 +2258,7 @@ export default function Catalog() {
                           <tr key={i} className="hover:bg-gray-50/50">
                             <td className="p-2 font-medium text-gray-900">{p.name}</td>
                             <td className="p-2 text-gray-600">{p.sku || '—'}</td>
-                            <td className="p-2 font-semibold text-emerald-700">{p.price}</td>
+                            <td className="p-2 font-semibold text-emerald-700">{p.price > 0 ? p.price : <span className="text-rose-600">нет цены: строка будет пропущена</span>}</td>
                             <td className="p-2 text-gray-600">{p.categoryName || 'Общая'}</td>
                           </tr>
                         ))}
