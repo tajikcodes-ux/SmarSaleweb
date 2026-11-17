@@ -100,6 +100,12 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
 
   const refreshScopeData = useCallback(async () => {
     if (!recall('access_token')) return;
+    // The platform admin has no company, so there are no branches, sectors or brands to load
+    try {
+      if (JSON.parse(recall('user') || '{}').role === 'SUPER_ADMIN') return;
+    } catch {
+      // a broken stored user is treated as a regular one
+    }
 
     setLoading(true);
     try {
@@ -152,19 +158,12 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     window.addEventListener('smartsale:auth-change', handleAuthChange);
     window.addEventListener('focus', handleAuthChange);
 
-    const timer = setInterval(() => {
-      if (recall('access_token') && branches.length === 0) {
-        refreshScopeData();
-      }
-    }, 2000);
-
     return () => {
       window.removeEventListener('storage', handleAuthChange);
       window.removeEventListener('smartsale:auth-change', handleAuthChange);
       window.removeEventListener('focus', handleAuthChange);
-      clearInterval(timer);
     };
-  }, [refreshScopeData, branches.length]);
+  }, [refreshScopeData]);
 
   // Zones of the selected branch; sectors without a branch are shown everywhere
   const zones = useMemo(
