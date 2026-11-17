@@ -27,6 +27,9 @@ import {
   Share2,
   MessageSquare,
   Sun,
+  CalendarDays,
+  Target,
+  Map as MapIcon,
   Moon,
   Camera,
   Compass,
@@ -182,6 +185,8 @@ export default function Layout({ children }: LayoutProps) {
       items: [
         { path: '/agents', label: 'Агенты', icon: Users },
         { path: '/map', label: 'Карта и GPS', icon: MapPin },
+        { path: '/route-planner', label: 'Планировщик маршрутов', icon: CalendarDays },
+        { path: '/coverage', label: 'Покрытие ОКБ', icon: Target },
         { path: '/photo-reports', label: 'Фотоконтроль', icon: Camera },
         { path: '/tasks', label: 'Задачи', icon: CheckSquare },
         { path: '/salary', label: 'Зарплаты', icon: Coins },
@@ -192,6 +197,7 @@ export default function Layout({ children }: LayoutProps) {
       title: 'Управление',
       items: [
         { path: '/clients', label: 'Клиенты', icon: UserCheck },
+        { path: '/territory', label: 'Секторы и импорт', icon: MapIcon },
         { path: '/branches', label: 'Филиалы', icon: MapPin },
         { path: '/roles', label: 'Управление ролями', icon: Shield },
         { path: '/audit-logs', label: 'Журнал Аудита', icon: Shield },
@@ -230,6 +236,9 @@ export default function Layout({ children }: LayoutProps) {
       '/warehouse': 'warehouse',
       '/agents': 'agents',
       '/map': 'map',
+      '/route-planner': 'map',
+      '/coverage': 'reports',
+      '/territory': 'clients',
       '/photo-reports': 'photo_reports',
       '/tasks': 'tasks',
       '/salary': 'salary',
@@ -248,12 +257,14 @@ export default function Layout({ children }: LayoutProps) {
 
         const resource = resourceMap[item.path];
         if (!resource) return false;
+        // Planning pages need the right to change routes or clients, not just to see them
+        const action = ({ '/route-planner': 'assign_routes', '/territory': 'update' } as Record<string, string>)[item.path] || 'read';
 
         // If user has specific permissions matrix populated
         if (permissions && Object.keys(permissions).length > 0) {
           const modPerms = permissions[resource];
           if (Array.isArray(modPerms)) {
-            return modPerms.includes('read');
+            return modPerms.includes(action);
           }
         }
 
@@ -262,7 +273,7 @@ export default function Layout({ children }: LayoutProps) {
           return true;
         }
         if (role === 'SUPERVISOR') {
-          return ['/', '/agents', '/map', '/photo-reports', '/clients', '/orders', '/returns', '/payments', '/tasks', '/reports', '/ai-assistant'].includes(item.path);
+          return ['/', '/agents', '/map', '/route-planner', '/coverage', '/photo-reports', '/clients', '/orders', '/returns', '/payments', '/tasks', '/reports', '/ai-assistant'].includes(item.path);
         }
         if (role === 'SALES_REP') {
           return ['/orders', '/clients', '/returns', '/payments', '/catalog', '/tasks', '/map', '/smm'].includes(item.path);

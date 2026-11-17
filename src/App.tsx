@@ -27,6 +27,9 @@ const AuditLogs = lazy(() => import('./pages/AuditLogs'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 const ReportConstructor = lazy(() => import('./pages/ReportConstructor'));
 const PhotoReports = lazy(() => import('./pages/PhotoReports'));
+const RoutePlanner = lazy(() => import('./pages/RoutePlanner'));
+const Coverage = lazy(() => import('./pages/Coverage'));
+const Territory = lazy(() => import('./pages/Territory'));
 const Landing = lazy(() => import('./pages/Landing'));
 
 function PageLoader() {
@@ -44,9 +47,11 @@ function PageLoader() {
 function ProtectedRoute({
   children,
   resource,
+  action = 'read',
 }: {
   children: React.ReactNode;
   resource?: string;
+  action?: string;
 }) {
   const token = localStorage.getItem('access_token');
   if (!token) return <Navigate to="/login" replace />;
@@ -59,7 +64,7 @@ function ProtectedRoute({
         const permissions = user.permissions || {};
         if (permissions && Object.keys(permissions).length > 0) {
           const modPerms = permissions[resource];
-          if (Array.isArray(modPerms) && !modPerms.includes('read')) {
+          if (Array.isArray(modPerms) && !modPerms.includes(action)) {
             return (
               <Layout>
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#f4f6fa] dark:bg-[#1a1a1a] h-full">
@@ -152,6 +157,30 @@ export default function App() {
             element={
               <ProtectedRoute resource="map">
                 <RoutesMap />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/route-planner"
+            element={
+              <ProtectedRoute resource="map" action="assign_routes">
+                <RoutePlanner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coverage"
+            element={
+              <ProtectedRoute resource="reports">
+                <Coverage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/territory"
+            element={
+              <ProtectedRoute resource="clients" action="update">
+                <Territory />
               </ProtectedRoute>
             }
           />

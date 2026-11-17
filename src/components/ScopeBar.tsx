@@ -17,6 +17,7 @@ export default function ScopeBar() {
     activeCount,
     selectedBranchName,
     selectedBrandName,
+    selectedZoneName,
     refreshScopeData,
   } = useScope();
 
@@ -51,7 +52,7 @@ export default function ScopeBar() {
 
   const filteredBrands = brands.filter((b) => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredBranches = branches.filter((b) => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredZones = zones.filter((z) => z.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredZones = zones.filter((z) => `${z.code} ${z.name}`.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div ref={barRef} className="flex items-center gap-1.5 relative text-xs">
@@ -189,7 +190,7 @@ export default function ScopeBar() {
 
               {brands.length === 0 && (
                 <div className="px-3 py-2 text-[11px] text-slate-400 text-center">
-                  Бренды не настроены в каталоге
+                  Бренды не настроены
                 </div>
               )}
             </div>
@@ -206,17 +207,17 @@ export default function ScopeBar() {
               ? 'bg-emerald-50/90 border-emerald-200 text-emerald-700 font-bold shadow-sm'
               : 'bg-[#f8f9fa] hover:bg-white border-[#e3e3e8] text-[#5f6368] hover:text-[#1d1d1f]'
           }`}
-          title="Фильтр по торговой зоне / району"
+          title="Фильтр по рабочей зоне (сектору)"
         >
           <MapPin className={`w-3.5 h-3.5 ${selectedZone ? 'text-emerald-600' : 'text-slate-400'}`} />
-          <span className="max-w-[110px] truncate">{selectedZone || 'Все зоны'}</span>
+          <span className="max-w-[110px] truncate">{selectedZoneName}</span>
           <ChevronDown className={`w-3 h-3 transition-transform ${openDropdown === 'zone' ? 'rotate-180' : ''}`} />
         </button>
 
         {openDropdown === 'zone' && (
           <div className="absolute left-0 top-full mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-[#e3e3e8] py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100">
             <div className="px-3 py-1.5 text-[11px] font-bold text-[#86868b] uppercase tracking-wider flex items-center justify-between border-b border-[#f1f3f4]">
-              <span>Торговый район / Зона</span>
+              <span>Рабочая зона (сектор)</span>
               <span className="text-[10px] text-slate-400">{zones.length}</span>
             </div>
 
@@ -236,19 +237,25 @@ export default function ScopeBar() {
 
               {filteredZones.map((z) => (
                 <button
-                  key={z}
+                  key={z.id}
                   onClick={() => {
-                    setZone(z);
+                    setZone(z.id);
                     setOpenDropdown(null);
                   }}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors ${
-                    selectedZone === z ? 'bg-emerald-50 font-bold text-emerald-700' : 'hover:bg-[#f8f9fa] text-[#1d1d1f]'
+                    selectedZone === z.id ? 'bg-emerald-50 font-bold text-emerald-700' : 'hover:bg-[#f8f9fa] text-[#1d1d1f]'
                   }`}
                 >
-                  <span className="truncate">{z}</span>
-                  {selectedZone === z && <Check className="w-3.5 h-3.5 text-emerald-600" />}
+                  <span className="truncate"><span className="font-mono text-[10px] text-slate-400 mr-1">{z.code}</span>{z.name}</span>
+                  {selectedZone === z.id && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                 </button>
               ))}
+
+              {zones.length === 0 && (
+                <div className="px-3 py-2 text-[11px] text-slate-400 text-center">
+                  Секторы не заведены: раздел «Секторы и импорт»
+                </div>
+              )}
             </div>
           </div>
         )}

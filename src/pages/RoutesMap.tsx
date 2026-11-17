@@ -16,7 +16,7 @@ L.Icon.Default.mergeOptions({
 });
 
 export default function RoutesMap() {
-  const { selectedBranchId, selectedZone } = useScope();
+  const { selectedBranchId, selectedZone, matchClient } = useScope();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersGroupRef = useRef<L.LayerGroup | null>(null);
@@ -50,24 +50,16 @@ export default function RoutesMap() {
   const scopedClients = useMemo(() => {
     return clients.filter((c) => {
       if (selectedBranchId && c.branchId && c.branchId !== selectedBranchId) return false;
-      if (selectedZone) {
-        const match = c.zone === selectedZone || (c.address || '').toLowerCase().includes(selectedZone.toLowerCase());
-        if (!match) return false;
-      }
-      return true;
+      return matchClient(c);
     });
-  }, [clients, selectedBranchId, selectedZone]);
+  }, [clients, selectedBranchId, selectedZone, matchClient]);
 
   const scopedRoutes = useMemo(() => {
     return routes.filter((r) => {
       if (selectedBranchId && r.branchId && r.branchId !== selectedBranchId) return false;
-      if (selectedZone) {
-        const match = r.zone === selectedZone || (r.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
-        if (!match) return false;
-      }
-      return true;
+      return !r.client || matchClient(r.client);
     });
-  }, [routes, selectedBranchId, selectedZone]);
+  }, [routes, selectedBranchId, selectedZone, matchClient]);
 
   // GIS & Smart Geo Layers
   const [showRoadRoutes, setShowRoadRoutes] = useState(true);

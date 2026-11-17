@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 import { clientBalance } from '../utils/clientBalance';
 import { normalizePaymentType, PAYMENT_TYPE_OPTIONS } from '../utils/paymentType';
+import { useScope } from '../context/ScopeContext';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -250,6 +251,9 @@ export default function Clients() {
   const [paymentType, setPaymentType] = useState('CASH');
   const [channel, setChannel] = useState('');
   const [agentId, setAgentId] = useState('');
+  const [sectorId, setSectorId] = useState('');
+  const [town, setTown] = useState('');
+  const { zones: sectors, matchClient, selectedBranchId } = useScope();
   const [agentOptions, setAgentOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [creditLimit, setCreditLimit] = useState(0);
   const [priceCategoryId, setPriceCategoryId] = useState('');
@@ -445,6 +449,8 @@ export default function Clients() {
     setPaymentType(normalizePaymentType(client.paymentType));
     setChannel(client.channel || '');
     setAgentId(client.agentId || '');
+    setSectorId(client.sectorId || '');
+    setTown(client.town || '');
     setCreditLimit(parseFloat(client.creditLimit?.toString() || '0'));
     setPriceCategoryId(client.priceCategoryId || '');
     setShowAddForm(true);
@@ -463,6 +469,8 @@ export default function Clients() {
     setPaymentType('CASH');
     setChannel('');
     setAgentId('');
+    setSectorId('');
+    setTown('');
     setCreditLimit(0);
     setPriceCategoryId('');
     setShowAddForm(true);
@@ -483,6 +491,8 @@ export default function Clients() {
       paymentType,
       channel: channel || null,
       agentId: agentId || null,
+      sectorId: sectorId || null,
+      town: town || null,
       creditLimit: parseFloat(creditLimit.toString()),
       priceCategoryId: priceCategoryId || null,
     };
@@ -541,6 +551,10 @@ export default function Clients() {
   const filteredAndSortedClients = useMemo(() => {
     return clients
       .filter((client) => {
+        // Header scope: branch, work zone (sector) and brand
+        if (selectedBranchId && client.branchId && client.branchId !== selectedBranchId) return false;
+        if (!matchClient(client)) return false;
+
         // Text search across name, phone, tin, address, legalName
         if (searchTerm.trim()) {
           const q = searchTerm.toLowerCase().trim();
@@ -584,7 +598,7 @@ export default function Clients() {
         if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
         return 0;
       });
-  }, [clients, searchTerm, debtFilter, selectedPriceCategory, sortField, sortDirection]);
+  }, [clients, searchTerm, debtFilter, selectedPriceCategory, sortField, sortDirection, matchClient, selectedBranchId]);
 
   const toggleSort = (field: 'name' | 'currentDebt' | 'creditLimit' | 'phone' | 'address') => {
     if (sortField === field) {
@@ -933,6 +947,23 @@ export default function Clients() {
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>
+              <select
+                value={sectorId}
+                onChange={(e) => setSectorId(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              >
+                <option value="">Сектор: не указан</option>
+                {sectors.map((s) => (
+                  <option key={s.id} value={s.id}>{s.code} · {s.name}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                placeholder="Город / район (для планировщика маршрутов)"
+                value={town}
+                onChange={(e) => setTown(e.target.value)}
+                className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+              />
               {!hasCoords && (
                 <p className="text-[10px] text-[#86868b] md:col-span-2">Координаты не указаны: кликните по карте или выберите адрес из подсказок. Без координат точка сохранится, но не будет на карте и без проверки радиуса при чекине.</p>
               )}

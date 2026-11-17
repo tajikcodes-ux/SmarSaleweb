@@ -12,13 +12,23 @@ export interface BrandItem {
   parentId?: string | null;
 }
 
+/** A work zone of the distributor; the header's "Зона" filter selects one. */
+export interface ZoneItem {
+  id: string;
+  code: string;
+  name: string;
+  branchId: string | null;
+  brandIds: string[];
+}
+
 interface ScopeContextType {
   selectedBranchId: string | null;
   selectedBrandId: string | null;
+  /** id of the selected sector */
   selectedZone: string | null;
   branches: BranchItem[];
   brands: BrandItem[];
-  zones: string[];
+  zones: ZoneItem[];
   loading: boolean;
   setBranchId: (id: string | null) => void;
   setBrandId: (id: string | null) => void;
@@ -27,119 +37,104 @@ interface ScopeContextType {
   activeCount: number;
   selectedBranchName: string;
   selectedBrandName: string;
+  selectedZoneName: string;
   refreshScopeData: () => Promise<void>;
+  /** client passes the zone and brand filters (branch is checked by the pages) */
+  matchClient: (client: any) => boolean;
+  /** product belongs to the selected brand */
+  matchProduct: (product: any, categoryId?: string | null) => boolean;
+  /** order's client is in the zone and the order has items of the brand */
+  matchOrder: (order: any) => boolean;
 }
 
 const ScopeContext = createContext<ScopeContextType | undefined>(undefined);
 
-const DUSHANBE_ZONES = ['Сино', 'Фирдавси', 'И. Сомони', 'Шохмансур'];
-const KHUJAND_ZONES = ['Панджшанбе', '18-й мкр', '34-й мкр', 'Б. Гафуров'];
-const OTHER_ZONES = ['Бохтар', 'Куляб', 'Вахдат', 'Турсунзаде', 'Гиссар'];
-const ALL_DEFAULT_ZONES = Array.from(new Set([...DUSHANBE_ZONES, ...KHUJAND_ZONES, ...OTHER_ZONES]));
+const remember = (key: string, value: string | null) => {
+  try {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
+  } catch {
+    // storage is a convenience only
+  }
+};
+const recall = (key: string) => {
+  try {
+    return localStorage.getItem(key) || null;
+  } catch {
+    return null;
+  }
+};
 
 export function ScopeProvider({ children }: { children: ReactNode }) {
-  const [selectedBranchId, setSelectedBranchIdState] = useState<string | null>(() => {
-    return localStorage.getItem('smartsale_scope_branch') || null;
-  });
-  const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => {
-    return localStorage.getItem('smartsale_scope_brand') || null;
-  });
-  const [selectedZone, setSelectedZoneState] = useState<string | null>(() => {
-    return localStorage.getItem('smartsale_scope_zone') || null;
-  });
+  const [selectedBranchId, setSelectedBranchIdState] = useState<string | null>(() => recall('smartsale_scope_branch'));
+  const [selectedBrandId, setSelectedBrandIdState] = useState<string | null>(() => recall('smartsale_scope_brand'));
+  const [selectedZone, setSelectedZoneState] = useState<string | null>(() => recall('smartsale_scope_sector'));
 
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [brands, setBrands] = useState<BrandItem[]>([]);
-  const [dynamicZones, setDynamicZones] = useState<string[]>([]);
+  // Brands come from the brand directory; companies that have not set it up keep root catalog categories
+  const [brandSource, setBrandSource] = useState<'brands' | 'categories'>('brands');
+  const [sectors, setSectors] = useState<ZoneItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const setBranchId = useCallback((id: string | null) => {
     setSelectedBranchIdState(id);
-    if (id) {
-      localStorage.setItem('smartsale_scope_branch', id);
-    } else {
-      localStorage.removeItem('smartsale_scope_branch');
-    }
+    remember('smartsale_scope_branch', id);
   }, []);
 
   const setBrandId = useCallback((id: string | null) => {
     setSelectedBrandIdState(id);
-    if (id) {
-      localStorage.setItem('smartsale_scope_brand', id);
-    } else {
-      localStorage.removeItem('smartsale_scope_brand');
-    }
+    remember('smartsale_scope_brand', id);
   }, []);
 
   const setZone = useCallback((zone: string | null) => {
     setSelectedZoneState(zone);
-    if (zone) {
-      localStorage.setItem('smartsale_scope_zone', zone);
-    } else {
-      localStorage.removeItem('smartsale_scope_zone');
-    }
+    remember('smartsale_scope_sector', zone);
   }, []);
 
   const resetAll = useCallback(() => {
-    setSelectedBranchIdState(null);
-    setSelectedBrandIdState(null);
-    setSelectedZoneState(null);
-    localStorage.removeItem('smartsale_scope_branch');
-    localStorage.removeItem('smartsale_scope_brand');
-    localStorage.removeItem('smartsale_scope_zone');
-  }, []);
+    setBranchId(null);
+    setBrandId(null);
+    setZone(null);
+  }, [setBranchId, setBrandId, setZone]);
 
   const refreshScopeData = useCallback(async () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!recall('access_token')) return;
 
     setLoading(true);
     try {
-      // 1. Fetch branches
       try {
         const branchRes = await api.get('/branches');
         if (Array.isArray(branchRes.data)) {
           setBranches(branchRes.data.map((b: any) => ({ id: b.id, name: b.name })));
         }
-      } catch (err) {
-        // Fallback gracefully
+      } catch {
+        // roles without branches:read work without the branch list
       }
 
-      // 2. Fetch categories (Root categories parentId == null are Brands/Directions)
+      let directoryBrands: BrandItem[] = [];
       try {
-        const catRes = await api.get('/catalog/categories');
-        if (Array.isArray(catRes.data)) {
-          const rootCategories = catRes.data.filter((c: any) => !c.parentId);
-          const brandList = (rootCategories.length > 0 ? rootCategories : catRes.data).map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            parentId: c.parentId,
-          }));
-          setBrands(brandList);
-        }
-      } catch (err) {
-        // Fallback gracefully
+        const scopeRes = await api.get('/territory/scope');
+        setSectors(scopeRes.data?.sectors ?? []);
+        directoryBrands = (scopeRes.data?.brands ?? []).map((b: any) => ({ id: b.id, name: b.name }));
+      } catch {
+        setSectors([]);
       }
 
-      // 3. Collect zones from clients
-      try {
-        const clientRes = await api.get('/clients');
-        if (Array.isArray(clientRes.data)) {
-          const foundZones = new Set<string>();
-          clientRes.data.forEach((cl: any) => {
-            const addr = cl.address || '';
-            ALL_DEFAULT_ZONES.forEach((z) => {
-              if (addr.toLowerCase().includes(z.toLowerCase())) {
-                foundZones.add(z);
-              }
-            });
-          });
-          if (foundZones.size > 0) {
-            setDynamicZones(Array.from(foundZones));
+      if (directoryBrands.length > 0) {
+        setBrands(directoryBrands);
+        setBrandSource('brands');
+      } else {
+        try {
+          const catRes = await api.get('/catalog/categories');
+          if (Array.isArray(catRes.data)) {
+            const rootCategories = catRes.data.filter((c: any) => !c.parentId);
+            setBrands((rootCategories.length > 0 ? rootCategories : catRes.data).map((c: any) => ({ id: c.id, name: c.name, parentId: c.parentId })));
+            setBrandSource('categories');
           }
+        } catch {
+          setBrands([]);
         }
-      } catch (err) {
-        // Fallback gracefully
       }
     } finally {
       setLoading(false);
@@ -158,8 +153,7 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     window.addEventListener('focus', handleAuthChange);
 
     const timer = setInterval(() => {
-      const hasToken = !!localStorage.getItem('access_token');
-      if (hasToken && branches.length === 0) {
+      if (recall('access_token') && branches.length === 0) {
         refreshScopeData();
       }
     }, 2000);
@@ -172,30 +166,42 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshScopeData, branches.length]);
 
-  // Dependent available zones based on selected branch
-  const availableZones = useMemo(() => {
-    if (!selectedBranchId) {
-      return Array.from(new Set([...dynamicZones, ...ALL_DEFAULT_ZONES]));
-    }
-    const branch = branches.find((b) => b.id === selectedBranchId);
-    if (!branch) return ALL_DEFAULT_ZONES;
+  // Zones of the selected branch; sectors without a branch are shown everywhere
+  const zones = useMemo(
+    () => (selectedBranchId ? sectors.filter((s) => !s.branchId || s.branchId === selectedBranchId) : sectors),
+    [sectors, selectedBranchId],
+  );
 
-    const bName = branch.name.toLowerCase();
-    if (bName.includes('худжанд') || bName.includes('согд')) {
-      return KHUJAND_ZONES;
-    }
-    if (bName.includes('душанбе')) {
-      return DUSHANBE_ZONES;
-    }
-    return ALL_DEFAULT_ZONES;
-  }, [selectedBranchId, branches, dynamicZones]);
-
-  // Auto-reset zone if current selectedZone is not in the filtered branch zones
   useEffect(() => {
-    if (selectedZone && !availableZones.includes(selectedZone)) {
+    if (selectedZone && sectors.length > 0 && !zones.some((z) => z.id === selectedZone)) {
       setZone(null);
     }
-  }, [availableZones, selectedZone, setZone]);
+  }, [zones, sectors.length, selectedZone, setZone]);
+
+  const sectorById = useMemo(() => new Map(sectors.map((s) => [s.id, s])), [sectors]);
+  const anySectorHasBrands = useMemo(() => sectors.some((s) => s.brandIds.length > 0), [sectors]);
+
+  const matchProduct = useCallback((product: any, categoryId?: string | null) => {
+    if (!selectedBrandId) return true;
+    if (brandSource === 'brands') return product?.brandId === selectedBrandId;
+    return product?.categoryId === selectedBrandId || product?.category?.parentId === selectedBrandId || categoryId === selectedBrandId;
+  }, [selectedBrandId, brandSource]);
+
+  const matchClient = useCallback((client: any) => {
+    if (selectedZone && client?.sectorId !== selectedZone) return false;
+    // A brand narrows clients to the sectors selling it, once sectors have brands at all
+    if (selectedBrandId && brandSource === 'brands' && anySectorHasBrands) {
+      const sector = client?.sectorId ? sectorById.get(client.sectorId) : undefined;
+      if (!sector || !sector.brandIds.includes(selectedBrandId)) return false;
+    }
+    return true;
+  }, [selectedZone, selectedBrandId, brandSource, anySectorHasBrands, sectorById]);
+
+  const matchOrder = useCallback((order: any) => {
+    if (selectedZone && order?.client?.sectorId !== selectedZone) return false;
+    if (selectedBrandId && !(order?.items || []).some((item: any) => matchProduct(item.product || {}, item.categoryId))) return false;
+    return true;
+  }, [selectedZone, selectedBrandId, matchProduct]);
 
   const activeCount = (selectedBranchId ? 1 : 0) + (selectedBrandId ? 1 : 0) + (selectedZone ? 1 : 0);
 
@@ -209,6 +215,12 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
     return brands.find((b) => b.id === selectedBrandId)?.name || 'Бренд';
   }, [selectedBrandId, brands]);
 
+  const selectedZoneName = useMemo(() => {
+    if (!selectedZone) return 'Все зоны';
+    const sector = sectorById.get(selectedZone);
+    return sector ? sector.name : 'Зона';
+  }, [selectedZone, sectorById]);
+
   return (
     <ScopeContext.Provider
       value={{
@@ -217,7 +229,7 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
         selectedZone,
         branches,
         brands,
-        zones: availableZones,
+        zones,
         loading,
         setBranchId,
         setBrandId,
@@ -226,7 +238,11 @@ export function ScopeProvider({ children }: { children: ReactNode }) {
         activeCount,
         selectedBranchName,
         selectedBrandName,
+        selectedZoneName,
         refreshScopeData,
+        matchClient,
+        matchProduct,
+        matchOrder,
       }}
     >
       {children}

@@ -5,7 +5,7 @@ import StockJournal from '../components/StockJournal';
 import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
 
 export default function Warehouse() {
-  const { selectedBranchId, selectedBrandId } = useScope();
+  const { selectedBranchId, selectedBrandId, matchOrder, matchProduct } = useScope();
   const [activeTab, setActiveTab] = useState<'management' | 'picking' | 'audits' | 'auto_order'>('management');
 
   // Warehouses state
@@ -61,24 +61,15 @@ export default function Warehouse() {
   const filteredPickingOrders = useMemo(() => {
     return orders.filter((o) => {
       if (selectedBranchId && o.client?.branchId && o.client.branchId !== selectedBranchId) return false;
-      if (selectedBrandId && !(o.items || []).some((it: any) => {
-        const prod = it.product || {};
-        return prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || it.categoryId === selectedBrandId;
-      })) return false;
-      return true;
+      return matchOrder(o);
     });
-  }, [orders, selectedBranchId, selectedBrandId]);
+  }, [orders, selectedBranchId, selectedBrandId, matchOrder]);
 
   const filteredSuggestions = useMemo(() => {
     return reorderData.suggestions.filter((s: any) => {
-      if (selectedBrandId) {
-        const prod = s.product || {};
-        const isBrand = prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || s.categoryId === selectedBrandId;
-        if (!isBrand) return false;
-      }
-      return true;
+      return matchProduct(s.product || {}, s.categoryId);
     });
-  }, [reorderData.suggestions, selectedBrandId]);
+  }, [reorderData.suggestions, selectedBrandId, matchProduct]);
 
   const loadWarehouses = async () => {
     try {

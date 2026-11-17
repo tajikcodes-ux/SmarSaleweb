@@ -40,7 +40,7 @@ const changeVsYesterday = (today: number, yesterday: number) => {
 };
 
 export default function Dashboard() {
-  const { selectedBranchId, selectedBrandId, selectedZone } = useScope();
+  const { selectedBranchId, selectedBrandId, selectedZone, matchClient, matchOrder, matchProduct } = useScope();
   const [loading, setLoading] = useState(true);
   const [rawOrders, setRawOrders] = useState<any[]>([]);
   const [rawUsers, setRawUsers] = useState<any[]>([]);
@@ -183,8 +183,7 @@ export default function Dashboard() {
       if (!Array.isArray(order.items)) return 0;
       return order.items.reduce((sum: number, it: any) => {
         const prod = it.product || {};
-        const isBrand = prod.categoryId === brandId || prod.category?.parentId === brandId || it.categoryId === brandId;
-        if (!isBrand) return sum;
+        if (!matchProduct(prod, it.categoryId)) return sum;
         const qty = Number(it.quantity || 0);
         const price = Number(it.price || prod.price || 0);
         return sum + qty * price;
@@ -194,12 +193,7 @@ export default function Dashboard() {
     // Filter orders by Branch, Zone, and Brand
     const filteredOrders = rawOrders.filter((o: any) => {
       const matchBranch = !selectedBranchId || o.branchId === selectedBranchId || o.salesRep?.branchId === selectedBranchId || o.client?.branchId === selectedBranchId;
-      const matchZone = !selectedZone || o.zone === selectedZone || o.workZone === selectedZone || (o.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
-      const matchBrand = !selectedBrandId || (o.items || []).some((it: any) => {
-        const prod = it.product || {};
-        return prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || it.categoryId === selectedBrandId;
-      });
-      return matchBranch && matchZone && matchBrand;
+      return matchBranch && matchOrder(o);
     });
     const revenueOrders = filteredOrders.filter(isRevenueOrder);
 
@@ -211,10 +205,7 @@ export default function Dashboard() {
       if (Array.isArray(order.items)) {
         order.items.forEach((item: any) => {
           const prod = item.product || {};
-          if (selectedBrandId) {
-            const isBrand = prod.categoryId === selectedBrandId || prod.category?.parentId === selectedBrandId || item.categoryId === selectedBrandId;
-            if (!isBrand) return;
-          }
+          if (!matchProduct(prod, item.categoryId)) return;
           const name = prod.name || item.name || 'Товар';
           const qty = Number(item.quantity || 0);
           const price = Number(item.price || prod.price || 0);
@@ -279,11 +270,7 @@ export default function Dashboard() {
     // --- AKB / OKB Logic ---
     const filteredClients = rawClients.filter((c: any) => {
       if (selectedBranchId && c.branchId && c.branchId !== selectedBranchId) return false;
-      if (selectedZone) {
-        const zoneMatch = c.zone === selectedZone || (c.address || '').toLowerCase().includes(selectedZone.toLowerCase());
-        if (!zoneMatch) return false;
-      }
-      return true;
+      return matchClient(c);
     });
     const totalClientsCount = filteredClients.length;
 
@@ -311,11 +298,7 @@ export default function Dashboard() {
     // Filter routes by branch and zone
     const routeInScope = (r: any) => {
       if (selectedBranchId && r.branchId && r.branchId !== selectedBranchId) return false;
-      if (selectedZone) {
-        const zoneMatch = r.zone === selectedZone || (r.client?.address || '').toLowerCase().includes(selectedZone.toLowerCase());
-        if (!zoneMatch) return false;
-      }
-      return true;
+      return !r.client || matchClient(r.client);
     };
     const filteredRoutes = rawRoutes.filter(routeInScope);
     const visitedCount = filteredRoutes.filter((r: any) => r.visited).length;
@@ -342,7 +325,7 @@ export default function Dashboard() {
       okbCount: totalClientsCount,
       akbPercentage,
     });
-  }, [rawOrders, rawUsers, rawRoutes, rawYesterdayRoutes, rawGps, rawClients, agentBases, selectedBranchId, selectedBrandId, selectedZone]);
+  }, [rawOrders, rawUsers, rawRoutes, rawYesterdayRoutes, rawGps, rawClients, agentBases, selectedBranchId, selectedBrandId, selectedZone, matchClient, matchOrder, matchProduct]);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
