@@ -9,6 +9,7 @@ interface Company {
   licenseKey: string;
   status: string;
   createdAt: string;
+  ownerUsername?: string | null;
 }
 
 export default function SuperAdmin() {
@@ -308,7 +309,7 @@ export default function SuperAdmin() {
               <div className="mt-5 space-y-2.5 pt-4 border-t border-[#e3e3e8] dark:border-[#1a1a1a] text-xs">
                 <div className="flex items-center justify-between text-[#86868b]">
                   <span>Логин администратора</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">admin@{c.slug}</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">{c.ownerUsername || 'нет владельца'}</span>
                 </div>
                 <div className="flex items-center justify-between text-[#86868b]">
                   <span>Лицензионный ключ</span>
