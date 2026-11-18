@@ -29,7 +29,8 @@ export default function SuperAdmin() {
   // Delete Confirmation State
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [tempResetPass, setTempResetPass] = useState<{ username: string; pass: string } | null>(null);
+  const [tempResetPass, setTempResetPass] = useState<{ username: string; pass: string; title: string } | null>(null);
+  const [credsCopied, setCredsCopied] = useState(false);
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
 
   const handleImpersonate = async (company: Company) => {
@@ -142,7 +143,16 @@ export default function SuperAdmin() {
       if (isEditMode && editingId) {
         await api.put(`/companies/${editingId}`, payload);
       } else {
-        await api.post('/companies', payload);
+        const res = await api.post('/companies', payload);
+        // The owner's password is random and returned only once, so it has to be shown right away
+        if (res.data?.ownerTempPassword) {
+          setCredsCopied(false);
+          setTempResetPass({
+            username: res.data.ownerUsername,
+            pass: res.data.ownerTempPassword,
+            title: 'Компания создана',
+          });
+        }
       }
 
       setShowModal(false);
@@ -188,9 +198,11 @@ export default function SuperAdmin() {
     setError('');
     try {
       const res = await api.post(`/companies/${companyId}/reset-admin-password`);
+      setCredsCopied(false);
       setTempResetPass({
         username: res.data.username,
         pass: res.data.tempPassword,
+        title: 'Пароль успешно сброшен',
       });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Не удалось сбросить пароль.');
@@ -513,7 +525,7 @@ export default function SuperAdmin() {
           <div className="w-full max-w-sm p-6 rounded-3xl bg-white dark:bg-[#0a0a0a] border border-[#e3e3e8] dark:border-[#1a1a1a] shadow-2xl relative animate-card-entrance text-slate-800 dark:text-slate-100">
             <h3 className="text-sm font-bold text-[#0b57d0] mb-2 flex items-center gap-2">
               <Sparkles className="w-4 h-4" />
-              <span>Пароль успешно сброшен</span>
+              <span>{tempResetPass.title}</span>
             </h3>
             <p className="text-[11px] text-[#86868b] leading-relaxed mb-4">
               Новые учетные данные для входа администратора компании:
@@ -531,7 +543,22 @@ export default function SuperAdmin() {
             <p className="text-[9px] text-[#86868b] mb-6">
               Скопируйте эти данные и передайте их клиенту. Пароль показывается только один раз.
             </p>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(`Логин: ${tempResetPass.username}
+Пароль: ${tempResetPass.pass}`);
+                    setCredsCopied(true);
+                  } catch {
+                    setCredsCopied(false);
+                  }
+                }}
+                className="px-4 py-2.5 border border-[#e3e3e8] dark:border-white/10 text-xs font-bold rounded-xl transition-all hover:bg-slate-50 dark:hover:bg-white/5"
+              >
+                {credsCopied ? 'Скопировано' : 'Скопировать'}
+              </button>
               <button
                 type="button"
                 onClick={() => setTempResetPass(null)}
