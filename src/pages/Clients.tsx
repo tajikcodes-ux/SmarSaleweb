@@ -255,6 +255,16 @@ export default function Clients() {
   const [town, setTown] = useState('');
   const { zones: sectors, matchClient, selectedBranchId } = useScope();
   const [agentOptions, setAgentOptions] = useState<Array<{ id: string; name: string }>>([]);
+  // Other agents serving the client besides the main one, with the zone each serves it in
+  const [extraAgents, setExtraAgents] = useState<Array<{ userId: string; sectorId: string | null }>>([]);
+  const canAssignAgents = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || 'null');
+      return u?.role === 'OWNER' || (Array.isArray(u?.permissions?.clients) && u.permissions.clients.includes('view_all'));
+    } catch {
+      return false;
+    }
+  })();
   const [creditLimit, setCreditLimit] = useState(0);
   const [priceCategoryId, setPriceCategoryId] = useState('');
   const [error, setError] = useState('');
@@ -453,6 +463,14 @@ export default function Clients() {
     setTown(client.town || '');
     setCreditLimit(parseFloat(client.creditLimit?.toString() || '0'));
     setPriceCategoryId(client.priceCategoryId || '');
+    setExtraAgents([]);
+    if (canAssignAgents) {
+      api.get(`/clients/${client.id}/agents`)
+        .then((res) => setExtraAgents((res.data || [])
+          .filter((l: any) => l.userId !== client.agentId)
+          .map((l: any) => ({ userId: l.userId, sectorId: l.sectorId }))))
+        .catch(() => setExtraAgents([]));
+    }
     setShowAddForm(true);
   };
 
@@ -473,6 +491,7 @@ export default function Clients() {
     setTown('');
     setCreditLimit(0);
     setPriceCategoryId('');
+    setExtraAgents([]);
     setShowAddForm(true);
   };
 
@@ -498,10 +517,16 @@ export default function Clients() {
     };
 
     try {
-      if (editingClient) {
-        await api.put(`/clients/${editingClient.id}`, payload);
-      } else {
-        await api.post('/clients', payload);
+      const saved = editingClient
+        ? await api.put(`/clients/${editingClient.id}`, payload)
+        : await api.post('/clients', payload);
+      const savedId = editingClient?.id ?? saved.data?.id;
+      if (canAssignAgents && savedId && (editingClient || extraAgents.length > 0)) {
+        const others = extraAgents.filter((a) => a.userId !== agentId);
+        await api.put(`/clients/${savedId}/agents`, [
+          ...(agentId ? [{ userId: agentId, sectorId: sectorId || null }] : []),
+          ...others,
+        ]);
       }
       setShowAddForm(false);
       setEditingClient(null);
@@ -942,11 +967,48 @@ export default function Clients() {
                 onChange={(e) => setAgentId(e.target.value)}
                 className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg p-2.5 text-xs focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
               >
-                <option value="">Агент: не закреплён</option>
+                <option value="">{canAssignAgents ? 'Основной агент: не закреплён' : 'Агент: не закреплён'}</option>
                 {agentOptions.map((a) => (
                   <option key={a.id} value={a.id}>{a.name}</option>
                 ))}
               </select>
+              {canAssignAgents && (
+                <div className="md:col-span-2 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-[#86868b]">Также обслуживают:</span>
+                  {extraAgents.filter((a) => a.userId !== agentId).map((a) => {
+                    const sector = sectors.find((s) => s.id === a.sectorId);
+                    return (
+                      <span key={a.userId} className="inline-flex items-center gap-1 rounded-md border border-[#e9e9e7] dark:border-[#1a1a1a] bg-[#fbfbfa] dark:bg-white/5 px-2 py-1 text-[11px] text-[#37352f] dark:text-white">
+                        {agentOptions.find((o) => o.id === a.userId)?.name ?? 'Сотрудник'}
+                        {sector && <span className="text-[#86868b]">· {sector.name}</span>}
+                        <button
+                          type="button"
+                          aria-label="Убрать агента"
+                          onClick={() => setExtraAgents((list) => list.filter((x) => x.userId !== a.userId))}
+                          className="ml-0.5 text-[#86868b] hover:text-red-500"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const userId = e.target.value;
+                      if (userId) setExtraAgents((list) => [...list, { userId, sectorId: sectorId || null }]);
+                    }}
+                    className="bg-[#fbfbfa] dark:bg-white/5 border border-[#e9e9e7] dark:border-[#1a1a1a] rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-[#0071e3] text-[#37352f] dark:text-white"
+                  >
+                    <option value="">+ агент</option>
+                    {agentOptions
+                      .filter((o) => o.id !== agentId && !extraAgents.some((a) => a.userId === o.id))
+                      .map((o) => (
+                        <option key={o.id} value={o.id}>{o.name}</option>
+                      ))}
+                  </select>
+                </div>
+              )}
               <select
                 value={sectorId}
                 onChange={(e) => setSectorId(e.target.value)}

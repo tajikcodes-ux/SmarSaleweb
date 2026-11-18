@@ -147,6 +147,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
           { action: 'view_debts', label: 'Просмотр долгов' },
           { action: 'edit_credit', label: 'Кредитный лимит' },
           { action: 'export', label: 'Экспорт базы' },
+          { action: 'view_all', label: 'Вся база (vs только свои точки)' },
         ],
       },
     ],
