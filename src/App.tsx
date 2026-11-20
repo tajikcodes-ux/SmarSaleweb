@@ -74,7 +74,8 @@ function ProtectedRoute({
         const permissions = user.permissions || {};
         if (permissions && Object.keys(permissions).length > 0) {
           const modPerms = permissions[resource];
-          if (Array.isArray(modPerms) && !modPerms.includes(action)) {
+          // A section the role has no entry for is closed, the same as on the server
+          if (!Array.isArray(modPerms) || !modPerms.includes(action)) {
             return (
               <Layout>
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#f4f6fa] dark:bg-[#1a1a1a] h-full">

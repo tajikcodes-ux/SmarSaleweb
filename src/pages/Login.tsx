@@ -31,7 +31,16 @@ export default function Login() {
       navigate(response.data.user?.mustChangePassword ? '/change-password' : '/');
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Неверное имя пользователя или пароль');
+      const status = err.response?.status;
+      setError(
+        status === 429
+          ? 'Слишком много попыток входа. Подождите минуту и попробуйте снова.'
+          : !err.response
+            ? 'Нет связи с сервером. Проверьте интернет и попробуйте снова.'
+            : status >= 500
+              ? 'Сервер временно недоступен. Попробуйте позже.'
+              : err.response?.data?.message || 'Неверное имя пользователя или пароль',
+      );
     } finally {
       setLoading(false);
     }

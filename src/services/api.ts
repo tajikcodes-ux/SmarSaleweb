@@ -26,7 +26,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      if (error.response.status === 401) {
+      // A refused sign-in is answered on the login form, not treated as an expired session
+      const isSignIn = String(error.config?.url || '').includes('/auth/');
+      if (error.response.status === 401 && !isSignIn) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         window.location.href = '/login';

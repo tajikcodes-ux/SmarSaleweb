@@ -265,9 +265,7 @@ export default function Layout({ children }: LayoutProps) {
         // If user has specific permissions matrix populated
         if (permissions && Object.keys(permissions).length > 0) {
           const modPerms = permissions[resource];
-          if (Array.isArray(modPerms)) {
-            return modPerms.includes(action);
-          }
+          return Array.isArray(modPerms) && modPerms.includes(action);
         }
 
         // Fallback for legacy role-based profiles without custom permissions
