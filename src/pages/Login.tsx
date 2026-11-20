@@ -28,7 +28,7 @@ export default function Login() {
       localStorage.setItem('access_token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       window.dispatchEvent(new CustomEvent('smartsale:auth-change'));
-      navigate('/');
+      navigate(response.data.user?.mustChangePassword ? '/change-password' : '/');
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.message || 'Неверное имя пользователя или пароль');

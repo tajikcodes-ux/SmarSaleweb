@@ -6,6 +6,7 @@ import { ScopeProvider } from './context/ScopeContext';
 
 // Lazy loaded page components for optimal performance and instant initial load
 const Login = lazy(() => import('./pages/Login'));
+const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Agents = lazy(() => import('./pages/Agents'));
 const RoutesMap = lazy(() => import('./pages/RoutesMap'));
@@ -55,6 +56,15 @@ function ProtectedRoute({
 }) {
   const token = localStorage.getItem('access_token');
   if (!token) return <Navigate to="/login" replace />;
+
+  // A password someone else set has to be replaced before any page opens
+  try {
+    if (JSON.parse(localStorage.getItem('user') || 'null')?.mustChangePassword) {
+      return <Navigate to="/change-password" replace />;
+    }
+  } catch {
+    /* the server refuses requests anyway and sends the user here */
+  }
 
   if (resource) {
     try {
@@ -138,6 +148,7 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/landing" element={<Landing />} />
           
           <Route

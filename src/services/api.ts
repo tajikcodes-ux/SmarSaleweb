@@ -30,6 +30,15 @@ api.interceptors.response.use(
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
         window.location.href = '/login';
+      } else if (error.response.status === 403 && error.response.data?.code === 'PASSWORD_CHANGE_REQUIRED') {
+        // The password was reset meanwhile: everything waits until the user picks a new one
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          localStorage.setItem('user', JSON.stringify({ ...user, mustChangePassword: true }));
+        } catch {
+          /* the change-password page works without the stored user */
+        }
+        if (window.location.pathname !== '/change-password') window.location.href = '/change-password';
       } else if (error.response.status === 403 && error.config?.method !== 'get') {
         // Pages load optional widgets the role may not have; a denied read is not an error to show
         alert(error.response.data?.message || 'Доступ запрещен: у вашей роли нет прав на выполнение этого действия.');

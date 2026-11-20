@@ -38,6 +38,7 @@ import { useSyncExternalStore } from 'react';
 import { Tour, TourInvite } from '../tour/Tour';
 import { tourStore, tourSeenKey } from '../tour/tourStore';
 import ScopeBar from './ScopeBar';
+import { ProfileDialog } from './AccountDialog';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,6 +48,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [showAiInsight, setShowAiInsight] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -620,7 +622,13 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
             
-            <div data-tour="profile" className="flex items-center gap-2 border-l border-[#e3e3e8] pl-4">
+            <button
+              type="button"
+              data-tour="profile"
+              onClick={() => setShowProfile(true)}
+              title="Мой профиль и пароль"
+              className="flex items-center gap-2 border-l border-[#e3e3e8] pl-4 rounded-r-lg hover:opacity-80 transition-opacity"
+            >
               <div className="w-8 h-8 rounded-full bg-[#0b57d0] text-white flex items-center justify-center font-bold text-xs shadow-sm">
                 {initial}
               </div>
@@ -628,7 +636,8 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="text-xs font-bold text-[#1d1d1f] leading-none">{displayName}</div>
                 <div className="text-[9px] text-[#86868b] font-bold uppercase mt-0.5">{user.role}</div>
               </div>
-            </div>
+            </button>
+            <ProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
           </div>
         </header>
 
