@@ -280,6 +280,16 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         ],
       },
       {
+        key: 'settings',
+        label: 'Настройки компании',
+        description: 'Правила работы: радиус отметки, смена, приём оплат, кредитный лимит',
+        actions: [
+          { action: 'read', label: 'Просмотр настроек' },
+          { action: 'update_field', label: 'Полевые правила (визиты, смена, клиенты)' },
+          { action: 'update_finance', label: 'Финансовые правила (оплаты, кредит)' },
+        ],
+      },
+      {
         key: 'roles',
         label: 'Управление ролями и доступом',
         description: 'Настройка матрицы разрешений, системные и кастомные роли',

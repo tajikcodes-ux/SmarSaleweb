@@ -25,6 +25,7 @@ const Roles = lazy(() => import('./pages/Roles'));
 const SmmPanel = lazy(() => import('./pages/SmmPanel'));
 const FeedbackPanel = lazy(() => import('./pages/FeedbackPanel'));
 const AuditLogs = lazy(() => import('./pages/AuditLogs'));
+const CompanySettings = lazy(() => import('./pages/CompanySettings'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 const ReportConstructor = lazy(() => import('./pages/ReportConstructor'));
 const PhotoReports = lazy(() => import('./pages/PhotoReports'));
@@ -305,6 +306,14 @@ export default function App() {
             element={
               <ProtectedRoute resource="feedbacks">
                 <FeedbackPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute resource="settings">
+                <CompanySettings />
               </ProtectedRoute>
             }
           />

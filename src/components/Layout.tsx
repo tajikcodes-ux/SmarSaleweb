@@ -33,6 +33,7 @@ import {
   Moon,
   Camera,
   Compass,
+  Settings2,
 } from 'lucide-react';
 import { useSyncExternalStore } from 'react';
 import { Tour, TourInvite } from '../tour/Tour';
@@ -202,6 +203,7 @@ export default function Layout({ children }: LayoutProps) {
         { path: '/territory', label: 'Секторы и импорт', icon: MapIcon },
         { path: '/branches', label: 'Филиалы', icon: MapPin },
         { path: '/roles', label: 'Управление ролями', icon: Shield },
+        { path: '/settings', label: 'Настройки компании', icon: Settings2 },
         { path: '/audit-logs', label: 'Журнал Аудита', icon: Shield },
         { path: '/smm', label: 'Маркетинг и SMM', icon: Share2 },
         { path: '/feedbacks', label: 'Обратная связь', icon: MessageSquare },
@@ -247,6 +249,7 @@ export default function Layout({ children }: LayoutProps) {
       '/clients': 'clients',
       '/branches': 'branches',
       '/roles': 'roles',
+      '/settings': 'settings',
       '/audit-logs': 'audit_logs',
       '/smm': 'smm',
       '/feedbacks': 'feedbacks',

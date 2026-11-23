@@ -20,6 +20,7 @@ export default defineConfig({
   },
   projects: [
     { name: 'business', testMatch: /business\.spec\.ts/ },
-    { name: 'web', testMatch: /web\.spec\.ts/, use: { ...devices['Desktop Chrome'] }, dependencies: ['business'] },
+    { name: 'settings', testMatch: /settings\.spec\.ts/, dependencies: ['business'] },
+    { name: 'web', testMatch: /web\.spec\.ts/, use: { ...devices['Desktop Chrome'] }, dependencies: ['settings'] },
   ],
 });

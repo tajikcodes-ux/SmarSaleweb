@@ -97,6 +97,7 @@ const SECTIONS: Array<[string, string]> = [
   ['/promotions', 'Акции'],
   ['/branches', 'Филиалы'],
   ['/roles', 'Роли'],
+  ['/settings', 'Настройки компании'],
   ['/reports', 'Отчёты'],
   ['/audit-logs', 'Журнал'],
   ['/smm', 'SMM'],
@@ -118,6 +119,38 @@ test.describe('every section opens for the owner', () => {
       expect(problems, problems.join('\n')).toEqual([]);
     });
   }
+});
+
+test.describe('company settings page', () => {
+  test('the owner sees what is unsaved and is warned before weakening control', async ({ page }) => {
+    await signIn(page, 'admin');
+    await page.goto('/settings');
+    const radius = page.locator('[data-setting="visit.radiusMeters"] input[type="number"]');
+    await radius.fill('500');
+    await radius.blur();
+    await expect(page.getByText('не сохранено')).toBeVisible();
+    await expect(page.getByText(/Изменено: 1/)).toBeVisible();
+    await page.getByRole('button', { name: 'Сохранить' }).click();
+    await expect(page.getByRole('dialog')).toContainText('больше 300 м');
+    await page.getByRole('button', { name: 'Отмена' }).click();
+    await page.getByRole('button', { name: 'Отменить' }).click();
+    await expect(page.getByText(/Изменено:/)).toHaveCount(0);
+  });
+
+  test('a financier changes money rules, field rules are locked for him', async ({ page }) => {
+    await signIn(page, 'financier');
+    await page.goto('/settings');
+    await expect(page.locator('[data-setting="visit.radiusMeters"] input[type="number"]')).toBeDisabled();
+    await expect(page.locator('[data-setting="visit.radiusMeters"]').getByText(/Меняет:/)).toBeVisible();
+    const block = page.locator('[data-setting="credit.overLimit"]').getByRole('radio', { name: 'Запретить до оплаты' });
+    await expect(block).toBeEnabled();
+  });
+
+  test('an agent cannot open the settings', async ({ page }) => {
+    await signIn(page, 'agent1');
+    await page.goto('/settings');
+    await expect(page.getByText('Доступ к разделу ограничен')).toBeVisible();
+  });
 });
 
 test.describe('an agent', () => {
