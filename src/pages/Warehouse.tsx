@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
 import StockJournal from '../components/StockJournal';
-import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
+import { Warehouse as WarehouseIcon, Package, Check, Play, Printer, Plus, Edit, Trash, MapPin, Building2, Boxes, ClipboardCheck, CheckCircle2, Save, ArrowLeft, AlertTriangle, Info, TrendingDown, Truck, ShoppingCart, ShieldAlert } from 'lucide-react';
 
 export default function Warehouse() {
   const { selectedBranchId, selectedBrandId, matchOrder, matchProduct } = useScope();
@@ -45,7 +45,12 @@ export default function Warehouse() {
   const [committingAudit, setCommittingAudit] = useState(false);
 
   // Auto-order and suggestions states
-  const [reorderData, setReorderData] = useState<{ totalDeficitCount: number; totalWarningCount: number; suggestions: any[] }>({
+  const [reorderData, setReorderData] = useState<{
+    totalDeficitCount: number;
+    totalWarningCount: number;
+    suggestions: any[];
+    basis?: { productsSoldLast30Days: number; productsWithMinStock: number; productsOutOfStock: number };
+  }>({
     totalDeficitCount: 0,
     totalWarningCount: 0,
     suggestions: [],
@@ -1385,6 +1390,21 @@ export default function Warehouse() {
             {loadingSuggestions ? (
               <div className="p-12 text-center text-slate-400 text-xs">
                 Расчёт скорости продаж и проверка остатков...
+              </div>
+            ) : filteredSuggestions.length === 0 && reorderData.basis
+                && reorderData.basis.productsSoldLast30Days === 0 && reorderData.basis.productsWithMinStock === 0 ? (
+              <div className="p-12 text-center space-y-2">
+                <Info className="w-8 h-8 text-amber-500 mx-auto" />
+                <h5 className="font-bold text-[#1d1d1f] text-sm">Прогноз пока не из чего строить</h5>
+                <p className="text-xs text-[#86868b] max-w-md mx-auto">
+                  За 30 дней в SmartSale нет продаж, и ни у одного товара не задан неснижаемый остаток.
+                  Автозаказ заработает, когда пойдут заказы или будет задан минимум в карточках товаров.
+                </p>
+                {reorderData.basis.productsOutOfStock > 0 && (
+                  <p className="text-xs font-bold text-rose-600">
+                    Сейчас без остатка: {reorderData.basis.productsOutOfStock} товаров
+                  </p>
+                )}
               </div>
             ) : filteredSuggestions.length === 0 ? (
               <div className="p-12 text-center space-y-2">

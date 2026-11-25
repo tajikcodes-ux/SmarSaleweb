@@ -1733,7 +1733,8 @@ export default function Clients() {
                   <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs">Загрузка операций по клиенту...</span>
                 </div>
-              ) : !reconciliationModal.data || reconciliationModal.data.operations.length === 0 ? (
+              ) : !reconciliationModal.data
+                || (reconciliationModal.data.operations.length === 0 && Number(reconciliationModal.data.initialBalance) === 0) ? (
                 <div className="py-16 text-center text-slate-400 text-xs italic">
                   Нет операций за выбранный период сверки.
                 </div>
@@ -1752,7 +1753,9 @@ export default function Clients() {
                   <tbody className="divide-y divide-[#e3e3e8]/60">
                     {reconciliationModal.data.initialBalance !== 0 && (
                       <tr className="bg-slate-50 font-bold">
-                        <td colSpan={3} className="p-2.5 text-slate-700">Входящее сальдо на начало периода</td>
+                        <td colSpan={3} className="p-2.5 text-slate-700">
+                          Входящее сальдо {reconciliationModal.startDate ? 'на начало периода' : '(начальный остаток)'}
+                        </td>
                         <td className="p-2.5 text-right text-slate-500 font-mono">—</td>
                         <td className="p-2.5 text-right text-slate-500 font-mono">—</td>
                         <td className="p-2.5 text-right font-mono font-bold text-slate-800">

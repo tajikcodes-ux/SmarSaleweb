@@ -3,7 +3,6 @@ import api from '../services/api';
 import { Coins, RefreshCw, CheckCircle2, AlertCircle, Settings2, Save, Target, Plus, Edit2, Sparkles, Printer, Download, CreditCard, FileText, X } from 'lucide-react';
 
 // min_visit_rate is kept in percent (85 = 85 %), the same as the server's defaults without a saved setting
-const defaultMinVisitRate = (role?: string) => (role === 'SUPERVISOR' ? 90 : role === 'SALES_REP' ? 85 : 0);
 
 export default function Salary() {
   const [activeTab, setActiveTab] = useState<'sheet' | 'settings' | 'targets'>('sheet');
@@ -171,7 +170,7 @@ export default function Salary() {
       `"${c.user?.username || ''}"`,
       `"${c.user?.role?.name || c.user?.role || ''}"`,
       parseFloat(c.baseSalary || 0).toFixed(2),
-      Math.round(Number(c.visitRate || 0) * 100) + '%',
+      c.plannedVisits === 0 ? 'нет плана' : Math.round(Number(c.visitRate || 0) * 100) + '%',
       parseFloat(c.salesVolume || 0).toFixed(2),
       parseFloat(c.bonusEarned || 0).toFixed(2),
       parseFloat(c.targetBonus || 0).toFixed(2),
@@ -249,18 +248,23 @@ export default function Salary() {
   const totalPayout = calculations.reduce((sum, item) => sum + Number(item.totalSalary), 0);
   const totalSales = calculations.reduce((sum, item) => sum + Number(item.salesVolume), 0);
   
-  const targetMetCount = calculations.filter((item) => {
+  // Only people with planned visits can meet or miss the visit norm
+  const withVisitPlan = calculations.filter((item) => item.plannedVisits !== 0);
+  const targetMetCount = withVisitPlan.filter((item) => {
     const visitRatePercent = Number(item.visitRate) * 100;
     
     // Find dynamic threshold from settingsList, else fallback
     const roleName = typeof item.user?.role === 'object' && item.user?.role !== null ? (item.user.role as any).name : item.user?.role;
     const rule = settingsList.find((s: any) => s.role === roleName);
-    const minRequired = rule ? parseFloat(rule.minVisitRate) : defaultMinVisitRate(roleName);
+    const minRequired = rule ? parseFloat(rule.minVisitRate) : 0;
     
     return visitRatePercent >= minRequired;
   }).length;
   
-  const targetMetPercentage = calculations.length > 0 ? Math.round((targetMetCount / calculations.length) * 100) : 100;
+  const targetMetPercentage = withVisitPlan.length > 0 ? Math.round((targetMetCount / withVisitPlan.length) * 100) : null;
+  const rolesWithoutTariff = [...new Set(
+    calculations.filter((c) => c.kpiConfigured === false).map((c) => c.user?.role?.name || c.user?.role || ''),
+  )].filter(Boolean);
 
   if (loading && calculations.length === 0 && activeTab === 'sheet') {
     return (
@@ -441,6 +445,20 @@ export default function Salary() {
 
       {activeTab === 'sheet' ? (
         <>
+          {rolesWithoutTariff.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+              <span>
+                Не задан тариф для ролей: <strong>{rolesWithoutTariff.join(', ')}</strong>. Оклад и комиссия для них не начисляются.
+              </span>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className="font-bold text-[#0071e3] hover:underline whitespace-nowrap"
+              >
+                Задать тариф →
+              </button>
+            </div>
+          )}
+
           {/* Metric Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="bg-white p-5 border border-[#e9e9e7] rounded-xl shadow-sm">
@@ -461,8 +479,14 @@ export default function Salary() {
                 Выполнение KPI (Визиты)
               </span>
               <div className="flex items-baseline gap-1.5 mt-2">
-                <span className="text-2xl font-bold text-emerald-600 font-mono">{targetMetPercentage}%</span>
-                <span className="text-xs text-[#86868b] font-bold">отдела</span>
+                {targetMetPercentage === null ? (
+                  <span className="text-sm font-bold text-[#86868b]">Нет плана визитов за месяц</span>
+                ) : (
+                  <>
+                    <span className="text-2xl font-bold text-emerald-600 font-mono">{targetMetPercentage}%</span>
+                    <span className="text-xs text-[#86868b] font-bold">отдела</span>
+                  </>
+                )}
               </div>
               <span className="text-[10px] text-[#86868b] block mt-1">
                 Соблюдение минимального лимита посещений из настроек KPI
@@ -508,7 +532,7 @@ export default function Salary() {
                     ? (item.user.role as any).name
                     : item.user?.role;
                   const rule = settingsList.find((s: any) => s.role === userRoleName);
-                  const minRequired = rule ? parseFloat(rule.minVisitRate) : defaultMinVisitRate(userRoleName);
+                  const minRequired = rule ? parseFloat(rule.minVisitRate) : 0;
                   const kpiPassed = visitRatePercent >= minRequired;
                   const targetBonusNum = Number(item.targetBonus || 0);
 
@@ -524,15 +548,23 @@ export default function Salary() {
                         </span>
                       </td>
                       <td className="p-3.5 font-mono text-[#37352f]">
-                        {parseFloat(item.baseSalary).toFixed(2)} TJS
+                        {item.kpiConfigured === false ? (
+                          <span className="text-amber-600 font-sans text-[10px] font-bold">тариф не задан</span>
+                        ) : (
+                          <>{parseFloat(item.baseSalary).toFixed(2)} TJS</>
+                        )}
                       </td>
                       <td className="p-3.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`font-bold font-mono ${kpiPassed ? 'text-emerald-600' : 'text-amber-600'}`}>
-                            {visitRatePercent}%
-                          </span>
-                          <span className="text-[10px] text-[#86868b]">из {minRequired}%</span>
-                        </div>
+                        {item.plannedVisits === 0 ? (
+                          <span className="text-[10px] text-[#86868b]">нет плана</span>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className={`font-bold font-mono ${kpiPassed ? 'text-emerald-600' : 'text-amber-600'}`}>
+                              {visitRatePercent}%
+                            </span>
+                            <span className="text-[10px] text-[#86868b]">из {minRequired}%</span>
+                          </div>
+                        )}
                       </td>
                       <td className="p-3.5 font-mono text-[#37352f]">
                         {parseFloat(item.salesVolume).toFixed(2)} TJS

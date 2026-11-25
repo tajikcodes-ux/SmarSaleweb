@@ -189,11 +189,10 @@ export default function Catalog() {
   };
 
   const getProductCategoryName = (p: any): string => {
+    const id = p.categoryId || p.category?.id;
+    const found = id ? categories.find((c) => c.id === id) : null;
+    if (found) return found.label;
     if (p.category?.name) return p.category.name;
-    if (p.categoryId) {
-      const found = categories.find((c) => c.id === p.categoryId);
-      if (found) return found.name;
-    }
     return 'Без категории';
   };
 
@@ -367,7 +366,12 @@ export default function Catalog() {
         api.get('/catalog/price-categories').catch(() => ({ data: [] })),
       ]);
       setProducts(prodRes.data);
-      setCategories(catRes.data);
+      // The same group name can sit under several parents ("Разное" in Прочее and in Автокосметика): label by the path
+      setCategories(
+        (catRes.data || [])
+          .map((c: any) => ({ ...c, label: c.parent?.name ? `${c.parent.name} / ${c.name}` : c.name }))
+          .sort((a: any, b: any) => a.label.localeCompare(b.label, 'ru')),
+      );
       setWarehouses(whRes.data);
       setSuppliers(supRes.data);
       setProcurements(procRes.data);
@@ -931,7 +935,7 @@ export default function Catalog() {
               >
                 <option value="">Выберите категорию</option>
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.label}</option>
                 ))}
               </select>
               <button
@@ -1080,7 +1084,7 @@ export default function Catalog() {
                   <option value="all">Все категории ({categories.length})</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {c.label}
                     </option>
                   ))}
                 </select>

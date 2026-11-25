@@ -6,6 +6,7 @@ import { useScope } from '../context/ScopeContext';
 import { MapPin, Users, RefreshCw, CheckCircle2, Circle, Trash, Copy, Sparkles, Info, Search, Play, Pause, Clock, Truck, ShieldCheck, CreditCard, Store, Layers, ChevronLeft, ChevronDown, ChevronUp, PanelRightClose, PanelRightOpen, Filter, Zap, Navigation, X, Compass, Maximize2, Minimize2 } from 'lucide-react';
 import MapLibreView from '../components/MapLibreView';
 import { clientBalance } from '../utils/clientBalance';
+import { batteryText } from '../utils/agentPresence';
 
 // Fix for default Leaflet icon paths in React production bundles
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -329,15 +330,7 @@ export default function RoutesMap() {
       setOrders(ordersList);
       setPayments(paymentsRes.data || []);
       
-      if (gpsRes.data.length > 0) {
-        setAgents(gpsRes.data);
-      } else {
-        // Center around Khujand default presets
-        setAgents([
-          { userId: '1', firstName: 'Фирдавс', lastName: 'Алиев', role: 'SALES_REP', latitude: 40.2825, longitude: 69.6210, speed: 0, batteryLevel: 85, recordedAt: new Date().toISOString() },
-          { userId: '2', firstName: 'Саид', lastName: 'Каримов', role: 'SALES_REP', latitude: 40.2910, longitude: 69.6130, speed: 45, batteryLevel: 92, recordedAt: new Date().toISOString() },
-        ]);
-      }
+      setAgents(Array.isArray(gpsRes.data) ? gpsRes.data : []);
     } catch (err) {
       console.error('Failed to load map data', err);
     } finally {
@@ -1095,7 +1088,7 @@ export default function RoutesMap() {
               </div>
               <h4 class="font-bold text-xs text-slate-900">${agent.firstName} ${agent.lastName}</h4>
               <div class="space-y-0.5 text-[10px] mt-2 text-slate-600">
-                <div><strong>Батарея:</strong> ${agent.batteryLevel || 100}%</div>
+                <div><strong>Батарея:</strong> ${batteryText(agent.batteryLevel) ?? 'нет данных'}</div>
                 <div><strong>Скорость:</strong> ${speedVal} км/ч</div>
                 <div><strong>GPS фиксация:</strong> ${recordedDateStr}</div>
               </div>
@@ -1291,8 +1284,8 @@ export default function RoutesMap() {
           segmentPoly.on('click', () => {
             const raw = pt.raw || {};
             const speed = raw.speed !== undefined && raw.speed !== null ? Math.round(Number(raw.speed)) : 0;
-            const battery = raw.batteryLevel !== undefined && raw.batteryLevel !== null ? Number(raw.batteryLevel) : 100;
-            const isLowBat = battery <= 15;
+            const battery = batteryText(raw.batteryLevel);
+            const isLowBat = battery !== null && Number(raw.batteryLevel) <= 15;
             const timeStr = formatExactGpsTime(raw.recordedAt, pt.mins);
 
             L.popup()
@@ -1306,7 +1299,7 @@ export default function RoutesMap() {
                   <div class="mt-2 space-y-1 text-[11px]">
                     <div><strong>🕒 Время:</strong> <span class="font-semibold text-slate-800">${timeStr}</span></div>
                     <div><strong>🚀 Скорость:</strong> <span class="font-semibold text-slate-800">${speed} км/ч</span></div>
-                    <div><strong>🔋 Заряд батареи:</strong> <span class="${isLowBat ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${battery}% ${isLowBat ? '⚠️ (Энергосбережение)' : ''}</span></div>
+                    <div><strong>🔋 Заряд батареи:</strong> <span class="${isLowBat ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold'}">${battery ?? 'нет данных'} ${isLowBat ? '⚠️ (Энергосбережение)' : ''}</span></div>
                     <div><strong>🌐 Координаты:</strong> ${pt.lat.toFixed(5)}, ${pt.lon.toFixed(5)}</div>
                   </div>
                   <button onclick="window.jumpTimelineToMinutes(${pt.mins})" style="margin-top: 10px; width: 100%; padding: 5px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
@@ -1379,7 +1372,7 @@ export default function RoutesMap() {
             if (closest) {
               const raw = closest.raw || {};
               const speed = raw.speed !== undefined && raw.speed !== null ? Math.round(Number(raw.speed)) : 0;
-              const battery = raw.batteryLevel !== undefined && raw.batteryLevel !== null ? raw.batteryLevel : '100';
+              const battery = batteryText(raw.batteryLevel) ?? 'нет данных';
               const timeStr = formatExactGpsTime(raw.recordedAt, closest.mins);
 
               L.popup()
@@ -1392,7 +1385,7 @@ export default function RoutesMap() {
                     <div class="mt-2 space-y-1 text-[11px]">
                       <div><strong>🕒 Время:</strong> <span class="font-semibold text-slate-800">${timeStr}</span></div>
                       <div><strong>🚀 Скорость:</strong> <span class="font-semibold text-slate-800">${speed} км/ч</span></div>
-                      <div><strong>🔋 Заряд батареи:</strong> <span class="font-bold text-emerald-600">${battery}%</span></div>
+                      <div><strong>🔋 Заряд батареи:</strong> <span class="font-bold text-emerald-600">${battery}</span></div>
                       <div><strong>🌐 Координаты:</strong> ${closest.lat.toFixed(5)}, ${closest.lon.toFixed(5)}</div>
                     </div>
                     <button onclick="window.jumpTimelineToMinutes(${closest.mins})" style="margin-top: 10px; width: 100%; padding: 5px 10px; background: #0071e3; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">
@@ -2909,9 +2902,11 @@ export default function RoutesMap() {
                           </div>
 
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-[9px] font-mono text-slate-400">
-                              🔋 {agent.batteryLevel || 100}%
-                            </span>
+                            {batteryText(agent.batteryLevel) && (
+                              <span className="text-[9px] font-mono text-slate-400">
+                                🔋 {batteryText(agent.batteryLevel)}
+                              </span>
+                            )}
                             <button
                               type="button"
                               onClick={(e) => {

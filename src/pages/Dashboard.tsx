@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
+import { batteryText, isOnline, lastSeenText } from '../utils/agentPresence';
 import {
   Users,
   ShoppingBag,
@@ -252,12 +253,13 @@ export default function Dashboard() {
       return true;
     });
 
-    const filteredGps = rawGps.filter((g: any) => {
-      if (selectedBranchId && g.branchId && g.branchId !== selectedBranchId) return false;
-      return true;
-    });
+    // Field staff who have sent at least one GPS point, the ones online first
+    const filteredGps = rawGps
+      .filter((g: any) => g.latitude !== null && g.latitude !== undefined && g.recordedAt)
+      .filter((g: any) => !(selectedBranchId && g.branchId && g.branchId !== selectedBranchId))
+      .sort((a: any, b: any) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
     setAgents(filteredGps);
-    const activeRepsCount = filteredGps.length;
+    const activeRepsCount = filteredGps.filter(isOnline).length;
 
     const ordersOn = (day: string) => revenueOrders.filter((o: any) => o.createdAt && localDay(o.createdAt) === day);
     const todayOrders = ordersOn(today);
@@ -648,7 +650,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1">
             {agents.length === 0 ? (
               <p className="text-xs text-slate-400 italic text-center py-12 col-span-2">
-                Нет активных агентов на карте.
+                Ни один агент ещё не присылал GPS. Точки появятся, когда агенты откроют смену в мобильном приложении.
               </p>
             ) : (
               agents.map((agent, index) => (
@@ -661,29 +663,32 @@ export default function Dashboard() {
                       <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[#0b57d0] border border-[#e3e3e8]">
                         {agent.firstName[0]}
                       </div>
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white pulse-green"></span>
+                      <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${isOnline(agent) ? 'bg-emerald-500 pulse-green' : 'bg-slate-300'}`}></span>
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-[#1d1d1f]">
                         {agent.firstName} {agent.lastName}
                       </h4>
                       <p className="text-[9px] text-[#86868b] font-medium font-mono mt-0.5">
-                        ETA: 10:15 • Бат: {agent.batteryLevel}%
+                        {isOnline(agent) ? 'В сети' : `Был ${lastSeenText(agent.recordedAt)}`}
+                        {batteryText(agent.batteryLevel) && ` • 🔋 ${batteryText(agent.batteryLevel)}`}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                      agent.speed > 0
-                        ? 'text-emerald-700 bg-emerald-50 border border-emerald-100'
-                        : 'text-amber-700 bg-amber-50 border border-amber-100'
-                    }`}>
-                      {agent.speed > 0 ? `${agent.speed} км/ч` : 'Стоит'}
-                    </span>
-                    <button className="text-[10px] font-extrabold text-[#0b57d0] block mt-2 hover:underline">
-                      Подробнее →
-                    </button>
+                    {isOnline(agent) && (
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        Number(agent.speed) > 0
+                          ? 'text-emerald-700 bg-emerald-50 border border-emerald-100'
+                          : 'text-amber-700 bg-amber-50 border border-amber-100'
+                      }`}>
+                        {Number(agent.speed) > 0 ? `${Math.round(Number(agent.speed))} км/ч` : 'Стоит'}
+                      </span>
+                    )}
+                    <Link to="/map" className="text-[10px] font-extrabold text-[#0b57d0] block mt-2 hover:underline">
+                      На карте →
+                    </Link>
                   </div>
                 </div>
               ))
