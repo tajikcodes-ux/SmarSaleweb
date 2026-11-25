@@ -99,7 +99,7 @@ const SECTIONS: Array<[string, string]> = [
   ['/roles', 'Роли'],
   ['/settings', 'Настройки компании'],
   ['/reports', 'Отчёты'],
-  ['/history', 'История Smartup'],
+  ['/history', 'Архив продаж'],
   ['/audit-logs', 'Журнал'],
   ['/smm', 'SMM'],
   ['/feedbacks', 'Обратная связь'],
@@ -151,6 +151,16 @@ test.describe('company settings page', () => {
     await signIn(page, 'agent1');
     await page.goto('/settings');
     await expect(page.getByText('Доступ к разделу ограничен')).toBeVisible();
+  });
+});
+
+test.describe('archive of the previous system', () => {
+  test('a company without an archive has neither the section nor the client button', async ({ page }) => {
+    await signIn(page, 'admin');
+    await page.goto('/clients');
+    await expect(page.getByText('Магазин Бахор').first()).toBeVisible();
+    await expect(page.getByText('Архив продаж')).toHaveCount(0);
+    await expect(page.locator('button[title^="История в"]')).toHaveCount(0);
   });
 });
 

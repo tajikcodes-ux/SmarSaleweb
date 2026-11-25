@@ -4,13 +4,19 @@ import { History, Info } from 'lucide-react';
 
 interface MonthRow { month: string; branch: string; orders: number; returns: number; payments: number; orderCount: number; activeClients: number }
 interface AgentRow { agentName: string; branch: string; orders: number; returns: number; orderCount: number; activeClients: number }
-interface Summary { month: string | null; availableMonths: string[]; months: MonthRow[]; agents: AgentRow[] }
+interface Summary {
+  month: string | null;
+  availableMonths: string[];
+  months: MonthRow[];
+  agents: AgentRow[];
+  sources: Array<{ source: string; label: string }>;
+}
 
 const money = (v: number) => (v ? v.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) : '—');
 const MONTH_NAMES = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
 const monthLabel = (m: string) => `${MONTH_NAMES[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
 
-/** Sales history from the previous system (Smartup): an archive to compare with, it does not affect debts */
+/** Sales history from the company's previous system: an archive to compare with, it does not affect debts */
 export default function LegacyHistory() {
   const [data, setData] = useState<Summary | null>(null);
   const [month, setMonth] = useState('');
@@ -31,6 +37,8 @@ export default function LegacyHistory() {
     return [...grouped.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [data]);
 
+  const systemName = (data?.sources ?? []).map((s) => s.label).join(' и ');
+
   const branchesWithoutOrders = useMemo(() => {
     const all = new Set((data?.months ?? []).map((r) => r.branch));
     const withOrders = new Set((data?.months ?? []).filter((r) => r.orders > 0).map((r) => r.branch));
@@ -42,9 +50,9 @@ export default function LegacyHistory() {
       <div className="bg-white border border-[#e3e3e8] p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-bold text-[#1d1d1f] flex items-center gap-2">
-            <History className="w-5 h-5 text-[#0b57d0]" /> История продаж из Smartup
+            <History className="w-5 h-5 text-[#0b57d0]" /> Архив продаж{systemName ? ` из ${systemName}` : ''}
           </h2>
-          <p className="text-xs text-[#86868b] mt-1">Заказы, возвраты и оплаты наличными до перехода на SmartSale</p>
+          <p className="text-xs text-[#86868b] mt-1">Заказы, возвраты и оплаты до перехода на SmartSale</p>
         </div>
         {data && data.availableMonths.length > 0 && (
           <select
@@ -81,7 +89,7 @@ export default function LegacyHistory() {
                 <tr>
                   <th className="p-3">Месяц</th><th className="p-3">Филиал</th>
                   <th className="p-3 text-right">Заказы</th><th className="p-3 text-right">Возвраты</th>
-                  <th className="p-3 text-right">Оплаты нал.</th><th className="p-3 text-right">Заказов</th><th className="p-3 text-right">АКБ</th>
+                  <th className="p-3 text-right">Оплаты</th><th className="p-3 text-right">Заказов</th><th className="p-3 text-right">АКБ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e3e3e8]/60">

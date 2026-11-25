@@ -337,7 +337,8 @@ export default function App() {
           <Route
             path="/history"
             element={
-              <ProtectedRoute resource="reports">
+              // The page asks the server: permissions saved at sign-in can predate this section
+              <ProtectedRoute>
                 <LegacyHistory />
               </ProtectedRoute>
             }

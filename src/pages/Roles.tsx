@@ -74,6 +74,15 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         ],
       },
       {
+        key: 'legacy_history',
+        label: 'Архив продаж из прошлой системы',
+        description: 'Заказы, возвраты и оплаты до перехода на SmartSale (например, из Smartup). Только просмотр, на долги не влияет',
+        actions: [
+          { action: 'read', label: 'История своих клиентов' },
+          { action: 'view_all', label: 'Сводка по всей компании' },
+        ],
+      },
+      {
         key: 'ai',
         label: 'AI Ассистент',
         description: 'Умный аналитический помощник и ответы на бизнес-вопросы',

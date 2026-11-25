@@ -69,6 +69,11 @@ test.describe('agent base', () => {
 });
 
 test.describe('history from the previous system', () => {
+  test('a company without an archive is told so, and the section stays hidden', async () => {
+    expect(await admin.get('/legacy-history/availability')).toMatchObject({ available: false, sources: [], canViewSummary: true });
+    expect(await agent1.get('/legacy-history/availability')).toMatchObject({ available: false, canViewSummary: false });
+  });
+
   test('company history is for managers; an agent opens only the clients of his base', async () => {
     expect((await admin.call('get', '/legacy-history/summary')).status).toBe(200);
     expect((await agent1.call('get', '/legacy-history/summary')).status).toBe(403);

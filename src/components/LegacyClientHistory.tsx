@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { History, X } from 'lucide-react';
 
-interface Props { clientId: string; clientName: string; onClose: () => void }
+interface Props { clientId: string; clientName: string; systemName: string; onClose: () => void }
 
 const KIND_LABELS: Record<string, string> = { order: 'Заказ', return: 'Возврат', payment: 'Оплата' };
 const money = (v: number) => v.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-/** A client's history in the previous system (Smartup), read only */
-export default function LegacyClientHistory({ clientId, clientName, onClose }: Props) {
+/** A client's history in the company's previous system, read only */
+export default function LegacyClientHistory({ clientId, clientName, systemName, onClose }: Props) {
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState('');
 
@@ -24,7 +24,7 @@ export default function LegacyClientHistory({ clientId, clientName, onClose }: P
         <div className="flex items-start justify-between gap-3 p-5 border-b border-[#e3e3e8]">
           <div>
             <h3 className="text-sm font-bold text-[#1d1d1f] flex items-center gap-2">
-              <History className="w-4 h-4 text-[#0b57d0]" /> История в Smartup: {clientName}
+              <History className="w-4 h-4 text-[#0b57d0]" /> История в {data?.sourceLabel || systemName}: {clientName}
             </h3>
             <p className="text-[11px] text-[#86868b] mt-0.5">Архив до перехода на SmartSale. Долг клиента он не меняет.</p>
           </div>
@@ -39,7 +39,7 @@ export default function LegacyClientHistory({ clientId, clientName, onClose }: P
           ) : !data ? (
             <p className="text-xs text-[#86868b] text-center py-10">Загрузка…</p>
           ) : data.total === 0 ? (
-            <p className="text-xs text-[#86868b] text-center py-10">По этой точке в Smartup нет заказов, возвратов и оплат.</p>
+            <p className="text-xs text-[#86868b] text-center py-10">По этой точке в {systemName} нет заказов, возвратов и оплат.</p>
           ) : (
             <>
               <table className="w-full text-left text-xs">

@@ -41,6 +41,7 @@ import { Tour, TourInvite } from '../tour/Tour';
 import { tourStore, tourSeenKey } from '../tour/tourStore';
 import ScopeBar from './ScopeBar';
 import { ProfileDialog } from './AccountDialog';
+import { useLegacyHistory } from '../utils/legacyHistory';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -51,6 +52,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [showAiInsight, setShowAiInsight] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const legacy = useLegacyHistory();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -162,7 +164,7 @@ export default function Layout({ children }: LayoutProps) {
       items: [
         { path: '/', label: 'Дашборд', icon: LayoutDashboard },
         { path: '/reports', label: 'Конструктор отчетов', icon: BarChart3 },
-        { path: '/history', label: 'История Smartup', icon: History },
+        { path: '/history', label: 'Архив продаж', icon: History },
         { path: '/ai-assistant', label: 'AI Ассистент', icon: Sparkles },
       ]
     },
@@ -233,7 +235,6 @@ export default function Layout({ children }: LayoutProps) {
     const resourceMap: Record<string, string> = {
       '/': 'dashboard',
       '/reports': 'reports',
-      '/history': 'reports',
       '/ai-assistant': 'ai',
       '/orders': 'orders',
       '/returns': 'returns',
@@ -260,6 +261,8 @@ export default function Layout({ children }: LayoutProps) {
 
     return menuStructure.map(group => {
       const filteredItems = group.items.filter(item => {
+        // Only a company with an archive from its previous system has this section; the server says who may open it
+        if (item.path === '/history') return legacy.available && legacy.canViewSummary;
         // OWNER has full bypass access to all modules
         if (role === 'OWNER') return true;
 

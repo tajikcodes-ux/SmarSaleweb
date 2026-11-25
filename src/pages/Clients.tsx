@@ -6,6 +6,7 @@ import {
   Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw,
   Ban, ShieldCheck, Printer, Calendar, History } from 'lucide-react';
 import LegacyClientHistory from '../components/LegacyClientHistory';
+import { useLegacyHistory } from '../utils/legacyHistory';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 import { clientBalance } from '../utils/clientBalance';
@@ -37,6 +38,7 @@ export default function Clients() {
 
   // Reconciliation statement modal state
   const [legacyHistory, setLegacyHistory] = useState<{ id: string; name: string } | null>(null);
+  const legacy = useLegacyHistory();
   const [reconciliationModal, setReconciliationModal] = useState<{
     open: boolean;
     clientId: string;
@@ -1422,13 +1424,15 @@ export default function Clients() {
                           {item.status === 'blocked' ? <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Ban className="w-3.5 h-3.5" />}
                         </button>
 
-                        <button
-                          onClick={() => setLegacyHistory({ id: item.id, name: item.name })}
-                          className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-slate-50 text-[#6a6a65] hover:text-[#1d1d1f] transition-colors"
-                          title="История в Smartup"
-                        >
-                          <History className="w-3.5 h-3.5" />
-                        </button>
+                        {legacy.available && (
+                          <button
+                            onClick={() => setLegacyHistory({ id: item.id, name: item.name })}
+                            className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-slate-50 text-[#6a6a65] hover:text-[#1d1d1f] transition-colors"
+                            title={`История в ${legacy.label}`}
+                          >
+                            <History className="w-3.5 h-3.5" />
+                          </button>
+                        )}
 
                         {/* Interactive Reconciliation Statement Modal */}
                         <button
@@ -1620,7 +1624,7 @@ export default function Clients() {
 
       {/* INTERACTIVE RECONCILIATION STATEMENT MODAL */}
       {legacyHistory && (
-        <LegacyClientHistory clientId={legacyHistory.id} clientName={legacyHistory.name} onClose={() => setLegacyHistory(null)} />
+        <LegacyClientHistory clientId={legacyHistory.id} clientName={legacyHistory.name} systemName={legacy.label} onClose={() => setLegacyHistory(null)} />
       )}
 
       {reconciliationModal.open && (
