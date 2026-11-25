@@ -5,6 +5,7 @@ import logoClean from '../assets/logo_clean.webp';
 import {
   LayoutDashboard,
   BarChart3,
+  History,
   Users,
   MapPin,
   ShoppingBag,
@@ -161,6 +162,7 @@ export default function Layout({ children }: LayoutProps) {
       items: [
         { path: '/', label: 'Дашборд', icon: LayoutDashboard },
         { path: '/reports', label: 'Конструктор отчетов', icon: BarChart3 },
+        { path: '/history', label: 'История Smartup', icon: History },
         { path: '/ai-assistant', label: 'AI Ассистент', icon: Sparkles },
       ]
     },
@@ -231,6 +233,7 @@ export default function Layout({ children }: LayoutProps) {
     const resourceMap: Record<string, string> = {
       '/': 'dashboard',
       '/reports': 'reports',
+      '/history': 'reports',
       '/ai-assistant': 'ai',
       '/orders': 'orders',
       '/returns': 'returns',

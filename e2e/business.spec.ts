@@ -68,6 +68,15 @@ test.describe('agent base', () => {
   });
 });
 
+test.describe('history from the previous system', () => {
+  test('company history is for managers; an agent opens only the clients of his base', async () => {
+    expect((await admin.call('get', '/legacy-history/summary')).status).toBe(200);
+    expect((await agent1.call('get', '/legacy-history/summary')).status).toBe(403);
+    expect((await agent1.call('get', `/legacy-history/client/${client['Магазин Нур'].id}`)).status).toBe(200);
+    expect((await agent1.call('get', `/legacy-history/client/${client['Киоск Сомон'].id}`)).status).toBe(404);
+  });
+});
+
 test.describe('orders, stock and debt', () => {
   test('an agent off shift cannot take an order', async () => {
     const r = await order(agent1, 'Магазин Бахор', [['E2E-001', 1]]);

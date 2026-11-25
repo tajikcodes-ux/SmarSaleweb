@@ -28,6 +28,7 @@ const AuditLogs = lazy(() => import('./pages/AuditLogs'));
 const CompanySettings = lazy(() => import('./pages/CompanySettings'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 const ReportConstructor = lazy(() => import('./pages/ReportConstructor'));
+const LegacyHistory = lazy(() => import('./pages/LegacyHistory'));
 const PhotoReports = lazy(() => import('./pages/PhotoReports'));
 const RoutePlanner = lazy(() => import('./pages/RoutePlanner'));
 const Coverage = lazy(() => import('./pages/Coverage'));
@@ -330,6 +331,14 @@ export default function App() {
             element={
               <ProtectedRoute resource="reports">
                 <ReportConstructor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute resource="reports">
+                <LegacyHistory />
               </ProtectedRoute>
             }
           />

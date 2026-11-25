@@ -99,6 +99,7 @@ const SECTIONS: Array<[string, string]> = [
   ['/roles', 'Роли'],
   ['/settings', 'Настройки компании'],
   ['/reports', 'Отчёты'],
+  ['/history', 'История Smartup'],
   ['/audit-logs', 'Журнал'],
   ['/smm', 'SMM'],
   ['/feedbacks', 'Обратная связь'],

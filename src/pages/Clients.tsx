@@ -4,7 +4,8 @@ import {
   Plus, Navigation, Wallet, Edit, Trash, X, FileText, 
   FileSpreadsheet, Download, Upload, CheckCircle2, AlertTriangle,
   Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw,
-  Ban, ShieldCheck, Printer, Calendar } from 'lucide-react';
+  Ban, ShieldCheck, Printer, Calendar, History } from 'lucide-react';
+import LegacyClientHistory from '../components/LegacyClientHistory';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
 import { clientBalance } from '../utils/clientBalance';
@@ -35,6 +36,7 @@ export default function Clients() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   // Reconciliation statement modal state
+  const [legacyHistory, setLegacyHistory] = useState<{ id: string; name: string } | null>(null);
   const [reconciliationModal, setReconciliationModal] = useState<{
     open: boolean;
     clientId: string;
@@ -1420,6 +1422,14 @@ export default function Clients() {
                           {item.status === 'blocked' ? <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> : <Ban className="w-3.5 h-3.5" />}
                         </button>
 
+                        <button
+                          onClick={() => setLegacyHistory({ id: item.id, name: item.name })}
+                          className="p-1.5 rounded-lg border border-[#e3e3e8] hover:bg-slate-50 text-[#6a6a65] hover:text-[#1d1d1f] transition-colors"
+                          title="История в Smartup"
+                        >
+                          <History className="w-3.5 h-3.5" />
+                        </button>
+
                         {/* Interactive Reconciliation Statement Modal */}
                         <button
                           onClick={() => handleOpenReconciliation(item.id, item.name)}
@@ -1609,6 +1619,10 @@ export default function Clients() {
       )}
 
       {/* INTERACTIVE RECONCILIATION STATEMENT MODAL */}
+      {legacyHistory && (
+        <LegacyClientHistory clientId={legacyHistory.id} clientName={legacyHistory.name} onClose={() => setLegacyHistory(null)} />
+      )}
+
       {reconciliationModal.open && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
