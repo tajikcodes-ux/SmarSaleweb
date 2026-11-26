@@ -78,6 +78,8 @@ test.describe('history from the previous system', () => {
   test('company history is for managers; an agent opens only the clients of his base', async () => {
     expect((await admin.call('get', '/legacy-history/summary')).status).toBe(200);
     expect((await agent1.call('get', '/legacy-history/summary')).status).toBe(403);
+    expect((await agent1.call('get', '/legacy-history/dashboard')).status).toBe(403);
+    expect(await admin.get('/legacy-history/dashboard')).toEqual({ available: false });
     expect((await agent1.call('get', `/legacy-history/client/${client['Магазин Нур'].id}`)).status).toBe(200);
     expect((await agent1.call('get', `/legacy-history/client/${client['Киоск Сомон'].id}`)).status).toBe(404);
   });
