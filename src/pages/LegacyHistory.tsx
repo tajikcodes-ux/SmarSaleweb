@@ -2,7 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../services/api';
 import { History, Info } from 'lucide-react';
 
-interface MonthRow { month: string; branch: string; orders: number; returns: number; payments: number; orderCount: number; activeClients: number }
+interface MonthRow {
+  month: string;
+  branch: string;
+  orders: number;
+  returns: number;
+  payments: number;
+  transfersOut: number;
+  orderCount: number;
+  activeClients: number;
+}
+interface TransferRow { month: string; from: string; to: string; amount: number; documents: number }
 interface AgentRow { agentName: string; branch: string; orders: number; returns: number; orderCount: number; activeClients: number }
 interface Summary {
   month: string | null;
@@ -10,6 +20,7 @@ interface Summary {
   months: MonthRow[];
   agents: AgentRow[];
   sources: Array<{ source: string; label: string }>;
+  transfers: TransferRow[];
 }
 
 const money = (v: number) => (v ? v.toLocaleString('ru-RU', { maximumFractionDigits: 0 }) : '—');
@@ -38,6 +49,10 @@ export default function LegacyHistory() {
   }, [data]);
 
   const systemName = (data?.sources ?? []).map((s) => s.label).join(' и ');
+  const hasTransfers = (data?.transfers ?? []).length > 0;
+  // Share of returns in sales: the signal to look at first
+  const returnShare = (r: { orders: number; returns: number }) => (r.orders > 0 ? (r.returns / r.orders) * 100 : null);
+  const shareClass = (v: number | null) => (v === null ? '' : v >= 8 ? 'text-rose-600 font-bold' : v >= 5 ? 'text-amber-600' : '');
 
   const branchesWithoutOrders = useMemo(() => {
     const all = new Set((data?.months ?? []).map((r) => r.branch));
@@ -88,8 +103,10 @@ export default function LegacyHistory() {
               <thead className="bg-[#f8f9fa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
                 <tr>
                   <th className="p-3">Месяц</th><th className="p-3">Филиал</th>
-                  <th className="p-3 text-right">Заказы</th><th className="p-3 text-right">Возвраты</th>
-                  <th className="p-3 text-right">Оплаты</th><th className="p-3 text-right">Заказов</th><th className="p-3 text-right">АКБ</th>
+                  <th className="p-3 text-right">Продажи</th><th className="p-3 text-right">Возвраты</th>
+                  <th className="p-3 text-right">% возвр.</th><th className="p-3 text-right">Оплаты</th>
+                  {hasTransfers && <th className="p-3 text-right">Переброски</th>}
+                  <th className="p-3 text-right">Заказов</th><th className="p-3 text-right">АКБ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#e3e3e8]/60">
@@ -99,14 +116,51 @@ export default function LegacyHistory() {
                     <td className="p-3">{r.branch}</td>
                     <td className="p-3 text-right font-mono">{money(r.orders)}</td>
                     <td className="p-3 text-right font-mono text-rose-600">{money(r.returns)}</td>
+                    <td className={`p-3 text-right font-mono ${shareClass(returnShare(r))}`}>
+                      {returnShare(r) === null ? '—' : `${returnShare(r)!.toFixed(1)}%`}
+                    </td>
                     <td className="p-3 text-right font-mono text-emerald-700">{money(r.payments)}</td>
+                    {hasTransfers && <td className="p-3 text-right font-mono text-[#86868b]">{money(r.transfersOut)}</td>}
                     <td className="p-3 text-right font-mono">{r.orderCount || '—'}</td>
                     <td className="p-3 text-right font-mono">{r.activeClients && r.orders ? r.activeClients : '—'}</td>
                   </tr>
                 )))}
               </tbody>
             </table>
+            <p className="px-5 py-3 text-[11px] text-[#86868b]">
+              Продажи — без перебросок товара между своими филиалами{hasTransfers ? ': они в колонке «Переброски» и в таблице ниже' : ''}.
+            </p>
           </div>
+
+          {hasTransfers && (
+            <div className="bg-white border border-[#e3e3e8] rounded-2xl shadow-sm overflow-x-auto">
+              <h3 className="text-sm font-bold text-[#1d1d1f] px-5 pt-4">Переброски между филиалами, TJS</h3>
+              <p className="px-5 pt-1 text-[11px] text-[#86868b]">
+                Товар, отправленный своим филиалам. В прошлой системе он оформлялся как заказ, здесь он не считается продажей.
+              </p>
+              <table className="w-full text-left text-xs mt-3">
+                <thead className="bg-[#f8f9fa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
+                  <tr>
+                    <th className="p-3">Месяц</th><th className="p-3">Откуда</th><th className="p-3">Куда</th>
+                    <th className="p-3 text-right">Сумма</th><th className="p-3 text-right">Документов</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e3e3e8]/60">
+                  {data.transfers.map((t, i) => (
+                    <tr key={`${t.month}-${t.from}-${t.to}`}>
+                      <td className="p-3 font-semibold text-[#1d1d1f]">
+                        {i === 0 || data.transfers[i - 1].month !== t.month ? monthLabel(t.month) : ''}
+                      </td>
+                      <td className="p-3">{t.from}</td>
+                      <td className="p-3">→ {t.to}</td>
+                      <td className="p-3 text-right font-mono">{money(t.amount)}</td>
+                      <td className="p-3 text-right font-mono">{t.documents}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div className="bg-white border border-[#e3e3e8] rounded-2xl shadow-sm overflow-x-auto">
             <h3 className="text-sm font-bold text-[#1d1d1f] px-5 pt-4">Агенты за {data.month ? monthLabel(data.month) : '—'}</h3>
@@ -117,7 +171,7 @@ export default function LegacyHistory() {
                 <thead className="bg-[#f8f9fa] text-[10px] font-bold text-[#86868b] uppercase tracking-wider">
                   <tr>
                     <th className="p-3">Агент</th><th className="p-3">Филиал</th>
-                    <th className="p-3 text-right">Заказы, TJS</th><th className="p-3 text-right">Возвраты, TJS</th>
+                    <th className="p-3 text-right">Продажи, TJS</th><th className="p-3 text-right">Возвраты, TJS</th>
                     <th className="p-3 text-right">Заказов</th><th className="p-3 text-right">АКБ</th>
                   </tr>
                 </thead>

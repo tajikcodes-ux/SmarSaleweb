@@ -4,7 +4,7 @@ import { History, X } from 'lucide-react';
 
 interface Props { clientId: string; clientName: string; systemName: string; onClose: () => void }
 
-const KIND_LABELS: Record<string, string> = { order: 'Заказ', return: 'Возврат', payment: 'Оплата' };
+const KIND_LABELS: Record<string, string> = { order: 'Заказ', return: 'Возврат', payment: 'Оплата', transfer: 'Переброска' };
 const money = (v: number) => v.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** A client's history in the company's previous system, read only */
