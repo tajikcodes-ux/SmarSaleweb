@@ -6,6 +6,7 @@ import {
   Sparkles, Search, ArrowUpDown, ArrowUp, ArrowDown, RotateCcw,
   Ban, ShieldCheck, Printer, Calendar, History } from 'lucide-react';
 import LegacyClientHistory from '../components/LegacyClientHistory';
+import LocationIssues from '../components/LocationIssues';
 import { useLegacyHistory } from '../utils/legacyHistory';
 import * as XLSX from 'xlsx-js-style';
 import L from 'leaflet';
@@ -1193,6 +1194,7 @@ export default function Clients() {
             >
               Без долга ({clients.length - debtorClientsCount})
             </button>
+            {canAssignAgents && <LocationIssues />}
           </div>
 
           <div className="text-[11px] text-[#86868b] font-medium">

@@ -25,7 +25,10 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  await change(owner, { 'visit.radiusMeters': 150, 'visit.allowRemoteWithReason': true, 'credit.overLimit': 'hold' });
+  await change(owner, {
+    'visit.radiusMeters': 150, 'visit.allowRemoteWithReason': true, 'credit.overLimit': 'hold',
+    'visit.autoPinCoordinates': false, 'visit.autoPinMinVisits': 2, 'visit.autoPinRadiusMeters': 100,
+  });
   await shared?.dispose();
 });
 
@@ -52,6 +55,21 @@ test('each group is changed only by its roles', async () => {
   expect(field.visitRadiusMeters).toBe(200);
   expect(field.canCollectPayments).toBe(true);
   await change(owner, { 'visit.radiusMeters': 150, 'credit.overLimit': 'hold' });
+});
+
+test('coordinates from check-ins: off by default, tuned by field managers, issues for those who see the whole base', async () => {
+  const s = await settings(owner);
+  expect([s['visit.autoPinCoordinates'], s['visit.autoPinMinVisits'], s['visit.autoPinRadiusMeters']]).toEqual([false, 2, 100]);
+  expect((await change(manager, { 'visit.autoPinCoordinates': true, 'visit.autoPinMinVisits': 3 })).status).toBe(200);
+  expect((await change(financier, { 'visit.autoPinRadiusMeters': 80 })).status).toBe(403);
+  for (const bad of [{ 'visit.autoPinMinVisits': 1 }, { 'visit.autoPinRadiusMeters': 500 }]) {
+    expect((await change(owner, bad)).status, JSON.stringify(bad)).toBe(400);
+  }
+  const issues = await owner.get('/clients/location-issues');
+  expect(issues).toMatchObject({ scattered: [] });
+  expect(issues.withoutCoordinates).toBeGreaterThanOrEqual(0);
+  expect((await agent.call('get', '/clients/location-issues')).status).toBe(403);
+  await change(owner, { 'visit.autoPinCoordinates': false, 'visit.autoPinMinVisits': 2 });
 });
 
 test('wrong values are refused with a reason', async () => {
