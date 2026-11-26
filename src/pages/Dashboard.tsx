@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import api from '../services/api';
 import { useScope } from '../context/ScopeContext';
 import { batteryText, isOnline, lastSeenText } from '../utils/agentPresence';
+import SmartupFreshness from '../components/SmartupFreshness';
 import {
   Users,
   ShoppingBag,
@@ -572,6 +573,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
+      <SmartupFreshness />
       {/* Welcome & Dashboard Sub-bar */}
       <div className="bg-white border border-[#e3e3e8] p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
         <div>

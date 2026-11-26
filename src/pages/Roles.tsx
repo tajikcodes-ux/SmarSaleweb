@@ -74,6 +74,15 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         ],
       },
       {
+        key: 'integrations',
+        label: 'Загрузка данных из прошлой системы',
+        description: 'Загрузка выгрузки Smartup: клиенты, долги, остатки, история. Меняет долги и остатки — только для тех, кто отвечает за деньги',
+        actions: [
+          { action: 'read', label: 'Просмотр загрузок' },
+          { action: 'run', label: 'Загрузка и применение' },
+        ],
+      },
+      {
         key: 'legacy_history',
         label: 'Архив продаж из прошлой системы',
         description: 'Заказы, возвраты и оплаты до перехода на SmartSale (например, из Smartup). Только просмотр, на долги не влияет',

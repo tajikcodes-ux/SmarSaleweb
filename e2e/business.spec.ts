@@ -1,5 +1,6 @@
 import { APIRequestContext, expect, request as playwrightRequest, test } from '@playwright/test';
 import { money, Session, signIn } from './api';
+import { API_URL } from './env';
 
 /**
  * Money and goods through the real API and a real database: what an agent, a manager and a
@@ -79,6 +80,21 @@ test.describe('history from the previous system', () => {
     expect((await agent1.call('get', '/legacy-history/summary')).status).toBe(403);
     expect((await agent1.call('get', `/legacy-history/client/${client['Магазин Нур'].id}`)).status).toBe(200);
     expect((await agent1.call('get', `/legacy-history/client/${client['Киоск Сомон'].id}`)).status).toBe(404);
+  });
+});
+
+test.describe('loading a Smartup backup', () => {
+  test('only those who manage money load data, and a file that is not an archive is refused', async () => {
+    expect(await admin.get('/integrations/smartup/runs')).toEqual([]);
+    expect(await agent1.get('/integrations/smartup/status')).toEqual({ connected: false });
+    expect((await agent1.call('get', '/integrations/smartup/runs')).status).toBe(403);
+    const upload = (s: Session, name: string) =>
+      shared.post(`${API_URL}/integrations/smartup/runs`, {
+        headers: { Authorization: `Bearer ${s.token}` },
+        multipart: { file: { name, mimeType: 'application/zip', buffer: Buffer.from('not a zip') } },
+      });
+    expect((await upload(agent1, 'backup.zip')).status()).toBe(403);
+    expect((await upload(admin, 'backup.txt')).status()).toBe(400);
   });
 });
 
