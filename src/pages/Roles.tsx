@@ -264,6 +264,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
           { action: 'delete', label: 'Удаление' },
           { action: 'collect', label: 'Инкассация в полях' },
           { action: 'reconcile', label: 'Акты сверки' },
+          { action: 'confirm', label: 'Проведение кассиром' },
           { action: 'export', label: 'Экспорт кассы' },
         ],
       },

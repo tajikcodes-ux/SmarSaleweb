@@ -13,7 +13,10 @@ export default function Payments() {
 
   const userStr = localStorage.getItem('user');
   const currentUser = userStr ? JSON.parse(userStr) : null;
-  const isFinanceManager = currentUser && ['OWNER', 'FINANCIER', 'ACCOUNTANT'].includes(currentUser.role);
+  // Who posts collected money: the cashier's right, as the server checks it
+  const isFinanceManager = !!currentUser && (
+    currentUser.role === 'OWNER' || (Array.isArray(currentUser.permissions?.payments) && currentUser.permissions.payments.includes('confirm'))
+  );
 
   const handleToggleSalesRep = async (val: boolean) => {
     try {
@@ -436,7 +439,7 @@ export default function Payments() {
                         ? 'bg-rose-50 text-rose-700 border border-rose-100'
                         : 'bg-amber-50 text-amber-700 border border-amber-100'
                     }`}>
-                      {item.status === 'verified' ? 'Подтвержден' : item.status === 'rejected' ? 'Отклонен' : 'На сверке'}
+                      {item.status === 'verified' ? 'Проведено кассой' : item.status === 'rejected' ? 'Отклонено' : 'Ждёт кассира'}
                     </span>
                   </td>
                   <td className="p-3.5 text-[#6a6a65]">
@@ -451,14 +454,14 @@ export default function Payments() {
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => handleReconcile(item.id, 'verify')}
-                            title="Подтвердить получение наличных"
+                            title="Провести: деньги получены кассой"
                             className="p-1.5 rounded bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 transition-colors"
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleReconcile(item.id, 'reject')}
-                            title="Отклонить (возврат долга клиенту)"
+                            title="Отклонить: деньги не дошли до кассы"
                             className="p-1.5 rounded bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 transition-colors"
                           >
                             <AlertCircle className="w-3.5 h-3.5" />
@@ -466,7 +469,7 @@ export default function Payments() {
                         </div>
                       ) : (
                         <span className="text-[10px] text-[#86868b] italic">
-                          {item.status === 'verified' ? 'Сверено' : 'Отклонено'}
+                          {item.status === 'verified' ? 'Проведено' : 'Отклонено'}
                         </span>
                       )}
                     </td>

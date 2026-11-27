@@ -1394,6 +1394,11 @@ export default function Clients() {
                     </td>
                     <td className={`p-3.5 font-bold font-mono ${debt < 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
                       <div>{debt < 0 ? `Аванс ${Math.abs(debt).toFixed(2)} TJS` : `${debt.toFixed(2)} TJS`}</div>
+                      {Number(item.awaitingCashier) > 0 && (
+                        <div className="text-[10px] font-semibold text-amber-700" title="Деньги приняты, но кассир их ещё не провёл: долг уменьшится после проведения">
+                          ждёт кассира {Number(item.awaitingCashier).toFixed(2)} TJS
+                        </div>
+                      )}
                       {debt > 0 && debtAgingMap[item.id] && (
                         <span className={`inline-block mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold font-sans ${
                           debtAgingMap[item.id].ageDays > 30 ? 'bg-rose-100 text-rose-800 border border-rose-200' :

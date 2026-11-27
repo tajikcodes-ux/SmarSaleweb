@@ -28,6 +28,7 @@ test.afterAll(async () => {
   await change(owner, {
     'visit.radiusMeters': 150, 'visit.allowRemoteWithReason': true, 'credit.overLimit': 'hold',
     'visit.autoPinCoordinates': false, 'visit.autoPinMinVisits': 2, 'visit.autoPinRadiusMeters': 100,
+    'payments.debtReducesOn': 'collect',
   });
   await shared?.dispose();
 });
@@ -109,6 +110,25 @@ test('the credit rule applies to the next order at once', async () => {
 
   await change(financier, { 'credit.overLimit': 'hold' });
   await owner.call('put', `/clients/${amid.id}`, { creditLimit: 0 });
+});
+
+test('with the cashier rule a payment lowers the debt only when the cashier posts it', async () => {
+  const debtOf = async () => {
+    const c = (await owner.get('/clients')).find((x: any) => x.name === 'Магазин Нур');
+    return { id: c.id, debt: Number(c.currentDebt), awaiting: Number(c.awaitingCashier) };
+  };
+  await change(financier, { 'payments.debtReducesOn': 'cashier' });
+  const before = await debtOf();
+  const paid = await agent.call('post', '/payments', { clientId: before.id, amount: 7, paymentMethod: 'CASH' });
+  expect(paid.status).toBe(201);
+  expect(await debtOf()).toMatchObject({ debt: before.debt, awaiting: before.awaiting + 7 });
+
+  // An agent cannot post his own money; the financier (a cashier's right) can
+  expect((await agent.call('patch', `/payments/${paid.body.id}/reconcile`, { action: 'verify' })).status).toBe(403);
+  expect((await financier.call('patch', `/payments/${paid.body.id}/reconcile`, { action: 'verify' })).status).toBe(200);
+  expect(await debtOf()).toMatchObject({ debt: before.debt - 7, awaiting: before.awaiting });
+
+  await change(financier, { 'payments.debtReducesOn': 'collect' });
 });
 
 test('the radius and the reason rule decide a check-in from afar', async () => {

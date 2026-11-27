@@ -185,6 +185,7 @@ const ROLE_LABELS: Record<string, string> = {
   DELIVERY_MAN: 'Курьер',
   WAREHOUSE_MAN: 'Кладовщик',
   FINANCIER: 'Финансист',
+  CASHIER: 'Кассир',
   AUDITOR: 'Аудитор',
   MARKETER: 'Маркетолог',
   BUYER: 'Менеджер по закупкам',
