@@ -19,7 +19,7 @@ export default function Returns() {
   const [selectedClient, setSelectedClient] = useState('');
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [reason, setReason] = useState('');
-  const [returnItems, setReturnItems] = useState<{ productId: string; quantity: number; price: number }[]>([]);
+  const [returnItems, setReturnItems] = useState<{ productId: string; quantity: number; price: number; condition?: string }[]>([]);
 
   const loadData = async () => {
     try {
@@ -63,9 +63,9 @@ export default function Returns() {
     if (field === 'productId') {
       const prod = products.find((p) => p.id === value);
       updated[index] = {
+        ...updated[index],
         productId: value,
         price: prod ? parseFloat(prod.price) : 0,
-        quantity: updated[index].quantity,
       };
     } else {
       updated[index] = {
@@ -252,7 +252,7 @@ export default function Returns() {
                       <div className="max-w-[200px] text-[10px] text-[#515154] leading-relaxed">
                         {ret.items?.map((it: any) => (
                           <div key={it.id}>
-                            • {it.product?.name} x{parseFloat(it.quantity)}
+                            • {it.product?.name} x{parseFloat(it.quantity)}{it.condition === 'defect' ? ' (брак)' : ''}
                           </div>
                         ))}
                       </div>
@@ -437,10 +437,20 @@ export default function Returns() {
                         className="w-20 bg-white border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs text-[#37352f] focus:outline-none focus:ring-1 focus:ring-[#0071e3]"
                       />
 
+                      <select
+                        value={item.condition || 'good'}
+                        onChange={(e) => handleItemChange(index, 'condition', e.target.value)}
+                        title="Брак уходит на склад брака и не продаётся"
+                        className="w-24 bg-white border border-[#e9e9e7] rounded-lg px-2 py-1.5 text-xs text-[#37352f] focus:outline-none focus:ring-1 focus:ring-[#0071e3]"
+                      >
+                        <option value="good">Годный</option>
+                        <option value="defect">Брак</option>
+                      </select>
+
                       <input
                         type="text"
                         disabled
-                        value={`${(item.quantity * item.price).toFixed(2)} TJS`}
+                        value={`≈ ${(item.quantity * item.price).toFixed(2)} TJS`}
                         className="w-28 bg-[#f5f5f7] border border-[#e9e9e7] rounded-lg px-2.5 py-1.5 text-xs text-[#86868b] font-bold text-right"
                       />
 
@@ -458,10 +468,11 @@ export default function Returns() {
 
               <div className="pt-4 border-t border-[#e9e9e7] flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] text-[#86868b] font-bold uppercase tracking-wider block">Итоговая сумма</span>
+                  <span className="text-[10px] text-[#86868b] font-bold uppercase tracking-wider block">Сумма (примерно)</span>
                   <span className="text-lg font-bold text-[#1d1d1f]">
                     {returnItems.reduce((sum, item) => sum + item.quantity * item.price, 0).toLocaleString('ru-RU', { minimumFractionDigits: 2 })} TJS
                   </span>
+                  <span className="text-[10px] text-[#86868b] block">Точную сумму посчитает сервер по цене, по которой клиент покупал.</span>
                 </div>
                 <div className="flex gap-3">
                   <button

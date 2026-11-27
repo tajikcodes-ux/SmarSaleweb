@@ -664,7 +664,12 @@ export default function Warehouse() {
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-[#1d1d1f] text-sm">{wh.name}</h4>
+                        <h4 className="font-bold text-[#1d1d1f] text-sm">
+                          {wh.name}
+                          {wh.kind === 'defect' && (
+                            <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800" title="Возвращённый брак: с этого склада не продаётся">БРАК</span>
+                          )}
+                        </h4>
                       </div>
                       {wh.address ? (
                         <p className="text-[11px] text-[#6a6a65] flex items-center gap-1">
