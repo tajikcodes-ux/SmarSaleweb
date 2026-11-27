@@ -88,6 +88,8 @@ export default function Integrations() {
   const [runs, setRuns] = useState<Run[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  // Share of the archive sent to the server; null when nothing is being sent
+  const [sent, setSent] = useState<number | null>(null);
   const [error, setError] = useState('');
   const timer = useRef<number | null>(null);
 
@@ -128,13 +130,18 @@ export default function Integrations() {
     try {
       const form = new FormData();
       form.append('file', file);
-      await api.post('/integrations/smartup/runs', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setSent(0);
+      await api.post('/integrations/smartup/runs', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (e) => setSent(e.total ? Math.round((e.loaded / e.total) * 100) : null),
+      });
       setFile(null);
       await load();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Не удалось загрузить архив');
     } finally {
       setBusy(false);
+      setSent(null);
     }
   };
 
@@ -182,7 +189,15 @@ export default function Integrations() {
             disabled={busy || running}
             className="px-4 py-2 bg-[#0b57d0] hover:bg-[#0a4bb3] disabled:opacity-50 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5"
           >
-            <Upload className="w-4 h-4" /> Проверить архив
+            {sent !== null ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> {sent < 100 ? `Загрузка… ${sent}%` : 'Файл получен, проверка…'}
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" /> Проверить архив
+              </>
+            )}
           </button>
         </div>
         {error && <p className="text-xs text-rose-600">{error}</p>}
