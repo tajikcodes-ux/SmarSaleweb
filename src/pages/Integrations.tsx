@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '../services/api';
 import { AlertTriangle, CheckCircle2, FileArchive, Loader2, Upload, XCircle } from 'lucide-react';
+import AgentMapping from '../components/AgentMapping';
 
 interface Report {
   dataDate: string;
-  archive: { inFile: number; added: number; reclassified: number; removed: number; byKind: Record<string, number> };
+  archive: { inFile: number; added: number; reclassified: number; removed: number; byKind: Record<string, number>; doubleEntry?: number; doubleEntryAgents?: string[] };
   clients: { inFile: number; created: number; withSector: number; withAgent: number; unknownBranch: string[] };
   priceTypes: { changed: number; unknownType: string[] };
   cards: { phones: number; addresses: number; coordinates: number };
@@ -56,6 +57,7 @@ function ReportView({ r, applied }: { r: Report; applied: boolean }) {
     ['Контакты и координаты', `телефонов ${n(r.cards.phones)}, адресов ${n(r.cards.addresses)}, координат ${n(r.cards.coordinates + r.coordinatesFromVisits)} (из них по визитам ${n(r.coordinatesFromVisits)})`],
   ];
   const warnings = [
+    ...(r.archive.doubleEntry ? [`Двойной ввод: ${r.archive.doubleEntry} документов в Smartup от тех, кто уже работает в SmartSale (${(r.archive.doubleEntryAgents ?? []).join(', ')})`] : []),
     ...(r.debts.skippedSmartSaleDocuments ? [`Долг не тронут у ${r.debts.skippedSmartSaleDocuments} клиентов: у них есть документы, оформленные в SmartSale`] : []),
     ...(r.debts.notFound ? [`${r.debts.notFound} должников на ${n(r.debts.notFoundSum)} TJS нет среди клиентов`] : []),
     ...(r.priceTypes.unknownType.length ? [`Нет таких типов цен в SmartSale: ${r.priceTypes.unknownType.join(', ')}`] : []),
@@ -231,6 +233,8 @@ export default function Integrations() {
           <ReportView r={latest.preview} applied={false} />
         </div>
       )}
+
+      <AgentMapping />
 
       <div className="bg-white border border-[#e3e3e8] rounded-2xl shadow-sm overflow-x-auto">
         <h3 className="text-sm font-bold text-[#1d1d1f] px-5 pt-4">Журнал загрузок</h3>

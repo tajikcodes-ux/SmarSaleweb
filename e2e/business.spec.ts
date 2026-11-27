@@ -91,6 +91,9 @@ test.describe('loading a Smartup backup', () => {
     // A company that never used Smartup: the section is off and an archive is refused
     expect(await agent1.get('/integrations/smartup/status')).toEqual({ connected: false, enabled: false });
     expect((await agent1.call('get', '/integrations/smartup/runs')).status).toBe(403);
+    expect((await agent1.call('get', '/integrations/smartup/agents')).status).toBe(403);
+    expect(await admin.get('/integrations/smartup/agents')).toMatchObject({ names: [] });
+    expect((await admin.call('put', '/integrations/smartup/agents', { names: [{ name: 'X', userId: 'no-such-user' }] })).status).toBe(400);
     const upload = (s: Session, name: string) =>
       shared.post(`${API_URL}/integrations/smartup/runs`, {
         headers: { Authorization: `Bearer ${s.token}` },
