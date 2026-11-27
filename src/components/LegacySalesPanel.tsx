@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useLegacyHistory } from '../utils/legacyHistory';
 import { History, TrendingDown, TrendingUp } from 'lucide-react';
+import { BranchReturnsChart, DailySalesChart } from './SalesCharts';
 
 interface Period { sales: number; orders: number; averageCheck: number; returns: number; payments: number; activeClients: number }
 interface Data {
@@ -13,6 +14,8 @@ interface Data {
   month?: Period & { from: string; to: string };
   previousMonth?: Period & { from: string; to: string };
   topAgents?: Array<{ name: string; sales: number; activeClients: number }>;
+  daily?: Array<{ day: number; sales: number; previous: number }>;
+  branches?: Array<{ branch: string; sales: number; returns: number }>;
 }
 
 const money = (v: number) => `${Math.round(v).toLocaleString('ru-RU')} TJS`;
@@ -78,6 +81,19 @@ export default function LegacySalesPanel({ branchId }: { branchId: string | null
             <Change now={now} before={before} lowerIsBetter={label === 'Возвраты'} />
           </div>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div>
+          <div className="text-xs font-bold text-[#1d1d1f] mb-1">Продажи по дням</div>
+          <DailySalesChart data={data.daily ?? []} />
+        </div>
+        {(data.branches ?? []).length > 1 && (
+          <div>
+            <div className="text-xs font-bold text-[#1d1d1f] mb-2">Филиалы за месяц: продажи и доля возвратов</div>
+            <BranchReturnsChart data={data.branches ?? []} />
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
