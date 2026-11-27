@@ -38,6 +38,7 @@ function Change({ now, before, lowerIsBetter = false }: { now: number; before: n
 export default function LegacySalesPanel({ branchId }: { branchId: string | null }) {
   const legacy = useLegacyHistory();
   const [data, setData] = useState<Data | null>(null);
+  const [allAgents, setAllAgents] = useState(false);
 
   useEffect(() => {
     if (!legacy.available || !legacy.canViewSummary) return;
@@ -88,9 +89,16 @@ export default function LegacySalesPanel({ branchId }: { branchId: string | null
           <div className="text-[10px] text-[#86868b] mt-0.5">День может быть неполным: выгрузка сделана в течение дня.</div>
         </div>
         <div>
-          <div className="font-bold text-[#1d1d1f] mb-1.5">Лучшие агенты месяца</div>
-          <ol className="space-y-0.5">
-            {(data.topAgents ?? []).map((a, i) => (
+          <div className="font-bold text-[#1d1d1f] mb-1.5 flex justify-between">
+            <span>{allAgents ? 'Агенты месяца' : 'Лучшие агенты месяца'}</span>
+            {(data.topAgents ?? []).length > 5 && (
+              <button onClick={() => setAllAgents(!allAgents)} className="text-[11px] font-semibold text-[#0b57d0] hover:underline">
+                {allAgents ? 'Свернуть' : `Все агенты (${data.topAgents!.length})`}
+              </button>
+            )}
+          </div>
+          <ol className={`space-y-0.5 ${allAgents ? 'max-h-72 overflow-y-auto pr-1' : ''}`}>
+            {(data.topAgents ?? []).slice(0, allAgents ? undefined : 5).map((a, i) => (
               <li key={a.name} className="flex justify-between gap-3 text-[#37352f]">
                 <span className="truncate">{i + 1}. {a.name}</span>
                 <span className="font-mono whitespace-nowrap">{money(a.sales)} · АКБ {a.activeClients}</span>

@@ -18,6 +18,12 @@ let cached: { token: string | null; request: Promise<LegacyAvailability> } | nul
 function load(): Promise<LegacyAvailability> {
   const token = localStorage.getItem('access_token');
   if (!token) return Promise.resolve(NONE);
+  try {
+    // The platform admin outside a company has no archive to ask about
+    if (JSON.parse(localStorage.getItem('user') || 'null')?.role === 'SUPER_ADMIN') return Promise.resolve(NONE);
+  } catch {
+    /* an unreadable profile: ask the server */
+  }
   if (cached?.token === token) return cached.request;
   const request = api
     .get('/legacy-history/availability')

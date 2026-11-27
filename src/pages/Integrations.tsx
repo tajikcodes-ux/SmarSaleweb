@@ -10,6 +10,7 @@ interface Report {
   cards: { phones: number; addresses: number; coordinates: number };
   coordinatesFromVisits: number;
   debts: { changed: number; cleared: number; delta: number; skippedSmartSaleDocuments: number; notFound: number; notFoundSum: number; total: number };
+  ageing?: { clients: number; rewritten: number; olderThanHistory: number };
   stock: Record<string, { changed: number; before: number; after: number; unknownCodes: number } | string>;
   notes: string[];
 }
@@ -48,6 +49,8 @@ function ReportView({ r, applied }: { r: Report; applied: boolean }) {
     ['Новые клиенты', `${n(r.clients.created)}: с зоной ${n(r.clients.withSector)}, с агентом ${n(r.clients.withAgent)}`],
     ['Долги', `${n(r.debts.changed)} клиентов, изменение ${r.debts.delta >= 0 ? '+' : ''}${n(r.debts.delta)} TJS` +
       (r.debts.cleared ? `, ${n(r.debts.cleared)} погасили полностью` : '') + `. Всего долг по Smartup ${n(r.debts.total)} TJS`],
+    ...(r.ageing ? [['Возраст долга', `${verb}пересчитан по заказам у ${n(r.ageing.rewritten)} клиентов из ${n(r.ageing.clients)}` +
+      (r.ageing.olderThanHistory ? `; у ${n(r.ageing.olderThanHistory)} часть долга старше истории Smartup` : '')] as [string, string]] : []),
     ['Остатки', Object.entries(r.stock).map(([b, s]) => (typeof s === 'string' ? `${b}: ${s}` : `${b}: ${n(s.changed)} поз. (${n(s.before)} → ${n(s.after)} шт.)`)).join('; ')],
     ['Типы цен', `${n(r.priceTypes.changed)} клиентов`],
     ['Контакты и координаты', `телефонов ${n(r.cards.phones)}, адресов ${n(r.cards.addresses)}, координат ${n(r.cards.coordinates + r.coordinatesFromVisits)} (из них по визитам ${n(r.coordinatesFromVisits)})`],

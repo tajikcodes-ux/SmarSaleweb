@@ -6,6 +6,7 @@ import { useScope } from '../context/ScopeContext';
 import { batteryText, isOnline, lastSeenText } from '../utils/agentPresence';
 import SmartupFreshness from '../components/SmartupFreshness';
 import LegacySalesPanel from '../components/LegacySalesPanel';
+import { useLegacyHistory } from '../utils/legacyHistory';
 import {
   Users,
   ShoppingBag,
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const { selectedBranchId, selectedBrandId, selectedZone, matchClient, matchOrder, matchProduct } = useScope();
   const [loading, setLoading] = useState(true);
   const [rawOrders, setRawOrders] = useState<any[]>([]);
+  const legacy = useLegacyHistory();
   const [rawUsers, setRawUsers] = useState<any[]>([]);
   const [rawRoutes, setRawRoutes] = useState<any[]>([]);
   const [rawYesterdayRoutes, setRawYesterdayRoutes] = useState<any[]>([]);
@@ -509,6 +511,10 @@ export default function Dashboard() {
     year: 'numeric',
   });
 
+  // The company still sells in its previous system: SmartSale's own figures are zero and its alarms are false
+  const recentSmartSaleOrders = rawOrders.some((o: any) => o.createdAt && Date.now() - new Date(o.createdAt).getTime() < 30 * 86400000);
+  const transition = legacy.available && legacy.canViewSummary && !recentSmartSaleOrders;
+
   const activeRepsCount = stats.agentsCount.split(' / ')[0].trim();
   const noAgentsActive = activeRepsCount === '0';
   const hasOrders = stats.rawOrdersCount > 0;
@@ -606,6 +612,14 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {transition && (
+        <div className="p-3.5 bg-[#f8f9fa] border border-[#e3e3e8] rounded-xl text-xs text-[#6a6a65]">
+          Компания пока работает в {legacy.label}: показатели SmartSale (выручка за день, агенты онлайн, покрытие, прогноз)
+          скрыты и появятся с первыми заказами в SmartSale. Продажи и агенты выше — по {legacy.label}.
+        </div>
+      )}
+
+      {!transition && (<>
       {/* Grid of KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
@@ -747,6 +761,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      </>)}
 
       {/* FMCG Risk Control: Debt Aging Breakdown (Smartup Standard) */}
       <div className="bg-white dark:bg-[#0a0a0c] border border-[#e3e3e8] dark:border-zinc-800 p-6 rounded-2xl shadow-sm space-y-5">
@@ -930,6 +946,7 @@ export default function Dashboard() {
         )}
       </div>
 
+      {!transition && (<>
       {/* Analytics (Sparklines), Top Products & Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Analytics Sparklines & Products */}
@@ -1247,6 +1264,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      </>)}
     </div>
   );
 }
