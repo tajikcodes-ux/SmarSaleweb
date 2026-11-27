@@ -55,6 +55,19 @@ export default function Layout({ children }: LayoutProps) {
   const [showAiInsight, setShowAiInsight] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const legacy = useLegacyHistory();
+  // The role's rights as the server has them now: a role changed by a manager applies without signing in again
+  const [, setRightsTick] = useState(0);
+  useEffect(() => {
+    api.get('/users/me')
+      .then((res) => {
+        const stored = JSON.parse(localStorage.getItem('user') || 'null');
+        if (!stored || !res.data?.permissions) return;
+        if (JSON.stringify(stored.permissions ?? {}) === JSON.stringify(res.data.permissions) && stored.role === res.data.role) return;
+        localStorage.setItem('user', JSON.stringify({ ...stored, permissions: res.data.permissions, role: res.data.role }));
+        setRightsTick((t) => t + 1);
+      })
+      .catch(() => undefined);
+  }, []);
   const smartup = useSmartupStatus();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);

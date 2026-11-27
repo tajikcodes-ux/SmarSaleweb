@@ -121,6 +121,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         description: 'Оформление, статусы, доставка и финансовые условия заказов',
         actions: [
           { action: 'read', label: 'Просмотр заказов' },
+          { action: 'view_all', label: 'Все заказы (vs только свои)' },
           { action: 'create', label: 'Создание' },
           { action: 'update', label: 'Редактирование' },
           { action: 'delete', label: 'Удаление' },
@@ -137,6 +138,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         description: 'Оформление возвратов от торговых точек, сверка причин и склад',
         actions: [
           { action: 'read', label: 'Просмотр возвратов' },
+          { action: 'view_all', label: 'Все возвраты (vs только свои)' },
           { action: 'create', label: 'Создание' },
           { action: 'update', label: 'Согласование' },
           { action: 'delete', label: 'Удаление' },
@@ -197,6 +199,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
           { action: 'auto_order', label: 'Умный автозаказ' },
           { action: 'adjust_stock', label: 'Инвентаризация/списание' },
           { action: 'dispatch', label: 'Передача в доставку' },
+          { action: 'delete', label: 'Удаление складов' },
         ],
       },
     ],
@@ -242,6 +245,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         description: 'Поручения супервайзеров, контроль дедлайнов и отчеты агентов',
         actions: [
           { action: 'read', label: 'Просмотр задач' },
+          { action: 'view_all', label: 'Все задачи (vs только свои)' },
           { action: 'create', label: 'Постановка задач' },
           { action: 'update', label: 'Отметка о выполнении' },
           { action: 'delete', label: 'Удаление' },
@@ -259,6 +263,7 @@ const PERMISSION_STRUCTURE: CategoryDef[] = [
         description: 'Прием платежей, инкассация торговых представителей, акты сверки',
         actions: [
           { action: 'read', label: 'Реестр оплат' },
+          { action: 'view_all', label: 'Все оплаты (vs только свои)' },
           { action: 'create', label: 'Прием платежа' },
           { action: 'update', label: 'Редактирование' },
           { action: 'delete', label: 'Удаление' },
@@ -462,12 +467,14 @@ export default function Roles() {
     });
   };
 
+  // Everything that only shows data: the sections and the whole company's records, money figures and tracks
+  const VIEW_ACTIONS = ['read', 'view_all', 'view_revenue', 'view_debts', 'view_cost', 'view_tracks'];
   const handlePresetReadOnly = () => {
     if (!selectedRole) return;
     const readOnlyPerms: Record<string, string[]> = {};
     PERMISSION_STRUCTURE.forEach((cat) => {
       cat.modules.forEach((m) => {
-        readOnlyPerms[m.key] = ['read'];
+        readOnlyPerms[m.key] = m.actions.map((a) => a.action).filter((a) => VIEW_ACTIONS.includes(a));
       });
     });
     setSelectedRole({
