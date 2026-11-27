@@ -160,6 +160,7 @@ test.describe('archive of the previous system', () => {
     await page.goto('/clients');
     await expect(page.getByText('Магазин Бахор').first()).toBeVisible();
     await expect(page.getByText('Архив продаж')).toHaveCount(0);
+    await expect(page.getByText('Загрузка из Smartup')).toHaveCount(0);
     await expect(page.locator('button[title^="История в"]')).toHaveCount(0);
   });
 });

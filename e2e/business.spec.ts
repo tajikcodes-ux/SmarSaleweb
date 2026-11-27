@@ -88,7 +88,8 @@ test.describe('history from the previous system', () => {
 test.describe('loading a Smartup backup', () => {
   test('only those who manage money load data, and a file that is not an archive is refused', async () => {
     expect(await admin.get('/integrations/smartup/runs')).toEqual([]);
-    expect(await agent1.get('/integrations/smartup/status')).toEqual({ connected: false });
+    // A company that never used Smartup: the section is off and an archive is refused
+    expect(await agent1.get('/integrations/smartup/status')).toEqual({ connected: false, enabled: false });
     expect((await agent1.call('get', '/integrations/smartup/runs')).status).toBe(403);
     const upload = (s: Session, name: string) =>
       shared.post(`${API_URL}/integrations/smartup/runs`, {
@@ -97,6 +98,9 @@ test.describe('loading a Smartup backup', () => {
       });
     expect((await upload(agent1, 'backup.zip')).status()).toBe(403);
     expect((await upload(admin, 'backup.txt')).status()).toBe(400);
+    const refused = await upload(admin, 'backup.zip');
+    expect(refused.status()).toBe(400);
+    expect(await refused.text()).toContain('не включена');
   });
 });
 

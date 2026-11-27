@@ -43,6 +43,7 @@ import { tourStore, tourSeenKey } from '../tour/tourStore';
 import ScopeBar from './ScopeBar';
 import { ProfileDialog } from './AccountDialog';
 import { useLegacyHistory } from '../utils/legacyHistory';
+import { useSmartupStatus } from '../utils/smartupImport';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -54,6 +55,7 @@ export default function Layout({ children }: LayoutProps) {
   const [showAiInsight, setShowAiInsight] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const legacy = useLegacyHistory();
+  const smartup = useSmartupStatus();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -266,6 +268,8 @@ export default function Layout({ children }: LayoutProps) {
       const filteredItems = group.items.filter(item => {
         // Only a company with an archive from its previous system has this section; the server says who may open it
         if (item.path === '/history') return legacy.available && legacy.canViewSummary;
+        // Only a company that loads Smartup data has this section
+        if (item.path === '/integrations' && !smartup.enabled) return false;
         // OWNER has full bypass access to all modules
         if (role === 'OWNER') return true;
 

@@ -83,6 +83,12 @@ const SECTIONS: Array<{ title: string; text: string; items: Def[] }> = [
       { key: 'payments.salesRepCanCollect', title: 'Агенты принимают оплату', hint: 'Агент сможет принять деньги у клиента; долг уменьшится на эту сумму.', control: { kind: 'toggle' } },
       { key: 'payments.driverCanCollect', title: 'Экспедиторы принимают оплату', hint: 'Экспедитор принимает оплату при доставке; без этого доставка не закрывает долг.', control: { kind: 'toggle' } },
       {
+        key: 'integrations.smartupImport',
+        title: 'Загрузка данных из Smartup',
+        hint: 'Для компании, которая переходит со Smartup: в меню появится «Загрузка из Smartup» — долги, остатки, клиенты и история продаж по выгрузке.',
+        control: { kind: 'toggle' },
+      },
+      {
         key: 'returns.requireItems',
         title: 'Возврат только товарами',
         hint: 'Агент выбирает возвращаемые товары, а сумму считает сервер по цене, по которой клиент их покупал. Брак уходит на склад брака. Включайте, когда у всех агентов обновлено приложение.',

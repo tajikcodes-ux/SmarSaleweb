@@ -1,18 +1,12 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
 import { Database } from 'lucide-react';
-
-interface Status { connected: boolean; dataDate?: string; appliedBy?: string | null }
+import { useSmartupStatus } from '../utils/smartupImport';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** How fresh the data loaded from Smartup is; yellow once it is older than a day. Nothing for a company without it */
 export default function SmartupFreshness() {
-  const [status, setStatus] = useState<Status | null>(null);
-  useEffect(() => {
-    api.get('/integrations/smartup/status').then((res) => setStatus(res.data)).catch(() => setStatus(null));
-  }, []);
-  if (!status?.connected || !status.dataDate) return null;
+  const status = useSmartupStatus();
+  if (!status.connected || !status.dataDate) return null;
   const old = Date.now() - new Date(status.dataDate).getTime() > DAY_MS;
   const date = new Date(status.dataDate).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   return (
