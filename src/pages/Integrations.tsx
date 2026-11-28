@@ -8,7 +8,7 @@ interface Report {
   archive: { inFile: number; added: number; reclassified: number; removed: number; byKind: Record<string, number>; doubleEntry?: number; doubleEntryAgents?: string[] };
   clients: { inFile: number; created: number; withSector: number; withAgent: number; unknownBranch: string[] };
   priceTypes: { changed: number; unknownType: string[] };
-  cards: { phones: number; addresses: number; coordinates: number };
+  cards: { phones: number; addresses: number; landmarks?: number; coordinates: number; rejectedCoordinates?: number };
   coordinatesFromVisits: number;
   debts: { changed: number; cleared: number; delta: number; skippedSmartSaleDocuments: number; notFound: number; notFoundSum: number; total: number };
   ageing?: { clients: number; rewritten: number; olderThanHistory: number };
@@ -54,7 +54,7 @@ function ReportView({ r, applied }: { r: Report; applied: boolean }) {
       (r.ageing.olderThanHistory ? `; у ${n(r.ageing.olderThanHistory)} часть долга старше истории Smartup` : '')] as [string, string]] : []),
     ['Остатки', Object.entries(r.stock).map(([b, s]) => (typeof s === 'string' ? `${b}: ${s}` : `${b}: ${n(s.changed)} поз. (${n(s.before)} → ${n(s.after)} шт.)`)).join('; ')],
     ['Типы цен', `${n(r.priceTypes.changed)} клиентов`],
-    ['Контакты и координаты', `телефонов ${n(r.cards.phones)}, адресов ${n(r.cards.addresses)}, координат ${n(r.cards.coordinates + r.coordinatesFromVisits)} (из них по визитам ${n(r.coordinatesFromVisits)})`],
+    ['Контакты и координаты', `телефонов ${n(r.cards.phones)}, адресов ${n(r.cards.addresses)}, ориентиров ${n(r.cards.landmarks ?? 0)}, координат ${n(r.cards.coordinates + r.coordinatesFromVisits)} (из них по визитам ${n(r.coordinatesFromVisits)})${r.cards.rejectedCoordinates ? `; не взято ${n(r.cards.rejectedCoordinates)}: вне Таджикистана, далеко от филиала или одна точка на многих карточках` : ''}`],
   ];
   const warnings = [
     ...(r.archive.doubleEntry ? [`Двойной ввод: ${r.archive.doubleEntry} документов в Smartup от тех, кто уже работает в SmartSale (${(r.archive.doubleEntryAgents ?? []).join(', ')})`] : []),
